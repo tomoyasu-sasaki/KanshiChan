@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kanchichan - 監視</title>
+  <link rel="stylesheet" href="../styles/style.css">
+</head>
+<body class="monitor-view">
+  <!-- メイン監視画面 -->
+  <div class="monitor-container">
+    <!-- カメラフィード -->
+    <div class="camera-feed">
+      <video id="videoElement" autoplay playsinline></video>
+      <canvas id="canvasElement"></canvas>
+      
+      <!-- ステータス表示（オーバーレイ） -->
+      <div class="status-overlay">
+        <div class="status-badge" id="phoneStatusBadge">
+          <span class="icon">📱</span>
+          <span id="phoneTimer">0:00</span>
+        </div>
+        <div class="status-badge" id="presenceStatusBadge">
+          <span class="icon">👤</span>
+          <span id="absenceTimer">0:00</span>
+        </div>
+      </div>
+
+      <!-- 監視状態インジケーター -->
+      <div class="monitor-indicator" id="monitorIndicator">
+        <div class="recording-dot"></div>
+        <span>監視中</span>
+      </div>
+    </div>
+
+    <!-- のツールバー -->
+    <div class="toolbar">
+      <div class="toolbar-left">
+        <div class="app-info">
+          <h1>📹 Kanchichan</h1>
+          <span class="time-display" id="currentTime">--:--</span>
+        </div>
+      </div>
+
+      <div class="toolbar-center">
+        <button class="tool-button" id="toggleMonitorBtn" title="監視開始/停止">
+          <span class="icon">⏸️</span>
+          <span class="label">停止</span>
+        </button>
+        <button class="tool-button" id="scheduleBtn" title="スケジュール">
+          <span class="icon">📅</span>
+          <span class="label">スケジュール</span>
+        </button>
+        <button class="tool-button" id="settingsBtn" title="設定">
+          <span class="icon">⚙️</span>
+          <span class="label">設定</span>
+        </button>
+        <button class="tool-button" id="logsBtn" title="ログ">
+          <span class="icon">📋</span>
+          <span class="label">ログ</span>
+        </button>
+      </div>
+
+      <div class="toolbar-right">
+        <button class="tool-button danger" id="exitBtn" title="終了">
+          <span class="icon">❌</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- スケジュールドロワー -->
+  <div class="drawer" id="scheduleDrawer">
+    <div class="drawer-content">
+      <div class="drawer-header">
+        <h2>📅 スケジュール管理</h2>
+        <button class="close-btn" data-drawer="scheduleDrawer">×</button>
+      </div>
+      
+      <div class="drawer-body">
+        <div class="schedule-form-container">
+          <h3>スケジュール追加</h3>
+          <form id="scheduleForm">
+            <div class="form-group">
+              <label for="title">タイトル</label>
+              <input type="text" id="title" required>
+            </div>
+
+            <div class="form-group">
+              <label for="date">日付</label>
+              <input type="date" id="date" required>
+            </div>
+
+            <div class="form-group">
+              <label for="time">時刻</label>
+              <input type="time" id="time" required>
+            </div>
+
+            <div class="form-group">
+              <label for="description">説明</label>
+              <textarea id="description" rows="3"></textarea>
+            </div>
+
+            <button type="submit" class="btn-primary">追加</button>
+          </form>
+        </div>
+
+        <div class="schedule-list-container">
+          <h3>スケジュール一覧</h3>
+          <div id="scheduleItems" class="schedule-items">
+            <p class="empty-message">スケジュールはありません</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 設定ドロワー -->
+  <div class="drawer" id="settingsDrawer">
+    <div class="drawer-content">
+      <div class="drawer-header">
+        <h2>⚙️ 設定</h2>
+        <button class="close-btn" data-drawer="settingsDrawer">×</button>
+      </div>
+      
+      <div class="drawer-body">
+        <div class="setting-group">
+          <h3>📱 スマホ検知設定</h3>
+
+          <div class="form-group">
+            <label for="phoneThreshold">
+              アラートを鳴らすまでの時間 (秒)
+              <span class="description">スマホが検知され続けてからアラートを鳴らすまでの秒数</span>
+            </label>
+            <div class="slider-container">
+              <input type="range" id="phoneThreshold" min="1" max="60" value="10" step="1">
+              <span id="phoneThresholdValue" class="slider-value">10秒</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>
+              <input type="checkbox" id="phoneAlertEnabled" checked>
+              スマホ検知アラートを有効にする
+            </label>
+          </div>
+
+          <div class="form-group">
+            <label for="phoneConfidence">
+              検知感度 (信頼度)
+              <span class="description">高いほど確実な検知のみ反応します</span>
+            </label>
+            <div class="slider-container">
+              <input type="range" id="phoneConfidence" min="0.1" max="0.9" value="0.5" step="0.1">
+              <span id="phoneConfidenceValue" class="slider-value">0.5</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <h3>👤 不在検知設定</h3>
+
+          <div class="form-group">
+            <label for="absenceThreshold">
+              アラートを鳴らすまでの時間 (秒)
+              <span class="description">人が検知されなくなってからアラートを鳴らすまでの秒数</span>
+            </label>
+            <div class="slider-container">
+              <input type="range" id="absenceThreshold" min="1" max="120" value="30" step="1">
+              <span id="absenceThresholdValue" class="slider-value">30秒</span>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label>
+              <input type="checkbox" id="absenceAlertEnabled" checked>
+              不在検知アラートを有効にする
+            </label>
+          </div>
+
+          <div class="form-group">
+            <label for="absenceConfidence">
+              検知感度 (信頼度)
+              <span class="description">高いほど確実な検知のみ反応します</span>
+            </label>
+            <div class="slider-container">
+              <input type="range" id="absenceConfidence" min="0.1" max="0.9" value="0.5" step="0.1">
+              <span id="absenceConfidenceValue" class="slider-value">0.5</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="setting-group">
+          <h3>🔊 通知設定</h3>
+
+          <div class="form-group">
+            <label>
+              <input type="checkbox" id="soundEnabled" checked>
+              アラート音を有効にする
+            </label>
+          </div>
+
+          <div class="form-group">
+            <label>
+              <input type="checkbox" id="desktopNotification" checked>
+              デスクトップ通知を有効にする
+            </label>
+          </div>
+        </div>
+        <div class="setting-group">
+          <h3>🖼️ 表示設定</h3>
+          <div class="form-group">
+            <label>
+              <input type="checkbox" id="showDetections" checked>
+              検出フレームを表示
+            </label>
+          </div>
+        </div>
+
+        <div class="button-group">
+          <button id="saveSettingsBtn" class="btn-primary">設定を保存</button>
+          <button id="resetSettingsBtn" class="btn-secondary">デフォルトに戻す</button>
+        </div>
+
+        <div id="saveMessage" class="save-message"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ログドロワー -->
+  <div class="drawer" id="logsDrawer">
+    <div class="drawer-content">
+      <div class="drawer-header">
+        <h2>📋 検知ログ</h2>
+        <button class="close-btn" data-drawer="logsDrawer">×</button>
+      </div>
+      
+      <div class="drawer-body">
+        <div id="logContainer" class="log-container">
+          <p class="empty-message">ログはありません</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="../renderer/schedule.js"></script>
+  <script src="../renderer/settings.js"></script>
+  <script src="../renderer/monitor.js"></script>
+  <script src="../renderer/app.js"></script>
+</body>
+</html>
