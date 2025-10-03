@@ -5,6 +5,7 @@
  * - 電力節約モードの抑止など Electron 特有の OS 依存処理をまとめる。
  */
 const { app, BrowserWindow, ipcMain, Notification, powerSaveBlocker } = require('electron');
+const path = require('path');
 const YOLODetector = require('./src/utils/yolo-detector');
 const { createMainWindow } = require('./src/main/create-window');
 const { registerIpcHandlers } = require('./src/main/ipc/register-handlers');
@@ -50,6 +51,16 @@ function stopPowerSaveBlocker() {
 
 app.whenReady().then(async () => {
   const { MAIN_WINDOW_CONFIG, APP_TITLE } = await appConstantsPromise;
+
+  // macOSのDockアイコンを設定
+  if (process.platform === 'darwin' && app.dock) {
+    const iconPath = path.join(__dirname, 'assets', 'logo.png');
+    try {
+      app.dock.setIcon(iconPath);
+    } catch (error) {
+      console.warn('Dockアイコンの設定に失敗:', error);
+    }
+  }
 
   yoloDetector = new YOLODetector();
   const initialized = await yoloDetector.initialize();
