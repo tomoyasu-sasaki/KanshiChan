@@ -41,6 +41,12 @@ let absenceDetectionStartTime = 0;
 let phoneAlertTriggered = false;
 let absenceAlertTriggered = false;
 
+// クリア判定と再通知クールダウン
+let phoneClearCandidateSince = 0;       // スマホ未検知が続いてからの経過測定
+let absenceClearCandidateSince = 0;     // 人物検知（復帰）が続いてからの経過測定
+let lastPhoneAlertAt = 0;               // 直近のスマホアラート時刻
+let lastAbsenceAlertAt = 0;             // 直近の不在アラート時刻
+
 /**
  * フレーム補完の時間窓
  * 
@@ -55,6 +61,14 @@ let lastPhoneDetectedTime = 0;
 let lastPersonDetectedTime = 0;
 const PHONE_INTERPOLATION_WINDOW = 2000; // 2秒（スマホ検知）
 const PERSON_INTERPOLATION_WINDOW = 500; // 0.5秒（不在検知は素早く反応）
+
+// クリア安定化ウィンドウ（この時間連続で反対状態が続いたらリセット）
+const PHONE_CLEAR_STABLE_MS = 2000;      // 2秒: スマホ未検知が2秒続いたらリセット
+const ABSENCE_CLEAR_STABLE_MS = 5000;    // 5秒: 復帰（人物検知）が5秒続いたらリセット
+
+// 連続通知を抑止するクールダウン
+const PHONE_ALERT_COOLDOWN_MS = 120000;  // 2分
+const ABSENCE_ALERT_COOLDOWN_MS = 300000;// 5分
 
 // 設定
 let settings = loadSettings();
@@ -284,14 +298,30 @@ function handlePhoneDetection(detected) {
       !phoneAlertTriggered &&
       phoneDetectionTime >= settings.phoneThreshold
     ) {
-      triggerPhoneAlert();
+      const nowTs = Date.now();
+      if (nowTs - lastPhoneAlertAt >= PHONE_ALERT_COOLDOWN_MS) {
+        lastPhoneAlertAt = nowTs;
+        triggerPhoneAlert();
+      }
     }
+
+    // クリア判定候補は破棄（検知継続中）
+    phoneClearCandidateSince = 0;
   } else {
+    // 未検知が安定して一定時間続いたら完全リセット
+    const nowTs = Date.now();
     if (phoneDetectionTime > 0) {
-      phoneDetectionTime = 0;
-      phoneDetectionStartTime = 0;
-      phoneAlertTriggered = false;
-      updateTimers();
+      if (phoneClearCandidateSince === 0) phoneClearCandidateSince = nowTs;
+      if (nowTs - phoneClearCandidateSince >= PHONE_CLEAR_STABLE_MS) {
+        phoneDetectionTime = 0;
+        phoneDetectionStartTime = 0;
+        phoneAlertTriggered = false;
+        phoneClearCandidateSince = 0;
+        updateTimers();
+      }
+    } else {
+      // 既に0の場合は候補だけクリア
+      phoneClearCandidateSince = 0;
     }
   }
 }
@@ -316,14 +346,29 @@ function handleAbsenceDetection(personDetected) {
       !absenceAlertTriggered &&
       absenceDetectionTime >= settings.absenceThreshold
     ) {
-      triggerAbsenceAlert();
+      const nowTs = Date.now();
+      if (nowTs - lastAbsenceAlertAt >= ABSENCE_ALERT_COOLDOWN_MS) {
+        lastAbsenceAlertAt = nowTs;
+        triggerAbsenceAlert();
+      }
     }
+
+    // 復帰クリア候補は破棄（未検知継続中）
+    absenceClearCandidateSince = 0;
   } else {
-    if (absenceDetectionTime > 0) {
-      absenceDetectionTime = 0;
-      absenceDetectionStartTime = 0;
-      absenceAlertTriggered = false;
-      updateTimers();
+    // 人物検知（復帰）が安定して一定時間続いたら完全リセット
+    const nowTs = Date.now();
+    if (absenceDetectionTime > 0 || absenceAlertTriggered) {
+      if (absenceClearCandidateSince === 0) absenceClearCandidateSince = nowTs;
+      if (nowTs - absenceClearCandidateSince >= ABSENCE_CLEAR_STABLE_MS) {
+        absenceDetectionTime = 0;
+        absenceDetectionStartTime = 0;
+        absenceAlertTriggered = false;
+        absenceClearCandidateSince = 0;
+        updateTimers();
+      }
+    } else {
+      absenceClearCandidateSince = 0;
     }
   }
 }
@@ -350,6 +395,24 @@ async function triggerPhoneAlert() {
       body: `スマホが${settings.phoneThreshold}秒以上検知されています`
     });
   }
+
+  // 音声読み上げ（VOICEVOX）
+  if (window.electronAPI && typeof window.electronAPI.speakText === 'function') {
+    try {
+      const res = await window.electronAPI.speakText({
+        text: 'スマホが検知されています。作業に集中しましょう。',
+        engine: 'voicevox',
+        options: { speakerId: settings.voicevoxSpeaker, speedScale: 1.05 }
+      });
+      if (res && res.success && res.dataUrl) {
+        const audio = new Audio(res.dataUrl);
+        audio.play().catch(() => {});
+      }
+    } catch {}
+  }
+
+  // 直後の再発火抑止: 軽いクールダウンを再設定
+  lastPhoneAlertAt = Date.now();
 }
 
 // 不在検知アラート
@@ -367,6 +430,24 @@ async function triggerAbsenceAlert() {
       body: `${settings.absenceThreshold}秒以上不在です`
     });
   }
+
+  // 音声読み上げ（VOICEVOX）
+  if (window.electronAPI && typeof window.electronAPI.speakText === 'function') {
+    try {
+      const res = await window.electronAPI.speakText({
+        text: '離席が続いています。席に戻りましょう。',
+        engine: 'voicevox',
+        options: { speakerId: settings.voicevoxSpeaker, speedScale: 1.0 }
+      });
+      if (res && res.success && res.dataUrl) {
+        const audio = new Audio(res.dataUrl);
+        audio.play().catch(() => {});
+      }
+    } catch {}
+  }
+
+  // 直後の再発火抑止: 軽いクールダウンを再設定
+  lastAbsenceAlertAt = Date.now();
 }
 
 // アラート音再生

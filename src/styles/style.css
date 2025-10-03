@@ -784,12 +784,27 @@ h2 {
   padding: 20px;
 }
 
+/* ドロワー内のログコンテナは全高を使用 */
+.drawer-body .log-container {
+  max-height: none;
+  height: 100%;
+}
+
 .drawer-body h3 {
   color: #333;
   font-size: 1.1rem;
   margin-bottom: 15px;
   padding-bottom: 10px;
   border-bottom: 2px solid #e0e0e0;
+}
+
+/* スケジュール: 本日ヘッダー */
+.today-schedule-header {
+  text-align: center;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #333;
+  margin: 10px 0 12px;
 }
 
 .schedule-form-container,
@@ -816,17 +831,102 @@ h2 {
   pointer-events: auto;
 }
 
+/* アコーディオンメニュー */
+.accordion {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.accordion-item {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: white;
+}
+
+.accordion-header {
+  width: 100%;
+  background: #f8f9fa;
+  border: none;
+  padding: 15px 20px;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #333;
+  transition: background 0.2s;
+}
+
+.accordion-header:hover {
+  background: #e9ecef;
+}
+
+.accordion-header.active {
+  background: linear-gradient(135deg, #667eea22 0%, #764ba222 100%);
+  color: #667eea;
+}
+
+.accordion-icon {
+  transition: transform 0.3s;
+  font-size: 0.8rem;
+}
+
+.accordion-header.active .accordion-icon {
+  transform: rotate(180deg);
+}
+
+.accordion-content {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-out;
+  padding: 0 20px;
+}
+
+.accordion-content .form-group:first-child {
+  margin-top: 15px;
+}
+
+.accordion-content .form-group:last-child {
+  margin-bottom: 15px;
+}
+
+/* セレクトボックス */
+.form-select {
+  width: 100%;
+  padding: 12px;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  background: white;
+  cursor: pointer;
+  transition: border-color 0.3s;
+  font-family: inherit;
+}
+
+.form-select:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.form-select option {
+  padding: 10px;
+}
+
 /* レスポンシブ対応 */
 @media (max-width: 768px) {
   .drawer {
     width: 100%;
     right: -100%;
   }
-  
+
   .toolbar-center .tool-button .label {
     display: none;
   }
-  
+
   .tool-button {
     min-width: 50px;
     padding: 10px;

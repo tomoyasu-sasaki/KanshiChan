@@ -39,7 +39,7 @@ function createWindow() {
       backgroundThrottling: false,
     },
     title: '📹 Kanchichan',
-    icon: "/Users/tmys-sasaki/Projects/Public/kanchichan/assets/logo.png"
+    icon: "/Users/tmys-sasaki/Projects/Public/kanchichan/assets/logo.png",
   });
 
   mainWindow.loadFile(path.join(__dirname, 'src', 'pages', 'index.html'));
@@ -144,21 +144,33 @@ ipcMain.handle('get-active-window', async () => {
     // 前面アプリ名
     const appName = await runOsa('tell application "System Events" to get name of first application process whose frontmost is true');
 
-    // 前面ウィンドウのタイトル（取得できない場合は空）
-    const title = await runOsa('tell application "System Events" to tell (first application process whose frontmost is true) to try return name of window 1 on error return "" end try end tell');
+    // まず System Events からのウィンドウタイトル（フォールバック用）
+    let title = await runOsa('tell application "System Events" to tell (first application process whose frontmost is true) to try return name of window 1 on error return "" end try end tell');
 
-    // ブラウザ別にURL取得を試行
+    // Google Chrome の場合はアクティブタブから URL とタイトルを直接取得（最優先）
+    // 参考: vitorgalvao のスニペットをベースに、前面ウィンドウ/タブが存在しない場合は空文字を返す
     let url = '';
     if (appName === 'Google Chrome') {
-      url = await runOsa('tell application "Google Chrome" to try if (count of windows) > 0 then return URL of active tab of front window on error return "" end try');
-    } else if (appName === 'Microsoft Edge') {
-      url = await runOsa('tell application "Microsoft Edge" to try if (count of windows) > 0 then return URL of active tab of front window on error return "" end try');
-    } else if (appName === 'Brave Browser') {
-      url = await runOsa('tell application "Brave Browser" to try if (count of windows) > 0 then return URL of active tab of front window on error return "" end try');
-    } else if (appName === 'Arc') {
-      url = await runOsa('tell application "Arc" to try return URL of active tab of front window on error return "" end try');
-    } else if (appName === 'Safari') {
-      url = await runOsa('tell application "Safari" to try if exists (front document) then return URL of front document on error return "" end try');
+      const chromeOut = await runOsa(`
+        tell application "Google Chrome"
+          if (count of windows) is 0 then return ""
+          tell front window
+            if (count of tabs) is 0 then return ""
+            set theTab to active tab
+            set theURL to URL of theTab
+            set theTitle to title of theTab
+            return theURL & "\n" & theTitle
+          end tell
+        end tell`);
+      const raw = (chromeOut || '').trim();
+      if (raw) {
+        const lines = raw.split(/\r?\n/);
+        url = (lines[0] || '').trim();
+        const tabTitle = lines.slice(1).join('\n').trim();
+        if (tabTitle) {
+          title = tabTitle; // Chrome のタブタイトルを優先
+        }
+      }
     }
 
     return {
@@ -171,6 +183,71 @@ ipcMain.handle('get-active-window', async () => {
     };
   } catch (e) {
     console.error('アクティブウィンドウ取得エラー:', e);
+    return { success: false, error: e.message };
+  }
+});
+
+/**
+ * VOICEVOX 連携 - テキスト読み上げ
+ * レンダラからのリクエストに応じて VOICEVOX HTTP API を呼び出し、
+ * data:URL 形式の WAV を返す（レンダラ側で new Audio(dataUrl).play()）
+ */
+async function synthesizeWithVoiceVox(text, options = {}) {
+  const host = options.host || '127.0.0.1';
+  const port = options.port || 50021;
+  const speakerId = options.speakerId != null ? options.speakerId : 1;
+  const base = `http://${host}:${port}`;
+
+  // audio_query
+  const aqUrl = `${base}/audio_query?text=${encodeURIComponent(text)}&speaker=${encodeURIComponent(speakerId)}`;
+  const aqRes = await fetch(aqUrl, { method: 'POST' });
+  if (!aqRes.ok) {
+    throw new Error(`VOICEVOX audio_query failed: ${aqRes.status}`);
+  }
+  const query = await aqRes.json();
+
+  // 任意のパラメータ反映
+  if (options.speedScale != null) query.speedScale = options.speedScale;
+  if (options.pitchScale != null) query.pitchScale = options.pitchScale;
+  if (options.intonationScale != null) query.intonationScale = options.intonationScale;
+
+  // synthesis
+  const synthUrl = `${base}/synthesis?speaker=${encodeURIComponent(speakerId)}`;
+  const sRes = await fetch(synthUrl, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(query)
+  });
+  if (!sRes.ok) {
+    throw new Error(`VOICEVOX synthesis failed: ${sRes.status}`);
+  }
+  const buf = Buffer.from(await sRes.arrayBuffer());
+  const dataUrl = `data:audio/wav;base64,${buf.toString('base64')}`;
+  return dataUrl;
+}
+
+// TTS IPC ハンドラ
+ipcMain.handle('tts-speak', async (event, payload) => {
+  try {
+    const { text, engine = 'voicevox', options = {} } = payload || {};
+    if (!text || typeof text !== 'string') {
+      return { success: false, error: 'text が空です' };
+    }
+
+    // 現状は VOICEVOX のみ対応（engine パラメータは将来拡張用）
+    if (engine !== 'voicevox') {
+      return { success: false, error: `未対応のエンジン: ${engine}` };
+    }
+
+    // Node.js v18+ の fetch 前提。存在しない場合はエラーにする
+    if (typeof fetch !== 'function') {
+      return { success: false, error: 'fetch が利用できません（Node v18+ が必要）' };
+    }
+
+    const dataUrl = await synthesizeWithVoiceVox(text, options);
+    return { success: true, dataUrl };
+  } catch (e) {
+    // VOICEVOX 未起動や接続拒否等はここに来る
     return { success: false, error: e.message };
   }
 });

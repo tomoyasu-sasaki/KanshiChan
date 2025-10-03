@@ -8,6 +8,7 @@
  * - saveSchedule: スケジュール保存（現状はメモリ内処理のみ、将来的にファイル/DB保存拡張可）
  * - sendNotification: デスクトップ通知送信
  * - detectObjects: YOLOv11物体検知（メインプロセスで実行）
+ * - speakText: VOICEVOXでテキスト読み上げ（メインプロセス経由）
  */
 const { contextBridge, ipcRenderer } = require('electron');
 
@@ -15,5 +16,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   saveSchedule: (schedule) => ipcRenderer.invoke('save-schedule', schedule),
   sendNotification: (data) => ipcRenderer.invoke('send-notification', data),
   detectObjects: (imageDataUrl) => ipcRenderer.invoke('detect-objects', imageDataUrl),
-  getActiveWindow: () => ipcRenderer.invoke('get-active-window')
+  getActiveWindow: () => ipcRenderer.invoke('get-active-window'),
+  speakText: (payload) => ipcRenderer.invoke('tts-speak', payload)
 });

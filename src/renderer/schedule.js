@@ -8,8 +8,45 @@ const scheduleItems = document.getElementById('scheduleItems');
 // 現在時刻チェック用タイマー
 let notificationCheckInterval;
 
+// 日付ユーティリティ
+function getTodayISODate() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const d = String(now.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`; // <input type="date"> 用
+}
+
+function getTodayDisplayDate() {
+  const iso = getTodayISODate();
+  // yyyy-mm-dd -> yyyy/mm/dd
+  return iso.replaceAll('-', '/');
+}
+
 // 初期化
 document.addEventListener('DOMContentLoaded', () => {
+  // yyyy/mm/dd のスケジュール」ヘッダーを追加
+  try {
+    const container = document.querySelector('.schedule-form-container');
+    const heading = container ? container.querySelector('h3') : null;
+    if (container && heading) {
+      const info = document.createElement('div');
+      info.className = 'today-schedule-header';
+      info.textContent = `${getTodayDisplayDate()} のスケジュール`;
+      container.insertBefore(info, heading);
+    }
+  } catch {}
+
+  // 日付入力は本日固定にして非表示
+  try {
+    const dateInput = document.getElementById('date');
+    if (dateInput) {
+      dateInput.value = getTodayISODate();
+      const group = dateInput.closest('.form-group');
+      if (group) group.style.display = 'none';
+    }
+  } catch {}
+
   renderSchedules();
   startNotificationCheck();
 });
@@ -19,7 +56,8 @@ scheduleForm.addEventListener('submit', async (e) => {
   e.preventDefault();
 
   const title = document.getElementById('title').value;
-  const date = document.getElementById('date').value;
+  // 日付は本日固定
+  const date = getTodayISODate();
   const time = document.getElementById('time').value;
   const description = document.getElementById('description').value;
 
@@ -29,7 +67,9 @@ scheduleForm.addEventListener('submit', async (e) => {
     date,
     time,
     description,
-    notified: false
+    notified: false,
+    preNotified: false,
+    startNotified: false
   };
 
   schedules.push(schedule);
@@ -118,41 +158,113 @@ function deleteSchedule(id) {
 
 // 通知チェック開始
 function startNotificationCheck() {
-  // 1分ごとにチェック
-  notificationCheckInterval = setInterval(checkScheduleNotifications, 60000);
-  // 起動時にも一度チェック
+  // 既存タイマーがあればクリア
+  if (notificationCheckInterval) {
+    clearInterval(notificationCheckInterval);
+    notificationCheckInterval = null;
+  }
+
+  // 起動直後は一度だけ実行（開始時刻直前の救済用。5分前通知は発火させない）
   checkScheduleNotifications();
+
+  // 分境界にアラインしてから、以後は60秒ごとにチェック
+  const now = new Date();
+  const msToNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
+  setTimeout(() => {
+    checkScheduleNotifications();
+    notificationCheckInterval = setInterval(checkScheduleNotifications, 60000);
+  }, Math.max(0, msToNextMinute));
 }
 
 // スケジュール通知チェック
 async function checkScheduleNotifications() {
   const now = new Date();
+  const seconds = now.getSeconds();
+  const nowAligned = new Date(now);
+  nowAligned.setSeconds(0, 0);
 
   for (let schedule of schedules) {
-    if (schedule.notified) continue;
-
     const scheduleDateTime = new Date(`${schedule.date}T${schedule.time}`);
+    if (isNaN(scheduleDateTime.getTime())) continue; // 無効な日時は無視
     const timeDiff = scheduleDateTime - now;
+    const minutesLeft = Math.floor((scheduleDateTime - nowAligned) / 60000);
 
-    // 5分前に通知
-    if (timeDiff > 0 && timeDiff <= 5 * 60 * 1000) {
+    // 既存データ互換（notified の意味を分割）
+    // - 未来の予定で notified=true: 5分前通知済とみなす
+    // - 過去/開始時刻付近で notified=true: 両方通知済とみなす
+    if (schedule.preNotified === undefined) schedule.preNotified = false;
+    if (schedule.startNotified === undefined) schedule.startNotified = false;
+    if (schedule.notified === true && schedule.preNotified === false && schedule.startNotified === false) {
+      if (timeDiff > 0) {
+        schedule.preNotified = true;
+      } else {
+        schedule.preNotified = true;
+        schedule.startNotified = true;
+      }
+      schedule.notified = schedule.preNotified || schedule.startNotified;
+      saveSchedules();
+    }
+
+    // 時刻が過ぎた古い予定は自動的に両方通知済み扱いにして二重発火を防止
+    if (timeDiff < -60000 && (!schedule.preNotified || !schedule.startNotified)) {
+      schedule.preNotified = true;
+      schedule.startNotified = true;
+      schedule.notified = true;
+      saveSchedules();
+      continue;
+    }
+
+    // 5分前通知: 分境界（秒=0）のときに分差がちょうど5のみ発火
+    if (seconds === 0 && minutesLeft === 5 && !schedule.preNotified) {
       await window.electronAPI.sendNotification({
         title: `スケジュール: ${schedule.title}`,
         body: `5分後に開始します\n${formatDate(schedule.date)} ${schedule.time}`
       });
 
-      schedule.notified = true;
+      // 音声読み上げ（VOICEVOX）
+      if (window.electronAPI && typeof window.electronAPI.speakText === 'function') {
+        try {
+          const res = await window.electronAPI.speakText({
+            text: `5分後に ${schedule.title} が始まります。`,
+            engine: 'voicevox',
+            options: { speakerId: 1, speedScale: 1.05 }
+          });
+          if (res && res.success && res.dataUrl && seconds === 0) {
+            const audio = new Audio(res.dataUrl);
+            audio.play().catch(() => {});
+          }
+        } catch {}
+      }
+
+      schedule.preNotified = true;
+      schedule.notified = schedule.preNotified || schedule.startNotified;
       saveSchedules();
     }
 
-    // 時刻になったら通知
-    if (timeDiff > -60000 && timeDiff <= 0 && !schedule.notified) {
+    // 開始時通知: 分境界で分差0 または 直前60秒以内の救済
+    if (((seconds === 0 && minutesLeft === 0) || (timeDiff > -60000 && timeDiff <= 0)) && !schedule.startNotified) {
       await window.electronAPI.sendNotification({
         title: `スケジュール: ${schedule.title}`,
         body: `開始時刻です\n${schedule.description || ''}`
       });
 
-      schedule.notified = true;
+      // 音声読み上げ（VOICEVOX）
+      if (window.electronAPI && typeof window.electronAPI.speakText === 'function') {
+        try {
+          const res = await window.electronAPI.speakText({
+            text: `${schedule.title} の開始時刻です。`,
+            engine: 'voicevox',
+            options: { speakerId: 1, speedScale: 1.0 }
+          });
+          if (res && res.success && res.dataUrl) {
+            const audio = new Audio(res.dataUrl);
+            audio.play().catch(() => {});
+          }
+        } catch {}
+      }
+
+      schedule.startNotified = true;
+      schedule.notified = schedule.preNotified || schedule.startNotified;
       saveSchedules();
     }
   }

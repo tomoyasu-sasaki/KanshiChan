@@ -1,3 +1,6 @@
+import { getSpeakerOptions } from '../constants/voicevox-speakers.js';
+import { YOLO_CLASSES, YOLO_CATEGORIES, getClassesByCategory } from '../constants/yolo-classes.js';
+
 // デフォルト設定
 const DEFAULT_SETTINGS = {
   phoneThreshold: 10,
@@ -9,7 +12,9 @@ const DEFAULT_SETTINGS = {
   soundEnabled: true,
   desktopNotification: true,
   enabledClasses: ['person', 'cell phone'], // デフォルトで有効なクラス
-  showDetections: true
+  showDetections: true,
+  yoloEnabled: true,
+  voicevoxSpeaker: 59 // ずんだもん(ノーマル)
 };
 
 // 設定を読み込み
@@ -24,32 +29,98 @@ function saveSettings(settings) {
 }
 
 // UI要素取得
-const phoneThreshold = document.getElementById('phoneThreshold');
-const phoneThresholdValue = document.getElementById('phoneThresholdValue');
-const phoneAlertEnabled = document.getElementById('phoneAlertEnabled');
-const phoneConfidence = document.getElementById('phoneConfidence');
-const phoneConfidenceValue = document.getElementById('phoneConfidenceValue');
-
-const absenceThreshold = document.getElementById('absenceThreshold');
-const absenceThresholdValue = document.getElementById('absenceThresholdValue');
-const absenceAlertEnabled = document.getElementById('absenceAlertEnabled');
-const absenceConfidence = document.getElementById('absenceConfidence');
-const absenceConfidenceValue = document.getElementById('absenceConfidenceValue');
-
-const soundEnabled = document.getElementById('soundEnabled');
-const desktopNotification = document.getElementById('desktopNotification');
-const showDetections = document.getElementById('showDetections');
-
-const saveSettingsBtn = document.getElementById('saveSettingsBtn');
-const resetSettingsBtn = document.getElementById('resetSettingsBtn');
-const saveMessage = document.getElementById('saveMessage');
+let phoneThreshold, phoneThresholdValue, phoneAlertEnabled, phoneConfidence, phoneConfidenceValue;
+let absenceThreshold, absenceThresholdValue, absenceAlertEnabled, absenceConfidence, absenceConfidenceValue;
+let soundEnabled, desktopNotification, showDetections;
+let yoloEnabled, voicevoxSpeaker;
+let saveSettingsBtn, resetSettingsBtn, saveMessage;
 
 // 初期化
 document.addEventListener('DOMContentLoaded', () => {
+  // UI要素を取得
+  phoneThreshold = document.getElementById('phoneThreshold');
+  phoneThresholdValue = document.getElementById('phoneThresholdValue');
+  phoneAlertEnabled = document.getElementById('phoneAlertEnabled');
+  phoneConfidence = document.getElementById('phoneConfidence');
+  phoneConfidenceValue = document.getElementById('phoneConfidenceValue');
+
+  absenceThreshold = document.getElementById('absenceThreshold');
+  absenceThresholdValue = document.getElementById('absenceThresholdValue');
+  absenceAlertEnabled = document.getElementById('absenceAlertEnabled');
+  absenceConfidence = document.getElementById('absenceConfidence');
+  absenceConfidenceValue = document.getElementById('absenceConfidenceValue');
+
+  soundEnabled = document.getElementById('soundEnabled');
+  desktopNotification = document.getElementById('desktopNotification');
+  showDetections = document.getElementById('showDetections');
+  yoloEnabled = document.getElementById('yoloEnabled');
+  voicevoxSpeaker = document.getElementById('voicevoxSpeaker');
+
+  saveSettingsBtn = document.getElementById('saveSettingsBtn');
+  resetSettingsBtn = document.getElementById('resetSettingsBtn');
+  saveMessage = document.getElementById('saveMessage');
+
+  // 動的にUI要素を生成
+  populateVoicevoxSpeakers();
+  populateDetectionClasses();
+
   const settings = loadSettings();
   applySettings(settings);
   setupEventListeners();
+  setupAccordion();
 });
+
+// VOICEVOX話者選択を動的に生成
+function populateVoicevoxSpeakers() {
+  const speakerOptions = getSpeakerOptions();
+  voicevoxSpeaker.innerHTML = '';
+  speakerOptions.forEach(option => {
+    const optionElement = document.createElement('option');
+    optionElement.value = option.id;
+    optionElement.textContent = option.label;
+    voicevoxSpeaker.appendChild(optionElement);
+  });
+}
+
+// 検知対象クラスを動的に生成
+function populateDetectionClasses() {
+  const container = document.getElementById('detectionClassesContainer');
+  const classesByCategory = getClassesByCategory();
+
+  container.innerHTML = '';
+
+  Object.keys(classesByCategory).forEach(categoryKey => {
+    const category = YOLO_CATEGORIES[categoryKey];
+    const classes = classesByCategory[categoryKey];
+
+    const categoryDiv = document.createElement('div');
+    categoryDiv.className = 'class-category';
+
+    const categoryTitle = document.createElement('h3');
+    categoryTitle.textContent = `${category.emoji} ${category.label}`;
+    categoryDiv.appendChild(categoryTitle);
+
+    const classGrid = document.createElement('div');
+    classGrid.className = 'class-grid';
+
+    classes.forEach(cls => {
+      const label = document.createElement('label');
+
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.value = cls.name;
+      checkbox.dataset.classId = cls.id;
+      checkbox.className = 'detection-class-checkbox';
+
+      label.appendChild(checkbox);
+      label.appendChild(document.createTextNode(cls.label));
+      classGrid.appendChild(label);
+    });
+
+    categoryDiv.appendChild(classGrid);
+    container.appendChild(categoryDiv);
+  });
+}
 
 // 設定をUIに適用
 function applySettings(settings) {
@@ -70,6 +141,18 @@ function applySettings(settings) {
   if (showDetections) {
     showDetections.checked = settings.showDetections !== false;
   }
+  if (yoloEnabled) {
+    yoloEnabled.checked = settings.yoloEnabled !== false;
+  }
+  if (voicevoxSpeaker) {
+    voicevoxSpeaker.value = settings.voicevoxSpeaker || 59;
+  }
+
+  // 検知クラスのチェックボックスを設定
+  const enabledClasses = settings.enabledClasses || DEFAULT_SETTINGS.enabledClasses;
+  document.querySelectorAll('.detection-class-checkbox').forEach(checkbox => {
+    checkbox.checked = enabledClasses.includes(checkbox.value);
+  });
 }
 
 // イベントリスナー設定
@@ -100,6 +183,12 @@ function setupEventListeners() {
 
 // 設定保存処理
 async function handleSaveSettings() {
+  // 有効化された検知クラスを取得
+  const enabledClasses = [];
+  document.querySelectorAll('.detection-class-checkbox:checked').forEach(checkbox => {
+    enabledClasses.push(checkbox.value);
+  });
+
   const settings = {
     phoneThreshold: parseInt(phoneThreshold.value),
     phoneAlertEnabled: phoneAlertEnabled.checked,
@@ -109,8 +198,10 @@ async function handleSaveSettings() {
     absenceConfidence: parseFloat(absenceConfidence.value),
     soundEnabled: soundEnabled.checked,
     desktopNotification: desktopNotification.checked,
-    enabledClasses: ['person', 'cell phone'], // 固定
-    showDetections: showDetections ? showDetections.checked : true
+    enabledClasses: enabledClasses,
+    showDetections: showDetections ? showDetections.checked : true,
+    yoloEnabled: yoloEnabled ? yoloEnabled.checked : true,
+    voicevoxSpeaker: voicevoxSpeaker ? parseInt(voicevoxSpeaker.value) : 59
   };
 
   saveSettings(settings);
@@ -152,7 +243,35 @@ function showMessage(text, type) {
   }, 3000);
 }
 
-// 設定をエクスポート（他のページから使用）
-function getSettings() {
-  return loadSettings();
+// アコーディオン機能のセットアップ
+function setupAccordion() {
+  const accordionHeaders = document.querySelectorAll('.accordion-header');
+
+  accordionHeaders.forEach((header, index) => {
+    // 最初のアイテムは開いた状態にする
+    if (index === 0) {
+      header.classList.add('active');
+      header.nextElementSibling.style.maxHeight = header.nextElementSibling.scrollHeight + 'px';
+    }
+
+    header.addEventListener('click', () => {
+      const isActive = header.classList.contains('active');
+      const content = header.nextElementSibling;
+
+      if (isActive) {
+        // 閉じる
+        header.classList.remove('active');
+        content.style.maxHeight = null;
+      } else {
+        // 開く
+        header.classList.add('active');
+        content.style.maxHeight = content.scrollHeight + 'px';
+      }
+    });
+  });
 }
+
+// 設定をエクスポート（他のページから使用）
+window.getSettings = function() {
+  return loadSettings();
+};
