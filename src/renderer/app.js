@@ -1,4 +1,11 @@
 /**
+ * 監視ビューの UI 全体制御。
+ * - ドロワーや監視開始/停止トグルなどのトップレベル操作を集約する。
+ * - monitor.js との境界で状態取得/更新を行い、設定値は constants から取得する。
+ */
+import { DEFAULT_MONITOR_SETTINGS } from '../constants/monitor.js';
+
+/**
  *  UI統合管理
  * 
  * 責務:
@@ -247,6 +254,19 @@ window.addAppLog = function(message, type = 'info') {
   }
 };
 
+/**
+ * localStorage に保存された監視設定を読み取り、破損時は既定値へ復旧する。
+ */
+const FALLBACK_MONITOR_SETTINGS_JSON = JSON.stringify(DEFAULT_MONITOR_SETTINGS);
+
+function getStoredMonitorSettings() {
+  try {
+    return JSON.parse(localStorage.getItem('monitorSettings') || FALLBACK_MONITOR_SETTINGS_JSON);
+  } catch {
+    return DEFAULT_MONITOR_SETTINGS;
+  }
+}
+
 // タイマー更新（グローバル関数として公開）
 window.updateTimerDisplay = function(phoneTime, absenceTime) {
   const phoneTimer = document.getElementById('phoneTimer');
@@ -265,7 +285,7 @@ window.updateTimerDisplay = function(phoneTime, absenceTime) {
   absenceTimer.textContent = formatTime(absenceTime);
 
   // 設定を取得
-  const settings = JSON.parse(localStorage.getItem('monitorSettings') || '{"phoneThreshold":10,"absenceThreshold":30}');
+  const settings = getStoredMonitorSettings();
 
   // ステータスバッジのスタイル更新
   if (phoneTime > 0) {

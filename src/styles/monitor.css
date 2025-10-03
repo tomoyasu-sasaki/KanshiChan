@@ -1,0 +1,279 @@
+/**
+ * 監視ビューと関連コンポーネントのスタイル。
+ * カメラフィード、ステータス表示、ツールバー、ログ表示をここに集約する。
+ */
+.status-indicator {
+  display: inline-block;
+  padding: 10px 20px;
+  border-radius: 20px;
+  font-weight: 600;
+  font-size: 1rem;
+  margin-bottom: 10px;
+  background: #e9ecef;
+  color: #495057;
+}
+
+.status-indicator.safe {
+  background: #d4edda;
+  color: #155724;
+}
+
+.status-indicator.warning {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.status-indicator.alert {
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.timer {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #667eea;
+}
+
+.detection-log {
+  margin-top: 30px;
+}
+
+.log-container {
+  max-height: 300px;
+  overflow-y: auto;
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 15px;
+}
+
+.log-entry {
+  padding: 10px;
+  margin-bottom: 10px;
+  background: white;
+  border-radius: 8px;
+  border-left: 4px solid #667eea;
+}
+
+.log-entry.alert {
+  border-left-color: #ff6b6b;
+  background: #fff5f5;
+}
+
+.log-time {
+  color: #999;
+  font-size: 0.85rem;
+  margin-right: 10px;
+}
+
+.monitor-view {
+  margin: 0;
+  padding: 0;
+  background: #202124;
+  overflow: hidden;
+}
+
+.monitor-container {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  position: relative;
+}
+
+.camera-feed {
+  flex: 1;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #000;
+  overflow: hidden;
+  width: 100%;
+  height: 100%;
+}
+
+.camera-feed #videoElement {
+  display: none;
+}
+
+.camera-feed #canvasElement {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.status-overlay {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 10;
+}
+
+.status-badge {
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(10px);
+  padding: 10px 15px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: white;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.3s;
+}
+
+.status-badge .icon {
+  font-size: 1.1rem;
+}
+
+.status-badge.warning {
+  background: rgba(255, 193, 7, 0.9);
+  border-color: rgba(255, 193, 7, 1);
+  color: #000;
+  animation: pulse 2s infinite;
+}
+
+.status-badge.alert {
+  background: rgba(244, 67, 54, 0.9);
+  border-color: rgba(244, 67, 54, 1);
+  animation: pulse 1s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05);
+    opacity: 0.9;
+  }
+}
+
+.monitor-indicator {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  background: rgba(244, 67, 54, 0.9);
+  padding: 8px 15px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: white;
+  font-weight: 600;
+  font-size: 0.85rem;
+  z-index: 10;
+}
+
+.monitor-indicator.stopped {
+  background: rgba(158, 158, 158, 0.9);
+}
+
+.recording-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: white;
+  animation: blink 1.5s infinite;
+}
+
+@keyframes blink {
+  0%, 50%, 100% {
+    opacity: 1;
+  }
+  25%, 75% {
+    opacity: 0.3;
+  }
+}
+
+.toolbar {
+  background: #202124;
+  padding: 20px 30px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-top: 1px solid #3c4043;
+  gap: 20px;
+}
+
+.toolbar-left {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.app-info h1 {
+  color: white;
+  font-size: 1.1rem;
+  margin: 0;
+  font-weight: 500;
+}
+
+.time-display {
+  color: #9aa0a6;
+  font-size: 0.85rem;
+  margin-left: 10px;
+}
+
+.toolbar-center {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex: 1;
+  justify-content: center;
+}
+
+.toolbar-right {
+  display: flex;
+  gap: 10px;
+}
+
+.tool-button {
+  background: transparent;
+  border: none;
+  padding: 12px 20px;
+  border-radius: 30px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  transition: all 0.2s;
+  color: white;
+  min-width: 70px;
+}
+
+.tool-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+}
+
+.tool-button:active {
+  transform: translateY(0);
+}
+
+.tool-button.active {
+  background: rgba(66, 133, 244, 0.3);
+  border: 2px solid #4285f4;
+}
+
+.tool-button.danger:hover {
+  background: rgba(244, 67, 54, 0.2);
+}
+
+.tool-button .icon {
+  font-size: 1.5rem;
+}
+
+.tool-button .label {
+  font-size: 0.75rem;
+  font-weight: 500;
+}

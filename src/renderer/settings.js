@@ -1,31 +1,45 @@
+/**
+ * 監視設定ドロワーの UI ロジック。
+ * - localStorage とフォームを同期させ、monitor.js へ設定を再読み込みさせる。
+ * - 定数は constants 配下から読み込み、重複定義を避ける。
+ */
+import { DEFAULT_MONITOR_SETTINGS } from '../constants/monitor.js';
+import { DEFAULT_VOICEVOX_SPEAKER_ID } from '../constants/voicevox-config.js';
 import { getSpeakerOptions } from '../constants/voicevox-speakers.js';
 import { YOLO_CLASSES, YOLO_CATEGORIES, getClassesByCategory } from '../constants/yolo-classes.js';
-
-// デフォルト設定
-const DEFAULT_SETTINGS = {
-  phoneThreshold: 10,
-  phoneAlertEnabled: true,
-  phoneConfidence: 0.5,
-  absenceThreshold: 30,
-  absenceAlertEnabled: true,
-  absenceConfidence: 0.5,
-  soundEnabled: true,
-  desktopNotification: true,
-  enabledClasses: ['person', 'cell phone'], // デフォルトで有効なクラス
-  showDetections: true,
-  yoloEnabled: true,
-  voicevoxSpeaker: 59 // ずんだもん(ノーマル)
-};
 
 // 設定を読み込み
 function loadSettings() {
   const saved = localStorage.getItem('monitorSettings');
-  return saved ? JSON.parse(saved) : DEFAULT_SETTINGS;
+  if (!saved) {
+    return cloneDefaultSettings();
+  }
+  try {
+    const parsed = JSON.parse(saved);
+    return {
+      ...cloneDefaultSettings(),
+      ...parsed,
+      enabledClasses: Array.isArray(parsed.enabledClasses) ? parsed.enabledClasses : [...DEFAULT_MONITOR_SETTINGS.enabledClasses]
+    };
+  } catch {
+    return cloneDefaultSettings();
+  }
 }
 
 // 設定を保存
 function saveSettings(settings) {
   localStorage.setItem('monitorSettings', JSON.stringify(settings));
+}
+
+/**
+ * DEFAULT_MONITOR_SETTINGS を UI 編集用に複製する (参照共有を避ける)。
+ */
+function cloneDefaultSettings() {
+  return {
+    ...DEFAULT_MONITOR_SETTINGS,
+    enabledClasses: [...DEFAULT_MONITOR_SETTINGS.enabledClasses],
+    voicevoxSpeaker: DEFAULT_MONITOR_SETTINGS.voicevoxSpeaker ?? DEFAULT_VOICEVOX_SPEAKER_ID
+  };
 }
 
 // UI要素取得
@@ -145,11 +159,11 @@ function applySettings(settings) {
     yoloEnabled.checked = settings.yoloEnabled !== false;
   }
   if (voicevoxSpeaker) {
-    voicevoxSpeaker.value = settings.voicevoxSpeaker || 59;
+    voicevoxSpeaker.value = settings.voicevoxSpeaker ?? DEFAULT_VOICEVOX_SPEAKER_ID;
   }
 
   // 検知クラスのチェックボックスを設定
-  const enabledClasses = settings.enabledClasses || DEFAULT_SETTINGS.enabledClasses;
+  const enabledClasses = settings.enabledClasses || DEFAULT_MONITOR_SETTINGS.enabledClasses;
   document.querySelectorAll('.detection-class-checkbox').forEach(checkbox => {
     checkbox.checked = enabledClasses.includes(checkbox.value);
   });
@@ -199,9 +213,9 @@ async function handleSaveSettings() {
     soundEnabled: soundEnabled.checked,
     desktopNotification: desktopNotification.checked,
     enabledClasses: enabledClasses,
-    showDetections: showDetections ? showDetections.checked : true,
-    yoloEnabled: yoloEnabled ? yoloEnabled.checked : true,
-    voicevoxSpeaker: voicevoxSpeaker ? parseInt(voicevoxSpeaker.value) : 59
+    showDetections: showDetections ? showDetections.checked : DEFAULT_MONITOR_SETTINGS.showDetections,
+    yoloEnabled: yoloEnabled ? yoloEnabled.checked : DEFAULT_MONITOR_SETTINGS.yoloEnabled,
+    voicevoxSpeaker: voicevoxSpeaker ? parseInt(voicevoxSpeaker.value, 10) : DEFAULT_VOICEVOX_SPEAKER_ID
   };
 
   saveSettings(settings);
@@ -226,8 +240,9 @@ async function handleSaveSettings() {
 // リセット処理
 function handleResetSettings() {
   if (confirm('設定をデフォルトに戻しますか?')) {
-    applySettings(DEFAULT_SETTINGS);
-    saveSettings(DEFAULT_SETTINGS);
+    const defaults = cloneDefaultSettings();
+    applySettings(defaults);
+    saveSettings(defaults);
     showMessage('設定をデフォルトに戻しました', 'info');
   }
 }

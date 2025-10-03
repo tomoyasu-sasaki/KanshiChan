@@ -1,4 +1,12 @@
 /**
+ * YOLOv11 推論ラッパー (ONNX Runtime)。
+ * - メインプロセス専用で動作し、canvas/onnxruntime-node への依存がある。
+ * - クラス名リストは constants/yolo-classes から動的に読み込む。
+ */
+const yoloClassModulePromise = import('../constants/yolo-classes.js');
+
+// クラス名リストはレンダラと共有する constants 層から取得する。
+/**
  * YOLOv11 物体検知クラス（ONNX Runtime使用）
  * 
  * 責務: YOLOv11モデルによる物体検知（推論・前処理・後処理）
@@ -27,18 +35,10 @@ class YOLODetector {
     this.iouThreshold = 0.45;
 
     // COCO dataset クラス名
-    this.classNames = [
-      'person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train', 'truck', 'boat',
-      'traffic light', 'fire hydrant', 'stop sign', 'parking meter', 'bench', 'bird', 'cat',
-      'dog', 'horse', 'sheep', 'cow', 'elephant', 'bear', 'zebra', 'giraffe', 'backpack',
-      'umbrella', 'handbag', 'tie', 'suitcase', 'frisbee', 'skis', 'snowboard', 'sports ball',
-      'kite', 'baseball bat', 'baseball glove', 'skateboard', 'surfboard', 'tennis racket',
-      'bottle', 'wine glass', 'cup', 'fork', 'knife', 'spoon', 'bowl', 'banana', 'apple',
-      'sandwich', 'orange', 'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake', 'chair',
-      'couch', 'potted plant', 'bed', 'dining table', 'toilet', 'tv', 'laptop', 'mouse',
-      'remote', 'keyboard', 'cell phone', 'microwave', 'oven', 'toaster', 'sink', 'refrigerator',
-      'book', 'clock', 'vase', 'scissors', 'teddy bear', 'hair drier', 'toothbrush'
-    ];
+    this.classNames = []; // 動的ロード完了後に設定される。
+    this.classNamesPromise = yoloClassModulePromise
+      .then((mod) => mod.YOLO_ALL_CLASS_NAMES || [])
+      .catch(() => []);
   }
 
   // モデル初期化
@@ -49,6 +49,7 @@ class YOLODetector {
       }
 
       this.session = await ort.InferenceSession.create(this.modelPath);
+      this.classNames = await this.classNamesPromise;
       console.log('YOLOv11 モデルを読み込みました');
       return true;
     } catch (error) {

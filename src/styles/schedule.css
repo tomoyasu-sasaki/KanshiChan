@@ -1,0 +1,80 @@
+/**
+ * スケジュール機能専用のレイアウトと装飾。
+ * スケジュールドロワー内のリスト/ボタン表現を含む。
+ */
+.schedule-items {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+.schedule-item {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 20px;
+  border-left: 4px solid #667eea;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.schedule-item:hover {
+  transform: translateX(5px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+.schedule-item.past {
+  opacity: 0.6;
+  border-left-color: #ccc;
+}
+
+.schedule-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.schedule-header h3 {
+  color: #333;
+  font-size: 1.2rem;
+}
+
+.btn-delete {
+  background: #ff6b6b;
+  color: white;
+  border: none;
+  padding: 6px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: background 0.3s;
+}
+
+.btn-delete:hover {
+  background: #ee5a52;
+}
+
+.schedule-info {
+  color: #666;
+}
+
+.schedule-datetime {
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.schedule-description {
+  line-height: 1.5;
+}
+
+.today-schedule-header {
+  text-align: center;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: #333;
+  margin: 10px 0 12px;
+}
+
+.schedule-form-container,
+.schedule-list-container {
+  margin-bottom: 30px;
+}

@@ -1,9 +1,16 @@
 /**
+ * 監視ロジックのメイン実装。
+ * - カメラストリーム処理、YOLO 結果のフィルタリング、通知発火までを担当する。
+ * - 設定は constants/monitor から取り込み、monitor.js 内でのみ状態を保持する。
+ */
+import { DEFAULT_MONITOR_SETTINGS, MONITOR_TIMING_CONSTANTS, MONITOR_UI_CONSTANTS } from '../constants/monitor.js';
+
+/**
  * 監視システム - 物体検知と状態管理
  * 
  * 責務:
  * - カメラ映像の描画ループ（60FPS）
- * - YOLOv11による物体検知ループ（0.1秒ごと）
+ * - YOLOv11による物体検知ループ（設定値に基づく間隔）
  * - 検知結果の処理（スマホ・人物の検知判定、フレーム補完）
  * - タイマー計算（スマホ検知時間・不在時間）
  * - アラート発火（閾値超過時の通知・音）
@@ -59,33 +66,48 @@ let lastAbsenceAlertAt = 0;             // 直近の不在アラート時刻
  */
 let lastPhoneDetectedTime = 0;
 let lastPersonDetectedTime = 0;
-const PHONE_INTERPOLATION_WINDOW = 2000; // 2秒（スマホ検知）
-const PERSON_INTERPOLATION_WINDOW = 500; // 0.5秒（不在検知は素早く反応）
+const PHONE_INTERPOLATION_WINDOW = MONITOR_TIMING_CONSTANTS.phoneInterpolationWindowMs;
+const PERSON_INTERPOLATION_WINDOW = MONITOR_TIMING_CONSTANTS.personInterpolationWindowMs;
 
 // クリア安定化ウィンドウ（この時間連続で反対状態が続いたらリセット）
-const PHONE_CLEAR_STABLE_MS = 2000;      // 2秒: スマホ未検知が2秒続いたらリセット
-const ABSENCE_CLEAR_STABLE_MS = 5000;    // 5秒: 復帰（人物検知）が5秒続いたらリセット
+const PHONE_CLEAR_STABLE_MS = MONITOR_TIMING_CONSTANTS.phoneClearStableMs;
+const ABSENCE_CLEAR_STABLE_MS = MONITOR_TIMING_CONSTANTS.absenceClearStableMs;
 
 // 連続通知を抑止するクールダウン
-const PHONE_ALERT_COOLDOWN_MS = 120000;  // 2分
-const ABSENCE_ALERT_COOLDOWN_MS = 300000;// 5分
+const PHONE_ALERT_COOLDOWN_MS = MONITOR_TIMING_CONSTANTS.phoneAlertCooldownMs;
+const ABSENCE_ALERT_COOLDOWN_MS = MONITOR_TIMING_CONSTANTS.absenceAlertCooldownMs;
 
 // 設定
 let settings = loadSettings();
 
 // 設定の読み込み
+/**
+ * localStorage から最新設定を取り出し、欠落フィールドを既定値で補完する。
+ */
 function loadSettings() {
   const saved = localStorage.getItem('monitorSettings');
-  return saved ? JSON.parse(saved) : {
-    phoneThreshold: 10,
-    phoneAlertEnabled: true,
-    phoneConfidence: 0.5,
-    absenceThreshold: 30,
-    absenceAlertEnabled: true,
-    absenceConfidence: 0.5,
-    soundEnabled: true,
-    desktopNotification: true,
-    enabledClasses: ['person', 'cell phone']
+  if (!saved) {
+    return createDefaultSettings();
+  }
+  try {
+    const parsed = JSON.parse(saved);
+    return {
+      ...createDefaultSettings(),
+      ...parsed,
+      enabledClasses: Array.isArray(parsed.enabledClasses) ? parsed.enabledClasses : [...DEFAULT_MONITOR_SETTINGS.enabledClasses]
+    };
+  } catch {
+    return createDefaultSettings();
+  }
+}
+
+/**
+ * DEFAULT_MONITOR_SETTINGS を浅いコピーに変換し、副作用から保護する。
+ */
+function createDefaultSettings() {
+  return {
+    ...DEFAULT_MONITOR_SETTINGS,
+    enabledClasses: [...DEFAULT_MONITOR_SETTINGS.enabledClasses]
   };
 }
 
@@ -103,14 +125,14 @@ document.addEventListener('DOMContentLoaded', () => {
 window.startMonitoringProcess = function() {
   isMonitoring = true;
   
-  // 検知ループ開始（0.5秒ごとに実行 - 素早く反応）
+  // 検知ループ開始（設定値に基づき実行）
   if (!detectionInterval) {
-    detectionInterval = setInterval(performDetection, 500);
+    detectionInterval = setInterval(performDetection, MONITOR_TIMING_CONSTANTS.detectionIntervalMs);
   }
 
   // 最前面アプリ監視（1秒ごと）
   if (!activeWindowInterval) {
-    activeWindowInterval = setInterval(trackActiveWindow, 1000);
+    activeWindowInterval = setInterval(trackActiveWindow, MONITOR_TIMING_CONSTANTS.activeWindowIntervalMs);
   }
 
   // 描画ループは別で高頻度実行
@@ -175,7 +197,7 @@ function renderLoop() {
 
   // 最新の検知結果を描画（1秒以内の結果のみ表示）
   const now = Date.now();
-  if (lastDetectionTime && (now - lastDetectionTime) < 1000) {
+  if (lastDetectionTime && (now - lastDetectionTime) < MONITOR_TIMING_CONSTANTS.detectionResultStaleMs) {
     // 設定で描画が有効な場合のみ描画
     if (settings.showDetections !== false) {
       drawDetections(lastDetections);
@@ -197,7 +219,7 @@ function renderLoop() {
  * 6. タイマー更新とアラート判定
  * 
  * パフォーマンス:
- * - 0.1秒間隔で実行（高頻度）
+ * - 設定値（既定 0.5秒）間隔で実行
  * - JPEG品質0.8: 検知精度とデータサイズのバランス
  */
 async function performDetection() {
@@ -218,7 +240,7 @@ async function performDetection() {
 
     if (result.success) {
       // 有効なクラスのみフィルタリング
-      const enabledClasses = settings.enabledClasses || ['person', 'cell phone'];
+      const enabledClasses = settings.enabledClasses || DEFAULT_MONITOR_SETTINGS.enabledClasses;
       const filteredDetections = result.detections.filter(d =>
         enabledClasses.includes(d.class)
       );
@@ -506,7 +528,7 @@ function addLog(message, type = 'info') {
   logContainer.insertBefore(logEntry, logContainer.firstChild);
 
   // ログを最大50件に制限
-  while (logContainer.children.length > 50) {
+  while (logContainer.children.length > MONITOR_UI_CONSTANTS.maxLogEntries) {
     logContainer.removeChild(logContainer.lastChild);
   }
 }

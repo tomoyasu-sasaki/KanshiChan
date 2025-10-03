@@ -1,3 +1,10 @@
+/**
+ * スケジュール管理ドロワー。
+ * - localStorage に予定を保持し、Electron 通知と VOICEVOX 読み上げのトリガーを担う。
+ * - 通知タイミングやメッセージは constants/schedule に集約。
+ */
+import { SCHEDULE_NOTIFICATION_LEAD_MINUTES, SCHEDULE_NOTIFICATION_COOLDOWN_MS, SCHEDULE_NOTIFICATION_SPEAKER_ID, SCHEDULE_MESSAGES } from '../constants/schedule.js';
+
 // スケジュール保存用配列
 let schedules = JSON.parse(localStorage.getItem('schedules')) || [];
 
@@ -79,8 +86,8 @@ scheduleForm.addEventListener('submit', async (e) => {
 
   // 保存成功通知
   await window.electronAPI.sendNotification({
-    title: 'スケジュール追加',
-    body: `${title} を追加しました`
+    title: SCHEDULE_MESSAGES.addTitle,
+    body: SCHEDULE_MESSAGES.addBody(title)
   });
 });
 
@@ -177,6 +184,9 @@ function startNotificationCheck() {
 }
 
 // スケジュール通知チェック
+/**
+ * 通知条件を評価し、Electron 通知と VOICEVOX 読み上げを必要に応じて実行する。
+ */
 async function checkScheduleNotifications() {
   const now = new Date();
   const seconds = now.getSeconds();
@@ -206,7 +216,7 @@ async function checkScheduleNotifications() {
     }
 
     // 時刻が過ぎた古い予定は自動的に両方通知済み扱いにして二重発火を防止
-    if (timeDiff < -60000 && (!schedule.preNotified || !schedule.startNotified)) {
+    if (timeDiff < -SCHEDULE_NOTIFICATION_COOLDOWN_MS && (!schedule.preNotified || !schedule.startNotified)) {
       schedule.preNotified = true;
       schedule.startNotified = true;
       schedule.notified = true;
@@ -215,19 +225,19 @@ async function checkScheduleNotifications() {
     }
 
     // 5分前通知: 分境界（秒=0）のときに分差がちょうど5のみ発火
-    if (seconds === 0 && minutesLeft === 5 && !schedule.preNotified) {
+    if (seconds === 0 && minutesLeft === SCHEDULE_NOTIFICATION_LEAD_MINUTES && !schedule.preNotified) {
       await window.electronAPI.sendNotification({
-        title: `スケジュール: ${schedule.title}`,
-        body: `5分後に開始します\n${formatDate(schedule.date)} ${schedule.time}`
+        title: SCHEDULE_MESSAGES.leadTitle(schedule.title),
+        body: SCHEDULE_MESSAGES.leadBody(schedule, formatDate(schedule.date))
       });
 
       // 音声読み上げ（VOICEVOX）
       if (window.electronAPI && typeof window.electronAPI.speakText === 'function') {
         try {
           const res = await window.electronAPI.speakText({
-            text: `5分後に ${schedule.title} が始まります。`,
+            text: `${SCHEDULE_NOTIFICATION_LEAD_MINUTES}分後に ${schedule.title} が始まります。`,
             engine: 'voicevox',
-            options: { speakerId: 1, speedScale: 1.05 }
+            options: { speakerId: SCHEDULE_NOTIFICATION_SPEAKER_ID, speedScale: 1.05 }
           });
           if (res && res.success && res.dataUrl && seconds === 0) {
             const audio = new Audio(res.dataUrl);
@@ -242,10 +252,10 @@ async function checkScheduleNotifications() {
     }
 
     // 開始時通知: 分境界で分差0 または 直前60秒以内の救済
-    if (((seconds === 0 && minutesLeft === 0) || (timeDiff > -60000 && timeDiff <= 0)) && !schedule.startNotified) {
+    if (((seconds === 0 && minutesLeft === 0) || (timeDiff > -SCHEDULE_NOTIFICATION_COOLDOWN_MS && timeDiff <= 0)) && !schedule.startNotified) {
       await window.electronAPI.sendNotification({
-        title: `スケジュール: ${schedule.title}`,
-        body: `開始時刻です\n${schedule.description || ''}`
+        title: SCHEDULE_MESSAGES.startTitle(schedule.title),
+        body: SCHEDULE_MESSAGES.startBody(schedule.description)
       });
 
       // 音声読み上げ（VOICEVOX）
@@ -254,7 +264,7 @@ async function checkScheduleNotifications() {
           const res = await window.electronAPI.speakText({
             text: `${schedule.title} の開始時刻です。`,
             engine: 'voicevox',
-            options: { speakerId: 1, speedScale: 1.0 }
+            options: { speakerId: SCHEDULE_NOTIFICATION_SPEAKER_ID, speedScale: 1.0 }
           });
           if (res && res.success && res.dataUrl) {
             const audio = new Audio(res.dataUrl);
