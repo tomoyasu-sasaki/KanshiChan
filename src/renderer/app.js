@@ -40,14 +40,12 @@ document.addEventListener('DOMContentLoaded', () => {
 // UI初期化
 function initializeUI() {
   // ツールバーボタン
-  const toggleMonitorBtn = document.getElementById('toggleMonitorBtn');
   const scheduleBtn = document.getElementById('scheduleBtn');
   const settingsBtn = document.getElementById('settingsBtn');
   const logsBtn = document.getElementById('logsBtn');
   const exitBtn = document.getElementById('exitBtn');
 
   // イベントリスナー設定
-  toggleMonitorBtn.addEventListener('click', toggleMonitoring);
   scheduleBtn.addEventListener('click', () => toggleDrawer('scheduleDrawer'));
   settingsBtn.addEventListener('click', () => toggleDrawer('settingsDrawer'));
   logsBtn.addEventListener('click', () => toggleDrawer('logsDrawer'));
@@ -68,9 +66,6 @@ function initializeUI() {
       closeDrawer(currentDrawer);
     }
   });
-
-  // 初期UI状態を設定（停止状態として表示）
-  updateMonitorUI();
 }
 
 // オーバーレイ作成
@@ -129,10 +124,8 @@ async function autoStartMonitoring() {
   } catch (error) {
     console.error('自動監視開始エラー:', error);
     if (typeof addLog === 'function') {
-      addLog('⚠️ カメラへのアクセスに失敗しました。手動で開始してください。', 'alert');
+      addLog('⚠️ カメラへのアクセスに失敗しました。', 'alert');
     }
-    // エラー時はUIを更新
-    updateMonitorUI();
   }
 }
 
@@ -183,48 +176,6 @@ async function startMonitoringFromApp() {
   if (typeof window.startMonitoringProcess === 'function') {
     window.startMonitoringProcess();
   }
-
-  // UI更新（監視開始後に更新）
-  updateMonitorUI();
-}
-
-// 監視停止（app.jsから）
-function stopMonitoringFromApp() {
-  if (typeof window.stopMonitoringProcess === 'function') {
-    window.stopMonitoringProcess();
-  }
-  
-  updateMonitorUI();
-}
-
-// 監視開始/停止トグル
-function toggleMonitoring() {
-  const state = window.getMonitorState();
-  
-  if (state.isMonitoring) {
-    stopMonitoringFromApp();
-  } else {
-    startMonitoringFromApp();
-  }
-}
-
-// 監視UI更新
-function updateMonitorUI() {
-  const state = window.getMonitorState();
-  const toggleBtn = document.getElementById('toggleMonitorBtn');
-  const indicator = document.getElementById('monitorIndicator');
-
-  if (state.isMonitoring) {
-    toggleBtn.querySelector('.icon').textContent = '⏸️';
-    toggleBtn.querySelector('.label').textContent = '停止';
-    indicator.classList.remove('stopped');
-    indicator.querySelector('span').textContent = '監視中';
-  } else {
-    toggleBtn.querySelector('.icon').textContent = '▶️';
-    toggleBtn.querySelector('.label').textContent = '開始';
-    indicator.classList.add('stopped');
-    indicator.querySelector('span').textContent = '停止中';
-  }
 }
 
 // 時計更新
@@ -239,10 +190,6 @@ function updateClock() {
 // アプリ終了
 function exitApp() {
   if (confirm('アプリケーションを終了しますか?')) {
-    const state = window.getMonitorState();
-    if (state.isMonitoring && typeof window.stopMonitoringProcess === 'function') {
-      window.stopMonitoringProcess();
-    }
     window.close();
   }
 }

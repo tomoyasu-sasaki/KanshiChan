@@ -139,55 +139,6 @@ window.startMonitoringProcess = function() {
   requestAnimationFrame(renderLoop);
 };
 
-// 監視プロセス停止（app.jsから呼ばれる）
-window.stopMonitoringProcess = function() {
-  stopMonitoring();
-  addLog('監視を停止しました');
-};
-
-// 監視停止
-function stopMonitoring() {
-  // メディアストリームを停止
-  if (mediaStream) {
-    mediaStream.getTracks().forEach(track => track.stop());
-    mediaStream = null;
-  }
-
-  // 検知インターバルをクリア
-  if (detectionInterval) {
-    clearInterval(detectionInterval);
-    detectionInterval = null;
-  }
-  if (activeWindowInterval) {
-    clearInterval(activeWindowInterval);
-    activeWindowInterval = null;
-  }
-
-  // ビデオをクリア
-  if (videoElement.srcObject) {
-    videoElement.srcObject = null;
-  }
-
-  // Canvasをクリア
-  if (ctx) {
-    ctx.clearRect(0, 0, canvasElement.width, canvasElement.height);
-  }
-
-  // 状態をリセット
-  isMonitoring = false;
-  phoneDetectionTime = 0;
-  absenceDetectionTime = 0;
-  phoneDetectionStartTime = 0;
-  absenceDetectionStartTime = 0;
-  phoneAlertTriggered = false;
-  absenceAlertTriggered = false;
-  lastPhoneDetectedTime = 0;
-  lastPersonDetectedTime = 0;
-  lastDetectionTime = 0;
-
-  updateTimers();
-}
-
 // 描画ループ（滑らかなビデオ表示用）
 function renderLoop() {
   if (!isMonitoring) return;

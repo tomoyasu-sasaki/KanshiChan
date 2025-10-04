@@ -43,10 +43,6 @@
       </div>
 
       <div class="toolbar-center">
-        <button class="tool-button" id="toggleMonitorBtn" title="監視開始/停止">
-          <span class="icon">⏸️</span>
-          <span class="label">停止</span>
-        </button>
         <button class="tool-button" id="scheduleBtn" title="スケジュール">
           <span class="icon">📅</span>
           <span class="label">スケジュール</span>
@@ -74,13 +70,21 @@
     <div class="drawer-content">
       <div class="drawer-header">
         <h2>📅 スケジュール管理</h2>
-        <button class="close-btn" data-drawer="scheduleDrawer">×</button>
+        <button class="close-btn" data-drawer="scheduleDrawer"></button>
       </div>
       
       <div class="drawer-body">
         <div class="schedule-form-container">
           <h3>スケジュール追加</h3>
-          <form id="scheduleForm">
+
+          <!-- タブ切り替え -->
+          <div class="schedule-input-tabs">
+            <button class="tab-button active" data-tab="single">1件ずつ</button>
+            <button class="tab-button" data-tab="bulk">一括入力</button>
+          </div>
+
+          <!-- 1件ずつフォーム -->
+          <form id="scheduleForm" class="tab-content active" data-tab-content="single">
             <div class="form-group">
               <label for="title">タイトル</label>
               <input type="text" id="title" required>
@@ -103,6 +107,18 @@
 
             <button type="submit" class="btn-primary">追加</button>
           </form>
+
+          <!-- 一括入力フォーム -->
+          <div class="tab-content" data-tab-content="bulk">
+            <div class="form-group">
+              <label for="bulkInput">
+                一括入力（1行に1件: 時刻 タイトル）
+                <span class="input-hint">例: 10:00 朝会</span>
+              </label>
+              <textarea id="bulkInput" rows="8" placeholder="10:00 朝会&#10;11:30 ランチ&#10;13:00 レビュー会議&#10;15:00 コーディング時間"></textarea>
+            </div>
+            <button type="button" id="bulkAddBtn" class="btn-primary">一括追加</button>
+          </div>
         </div>
 
         <div class="schedule-list-container">

@@ -15,6 +15,10 @@ const scheduleItems = document.getElementById('scheduleItems');
 // 現在時刻チェック用タイマー
 let notificationCheckInterval;
 
+// TTS再生キュー
+const ttsQueue = [];
+let isTTSPlaying = false;
+
 // 日付ユーティリティ
 function getTodayISODate() {
   const now = new Date();
@@ -54,8 +58,22 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   } catch {}
 
+  // タブ切り替え
+  setupTabs();
+
+  // 一括追加ボタン
+  const bulkAddBtn = document.getElementById('bulkAddBtn');
+  if (bulkAddBtn) {
+    bulkAddBtn.addEventListener('click', handleBulkAdd);
+  }
+
   renderSchedules();
   startNotificationCheck();
+
+  // 残り時間表示を30秒ごとに更新
+  setInterval(() => {
+    renderSchedules();
+  }, 30000);
 });
 
 // スケジュール追加
@@ -82,13 +100,17 @@ scheduleForm.addEventListener('submit', async (e) => {
   schedules.push(schedule);
   saveSchedules();
   renderSchedules();
-  scheduleForm.reset();
 
-  // 保存成功通知
-  await window.electronAPI.sendNotification({
-    title: SCHEDULE_MESSAGES.addTitle,
-    body: SCHEDULE_MESSAGES.addBody(title)
-  });
+  // クイック追加モード: タイトルと時刻のみクリア、フォーカスは時刻へ
+  document.getElementById('title').value = '';
+  document.getElementById('time').value = '';
+  document.getElementById('time').focus();
+
+  // 保存成功通知（サイレント版 - 連続登録時にうるさくならないように）
+  // await window.electronAPI.sendNotification({
+  //   title: SCHEDULE_MESSAGES.addTitle,
+  //   body: SCHEDULE_MESSAGES.addBody(title)
+  // });
 });
 
 // スケジュールを保存
@@ -124,19 +146,63 @@ function createScheduleElement(schedule) {
   div.className = 'schedule-item';
 
   const dateTime = new Date(`${schedule.date}T${schedule.time}`);
-  const isPast = dateTime < new Date();
+  const now = new Date();
+  const timeDiff = dateTime - now;
+  const minutesLeft = Math.floor(timeDiff / 60000);
 
-  if (isPast) {
+  // ステータス判定
+  let status = '';
+  let statusText = '';
+  let statusIcon = '';
+
+  if (timeDiff < 0) {
+    // 過去
     div.classList.add('past');
+    status = 'past';
+    statusText = '終了';
+    statusIcon = '✓';
+  } else if (minutesLeft <= 5) {
+    // 5分以内
+    div.classList.add('in-progress');
+    status = 'in-progress';
+    statusText = `あと${minutesLeft}分`;
+    statusIcon = '🔔';
+  } else if (minutesLeft <= 30) {
+    // 30分以内
+    div.classList.add('upcoming');
+    status = 'upcoming';
+    statusText = `あと${minutesLeft}分`;
+    statusIcon = '⏰';
+  } else {
+    // それ以上先
+    div.classList.add('future');
+    status = 'future';
+    const hoursLeft = Math.floor(minutesLeft / 60);
+    if (hoursLeft > 0) {
+      statusText = `あと${hoursLeft}時間${minutesLeft % 60}分`;
+    } else {
+      statusText = `あと${minutesLeft}分`;
+    }
+    statusIcon = '📅';
   }
+
+  // 通知状態
+  const notificationStatus = schedule.startNotified ? '🔕' : (schedule.preNotified ? '🔔' : '');
 
   div.innerHTML = `
     <div class="schedule-header">
-      <h3>${schedule.title}</h3>
+      <div class="schedule-title-area">
+        <span class="schedule-status-icon">${statusIcon}</span>
+        <h3>${schedule.title}</h3>
+      </div>
       <button class="btn-delete" onclick="deleteSchedule(${schedule.id})">削除</button>
     </div>
     <div class="schedule-info">
-      <p class="schedule-datetime">📆 ${formatDate(schedule.date)} ${schedule.time}</p>
+      <div class="schedule-meta">
+        <span class="schedule-datetime">🕐 ${schedule.time}</span>
+        <span class="schedule-status ${status}">${statusText}</span>
+        ${notificationStatus ? `<span class="notification-status">${notificationStatus}</span>` : ''}
+      </div>
       ${schedule.description ? `<p class="schedule-description">${schedule.description}</p>` : ''}
     </div>
   `;
@@ -156,11 +222,146 @@ function formatDate(dateString) {
   return `${year}年${month}月${day}日(${weekday})`;
 }
 
-// スケジュール削除
-function deleteSchedule(id) {
+// スケジュール削除（グローバルスコープに公開）
+window.deleteSchedule = function(id) {
   schedules = schedules.filter(s => s.id !== id);
   saveSchedules();
   renderSchedules();
+};
+
+// タブ切り替え設定
+function setupTabs() {
+  const tabButtons = document.querySelectorAll('.tab-button');
+  const tabContents = document.querySelectorAll('.tab-content');
+
+  tabButtons.forEach(button => {
+    button.addEventListener('click', () => {
+      const targetTab = button.getAttribute('data-tab');
+
+      // すべてのタブボタンとコンテンツから active を削除
+      tabButtons.forEach(btn => btn.classList.remove('active'));
+      tabContents.forEach(content => content.classList.remove('active'));
+
+      // クリックされたタブをアクティブに
+      button.classList.add('active');
+      const targetContent = document.querySelector(`[data-tab-content="${targetTab}"]`);
+      if (targetContent) {
+        targetContent.classList.add('active');
+      }
+    });
+  });
+}
+
+// 一括追加処理
+function handleBulkAdd() {
+  const bulkInput = document.getElementById('bulkInput');
+  const text = bulkInput.value.trim();
+
+  if (!text) {
+    alert('スケジュールを入力してください');
+    return;
+  }
+
+  const lines = text.split('\n').filter(line => line.trim());
+  const date = getTodayISODate();
+  let addedCount = 0;
+  let errorCount = 0;
+
+  lines.forEach(line => {
+    // 時刻とタイトルをパース（時刻 タイトル のフォーマット）
+    const match = line.trim().match(/^(\d{1,2}):(\d{2})\s+(.+)$/);
+
+    if (match) {
+      const hours = match[1].padStart(2, '0');
+      const minutes = match[2];
+      const time = `${hours}:${minutes}`;
+      const title = match[3].trim();
+
+      const schedule = {
+        id: Date.now() + addedCount, // ユニークIDを保証
+        title,
+        date,
+        time,
+        description: '',
+        notified: false,
+        preNotified: false,
+        startNotified: false
+      };
+
+      schedules.push(schedule);
+      addedCount++;
+    } else {
+      errorCount++;
+      console.warn('パース失敗:', line);
+    }
+  });
+
+  if (addedCount > 0) {
+    saveSchedules();
+    renderSchedules();
+    bulkInput.value = '';
+    alert(`${addedCount}件のスケジュールを追加しました${errorCount > 0 ? `\n（${errorCount}件のエラーをスキップ）` : ''}`);
+  } else {
+    alert('正しい形式で入力してください\n例: 10:00 朝会');
+  }
+}
+
+/**
+ * TTSキュー処理
+ * 音声を順番に再生し、重複を防ぐ
+ */
+async function playTTS(text, options = {}) {
+  ttsQueue.push({ text, options });
+  if (!isTTSPlaying) {
+    await processTTSQueue();
+  }
+}
+
+async function processTTSQueue() {
+  if (ttsQueue.length === 0) {
+    isTTSPlaying = false;
+    return;
+  }
+
+  isTTSPlaying = true;
+  const { text, options } = ttsQueue.shift();
+
+  try {
+    if (window.electronAPI && typeof window.electronAPI.speakText === 'function') {
+      const res = await window.electronAPI.speakText({
+        text,
+        engine: 'voicevox',
+        options: {
+          speakerId: options.speakerId || SCHEDULE_NOTIFICATION_SPEAKER_ID,
+          speedScale: options.speedScale || 1.0
+        }
+      });
+
+      if (res && res.success && res.dataUrl) {
+        const audio = new Audio(res.dataUrl);
+
+        // 再生終了後に次のキューを処理
+        audio.onended = () => {
+          processTTSQueue();
+        };
+
+        // エラー時も次へ進む
+        audio.onerror = () => {
+          processTTSQueue();
+        };
+
+        await audio.play();
+      } else {
+        // 音声生成失敗時は次へ
+        processTTSQueue();
+      }
+    } else {
+      processTTSQueue();
+    }
+  } catch (error) {
+    console.error('TTS再生エラー:', error);
+    processTTSQueue();
+  }
 }
 
 // 通知チェック開始
@@ -231,20 +432,11 @@ async function checkScheduleNotifications() {
         body: SCHEDULE_MESSAGES.leadBody(schedule, formatDate(schedule.date))
       });
 
-      // 音声読み上げ（VOICEVOX）
-      if (window.electronAPI && typeof window.electronAPI.speakText === 'function') {
-        try {
-          const res = await window.electronAPI.speakText({
-            text: `${SCHEDULE_NOTIFICATION_LEAD_MINUTES}分後に ${schedule.title} が始まります。`,
-            engine: 'voicevox',
-            options: { speakerId: SCHEDULE_NOTIFICATION_SPEAKER_ID, speedScale: 1.05 }
-          });
-          if (res && res.success && res.dataUrl && seconds === 0) {
-            const audio = new Audio(res.dataUrl);
-            audio.play().catch(() => {});
-          }
-        } catch {}
-      }
+      // 音声読み上げ（TTSキューに追加）
+      await playTTS(
+        `${SCHEDULE_NOTIFICATION_LEAD_MINUTES}分後に ${schedule.title} が始まります。`,
+        { speakerId: SCHEDULE_NOTIFICATION_SPEAKER_ID, speedScale: 1.05 }
+      );
 
       schedule.preNotified = true;
       schedule.notified = schedule.preNotified || schedule.startNotified;
@@ -258,20 +450,11 @@ async function checkScheduleNotifications() {
         body: SCHEDULE_MESSAGES.startBody(schedule.description)
       });
 
-      // 音声読み上げ（VOICEVOX）
-      if (window.electronAPI && typeof window.electronAPI.speakText === 'function') {
-        try {
-          const res = await window.electronAPI.speakText({
-            text: `${schedule.title} の開始時刻です。`,
-            engine: 'voicevox',
-            options: { speakerId: SCHEDULE_NOTIFICATION_SPEAKER_ID, speedScale: 1.0 }
-          });
-          if (res && res.success && res.dataUrl) {
-            const audio = new Audio(res.dataUrl);
-            audio.play().catch(() => {});
-          }
-        } catch {}
-      }
+      // 音声読み上げ（TTSキューに追加）
+      await playTTS(
+        `${schedule.title} の開始時刻です。`,
+        { speakerId: SCHEDULE_NOTIFICATION_SPEAKER_ID, speedScale: 1.0 }
+      );
 
       schedule.startNotified = true;
       schedule.notified = schedule.preNotified || schedule.startNotified;
