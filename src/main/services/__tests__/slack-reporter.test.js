@@ -34,6 +34,7 @@ test('slack report includes system event summary', async (t) => {
           { appName: 'Xcode', totalDurationSeconds: 300, sessions: 3 },
         ],
         totalDurationSeconds: 300,
+        chromeDetails: [],
       }),
       getSystemEvents: async () => ({
         summary: { lock_screen: 1, resume: 2 },

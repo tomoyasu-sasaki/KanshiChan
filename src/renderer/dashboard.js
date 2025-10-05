@@ -17,12 +17,12 @@ const typeFilterSelect = document.getElementById('dashboardTypeFilter');
 const kpiContainer = document.getElementById('dashboardKpis');
 const logTableBody = document.querySelector('#dashboardLogTable tbody');
 const appUsageTableBody = document.querySelector('#dashboardAppUsageTable tbody');
+const chromeUsageTableBody = document.querySelector('#dashboardChromeUsageTable tbody');
 const chartCanvas = document.getElementById('dashboardTrendChart');
 const slackSummaryEl = document.getElementById('dashboardSlackSummary');
 const slackHistoryListEl = document.getElementById('dashboardSlackHistory');
 const slackSendNowBtn = document.getElementById('dashboardSlackSendNow');
 const slackRefreshBtn = document.getElementById('dashboardSlackRefresh');
-const typingMonitorToggle = document.getElementById('typingMonitorToggle');
 const typingMonitorPauseBtn = document.getElementById('typingMonitorPauseBtn');
 const typingStatsRefreshBtn = document.getElementById('typingStatsRefreshBtn');
 const typingMonitorStatusEl = document.getElementById('typingMonitorStatus');
@@ -62,6 +62,7 @@ const state = {
   chart: null,
   appUsage: [],
   appUsageTotalDuration: 0,
+  chromeUsage: [],
   slackSettings: null,
   slackHistory: [],
   typingStats: null,
@@ -116,10 +117,6 @@ if (slackRefreshBtn && window.electronAPI?.slackReporterHistory) {
   slackRefreshBtn.addEventListener('click', () => {
     refreshSlackSection({ showLoadingIndicator: true });
   });
-}
-
-if (typingMonitorToggle && window.electronAPI?.typingMonitorSetEnabled) {
-  typingMonitorToggle.addEventListener('change', handleTypingMonitorToggle);
 }
 
 if (typingMonitorPauseBtn && window.electronAPI?.typingMonitorSetPaused) {
@@ -204,12 +201,15 @@ function loadDashboardData() {
       if (appUsageRes?.success) {
         state.appUsage = appUsageRes.data?.items || [];
         state.appUsageTotalDuration = appUsageRes.data?.totalDurationSeconds || 0;
+        state.chromeUsage = appUsageRes.data?.chromeDetails || [];
       } else {
         state.appUsage = [];
         state.appUsageTotalDuration = 0;
+        state.chromeUsage = [];
       }
 
       renderAppUsageTable();
+      renderChromeUsageTable();
       renderKpis();
     })
     .then(() => {
@@ -301,12 +301,12 @@ function renderKpis() {
       subtext: formatRange(state.stats.range),
     },
     {
-      label: 'スマホ滞在時間',
+      label: 'スマホ検知時間',
       value: formatDuration(phoneDuration),
       subtext: `${byType.phone_detection_end?.count || 0} 件のセッション`,
     },
     {
-      label: '不在時間',
+      label: '不在検知時間',
       value: formatDuration(absenceDuration),
       subtext: `${byType.absence_detection_end?.count || 0} 件のセッション`,
     },
@@ -612,7 +612,7 @@ function renderAppUsageTable() {
   if (!state.appUsage || state.appUsage.length === 0) {
     appUsageTableBody.innerHTML = `
       <tr class="empty">
-        <td colspan="4">データがありません</td>
+        <td colspan="3">データがありません</td>
       </tr>
     `;
     return;
@@ -620,11 +620,36 @@ function renderAppUsageTable() {
 
   appUsageTableBody.innerHTML = state.appUsage
     .map((item) => {
-      const detail = item.domain ? item.domain : (item.title || '-');
       return `
         <tr>
           <td>${escapeHtml(item.appName)}</td>
-          <td>${escapeHtml(detail || '-')}</td>
+          <td>${formatDuration(item.totalDurationSeconds)}</td>
+          <td>${item.sessions ?? 0}</td>
+        </tr>
+      `;
+    })
+    .join('');
+}
+
+function renderChromeUsageTable() {
+  if (!chromeUsageTableBody) {
+    return;
+  }
+
+  if (!state.chromeUsage || state.chromeUsage.length === 0) {
+    chromeUsageTableBody.innerHTML = `
+      <tr class="empty">
+        <td colspan="3">Chrome のデータがありません</td>
+      </tr>
+    `;
+    return;
+  }
+
+  chromeUsageTableBody.innerHTML = state.chromeUsage
+    .map((item) => {
+      return `
+        <tr>
+          <td>${escapeHtml(item.label || '(未記録)')}</td>
           <td>${formatDuration(item.totalDurationSeconds)}</td>
           <td>${item.sessions ?? 0}</td>
         </tr>
@@ -806,18 +831,10 @@ function setTypingBusy(isBusy) {
 }
 
 function updateTypingControlsDisabled() {
-  const available =
-    Boolean(window.electronAPI?.typingMonitorStatus) &&
-    state.typingStatus != null &&
-    state.typingStatus.available !== false;
-  if (typingMonitorToggle) {
-    typingMonitorToggle.disabled = typingBusy || !available;
-    if (available && state.typingStatus) {
-      typingMonitorToggle.checked = Boolean(state.typingStatus.enabled);
-    }
-  }
+  const status = state.typingStatus;
+  const available = Boolean(window.electronAPI?.typingMonitorStatus) && status?.available !== false;
   if (typingMonitorPauseBtn) {
-    typingMonitorPauseBtn.disabled = typingBusy || !available || !state.typingStatus?.enabled;
+    typingMonitorPauseBtn.disabled = typingBusy || !available || !status?.enabled;
   }
   if (typingStatsRefreshBtn) {
     typingStatsRefreshBtn.disabled = typingBusy || !available;
@@ -896,7 +913,7 @@ function renderTypingStatus() {
   }
 
   if (!status.available) {
-    typingMonitorStatusEl.textContent = 'タイピング監視は利用できません（iohook が見つかりません）';
+    typingMonitorStatusEl.textContent = 'タイピング監視は利用できません（uiohook-napi が見つかりません）';
     typingMonitorStatusEl.classList.add('error');
   } else if (!status.enabled) {
     typingMonitorStatusEl.textContent = 'タイピング監視は無効です。';
@@ -952,39 +969,6 @@ function renderTypingTable() {
       `;
     })
     .join('');
-}
-
-async function handleTypingMonitorToggle(event) {
-  if (typingBusy) {
-    return;
-  }
-  if (!window.electronAPI?.typingMonitorSetEnabled) {
-    showTypingStatusMessage('タイピング監視の切替機能が利用できません', 'error', { temporary: true });
-    return;
-  }
-
-  const enabled = event.currentTarget.checked;
-  const previous = state.typingStatus?.enabled;
-
-  try {
-    setTypingBusy(true);
-    showTypingStatusMessage(enabled ? 'タイピング監視を有効化しています...' : 'タイピング監視を無効化しています...', 'info');
-    const response = await window.electronAPI.typingMonitorSetEnabled(enabled);
-    if (!response?.success) {
-      throw new Error(response?.error || 'タイピング監視の切替に失敗しました');
-    }
-    state.typingStatus = response.status;
-    await refreshTypingSection({ start: lastRange?.start, end: lastRange?.end, showLoading: false });
-    showTypingStatusMessage(enabled ? 'タイピング監視を有効化しました' : 'タイピング監視を無効化しました', 'success', { temporary: true });
-  } catch (error) {
-    console.error('[Dashboard] タイピング監視切替エラー:', error);
-    showTypingStatusMessage(error.message || 'タイピング監視の切替に失敗しました', 'error', { temporary: true });
-    if (typingMonitorToggle) {
-      typingMonitorToggle.checked = Boolean(previous);
-    }
-  } finally {
-    setTypingBusy(false);
-  }
 }
 
 async function handleTypingPauseToggle() {
@@ -1252,6 +1236,10 @@ if (openBtn) {
 
 renderSlackSection();
 renderTypingStatus();
+
+window.addEventListener('typing-monitor-status-updated', () => {
+  refreshTypingSection({ start: lastRange?.start, end: lastRange?.end, showLoading: false });
+});
 
 window.addEventListener('detection-log-recorded', () => {
   if (!modal?.classList.contains('open')) return;

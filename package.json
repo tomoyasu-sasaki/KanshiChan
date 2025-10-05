@@ -20,5 +20,8 @@
     "node-llama-cpp": "^3.14.0",
     "onnxruntime-node": "^1.23.0",
     "sqlite3": "^5.1.7"
+  },
+  "optionalDependencies": {
+    "uiohook-napi": "^1.5.0"
   }
 }

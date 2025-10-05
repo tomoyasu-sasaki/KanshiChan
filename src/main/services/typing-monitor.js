@@ -1,18 +1,19 @@
 /**
  * グローバルキーボード入力の監視サービス。
- * - iohook を利用して macOS 上のキー押下をフックし、1分バケットごとに SQLite へ保存する。
+ * - uiohook-napi を利用して macOS 上のキー押下をフックし、1分バケットごとに SQLite へ保存する。
  * - 個人利用前提のため、キー内容は保持せず回数と最長連続入力時間のみを収集する。
  */
 const { run } = require('../db');
 
-let iohook = null;
-let iohookAvailable = false;
+let hookInstance = null;
+let hookAvailable = false;
 try {
   // eslint-disable-next-line global-require
-  iohook = require('iohook');
-  iohookAvailable = Boolean(iohook);
+  const { uIOhook } = require('uiohook-napi');
+  hookInstance = uIOhook;
+  hookAvailable = Boolean(hookInstance);
 } catch (error) {
-  console.warn('[TypingMonitor] iohook の読み込みに失敗しました:', error.message);
+  console.warn('[TypingMonitor] uiohook-napi の読み込みに失敗しました:', error.message);
 }
 
 const DEFAULT_CONFIG = {
@@ -147,6 +148,17 @@ function createTypingMonitor({ configStore }) {
     lastKeyAt = now;
   }
 
+  function detachHookListener() {
+    if (!hookInstance) {
+      return;
+    }
+    if (typeof hookInstance.off === 'function') {
+      hookInstance.off('keydown', handleKeydown);
+    } else if (typeof hookInstance.removeListener === 'function') {
+      hookInstance.removeListener('keydown', handleKeydown);
+    }
+  }
+
   async function flushPending() {
     if (currentBucket && currentBucket.keyPresses > 0) {
       const bucketToFlush = currentBucket;
@@ -159,7 +171,7 @@ function createTypingMonitor({ configStore }) {
   }
 
   async function start() {
-    if (!iohookAvailable) {
+    if (!hookAvailable) {
       return false;
     }
     if (running) {
@@ -167,17 +179,17 @@ function createTypingMonitor({ configStore }) {
     }
 
     try {
-      iohook.on('keydown', handleKeydown);
-      iohook.start();
+      hookInstance.on('keydown', handleKeydown);
+      hookInstance.start();
       running = true;
       paused = false;
       startFlushTimer();
       return true;
     } catch (error) {
-      console.error('[TypingMonitor] iohook 起動エラー:', error);
-      iohookAvailable = false;
+      console.error('[TypingMonitor] uiohook 起動エラー:', error);
+      hookAvailable = false;
       try {
-        iohook.off('keydown', handleKeydown);
+        detachHookListener();
       } catch {
         // noop
       }
@@ -192,12 +204,12 @@ function createTypingMonitor({ configStore }) {
     running = false;
     paused = false;
     clearFlushTimer();
-    if (iohookAvailable && iohook) {
+    if (hookAvailable && hookInstance) {
       try {
-        iohook.off('keydown', handleKeydown);
-        iohook.stop();
+        detachHookListener();
+        hookInstance.stop();
       } catch (error) {
-        console.warn('[TypingMonitor] iohook 停止エラー:', error.message);
+        console.warn('[TypingMonitor] uiohook 停止エラー:', error.message);
       }
     }
     await flushPending();
@@ -231,7 +243,7 @@ function createTypingMonitor({ configStore }) {
 
   function getStatus() {
     return {
-      available: iohookAvailable,
+      available: hookAvailable,
       enabled: Boolean(config.enabled),
       running,
       paused,

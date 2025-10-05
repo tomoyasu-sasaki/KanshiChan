@@ -133,27 +133,43 @@ async function getAppUsageStats(options = {}) {
   const end = Number.isFinite(options.end) ? options.end : now;
   const limit = Number.isInteger(options.limit) && options.limit > 0 ? Math.min(options.limit, 50) : 10;
 
-  const rows = await all(
+  const aggregatedRows = await all(
     `SELECT app_name,
-            COALESCE(domain, '') AS domain,
             SUM(duration_seconds) AS total_duration,
             COUNT(*) AS sessions
      FROM app_usage_logs
      WHERE started_at BETWEEN ? AND ?
-     GROUP BY app_name, domain
+     GROUP BY app_name
      ORDER BY total_duration DESC
      LIMIT ?`,
     [start, end, limit]
   );
 
-  const totalDuration = rows.reduce((sum, row) => sum + (row.total_duration || 0), 0);
+  const chromeDetailRows = await all(
+    `SELECT COALESCE(NULLIF(domain, ''), NULLIF(title, ''), '(未記録)') AS label,
+            SUM(duration_seconds) AS total_duration,
+            COUNT(*) AS sessions
+     FROM app_usage_logs
+     WHERE started_at BETWEEN ? AND ?
+       AND app_name = 'Google Chrome'
+     GROUP BY COALESCE(NULLIF(domain, ''), NULLIF(title, ''), '(未記録)')
+     ORDER BY total_duration DESC
+     LIMIT 10`,
+    [start, end]
+  );
+
+  const totalDuration = aggregatedRows.reduce((sum, row) => sum + (row.total_duration || 0), 0);
 
   return {
     range: { start, end },
     totalDurationSeconds: totalDuration,
-    items: rows.map((row) => ({
+    items: aggregatedRows.map((row) => ({
       appName: row.app_name,
-      domain: row.domain || null,
+      totalDurationSeconds: row.total_duration || 0,
+      sessions: row.sessions || 0,
+    })),
+    chromeDetails: chromeDetailRows.map((row) => ({
+      label: row.label,
       totalDurationSeconds: row.total_duration || 0,
       sessions: row.sessions || 0,
     })),

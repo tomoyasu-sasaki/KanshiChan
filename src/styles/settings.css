@@ -162,3 +162,14 @@
   font-size: var(--text-sm);
   line-height: 1.5;
 }
+
+.typing-settings-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.typing-settings-status {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}

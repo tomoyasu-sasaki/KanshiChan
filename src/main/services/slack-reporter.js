@@ -192,25 +192,36 @@ function createSlackReporter({ configStore }, dependencies = {}) {
       return acc;
     }, null);
 
-    const topApp = appUsageStats.items?.[0] || null;
     const systemSummary = systemEvents.summary || {};
+    const topApps = (appUsageStats.items || []).slice(0, 5);
+    const topChromeDomains = (appUsageStats.chromeDetails || []).slice(0, 5);
+
+    const rangeText = `${formatDateLabel(new Date(rangeStart.getTime()))} ${formatTimeKey(rangeStart)} 〜 ${formatDateLabel(now)} ${formatTimeKey(now)}`;
 
     const lines = [
-      `:bar_chart: 監視ちゃんサマリー (${formatDateLabel(now)} ${formatTimeKey(now)})`,
+      `:bar_chart: 監視ちゃんサマリー (${rangeText})`,
       `• 総イベント数: ${summary.totalCount || 0}`,
       `• アラート件数: ${alertCount}`,
-      `• スマホ滞在時間: ${formatDuration(phoneDuration)} (${byType.phone_detection_end?.count || 0} 件)` ,
-      `• 不在時間: ${formatDuration(absenceDuration)} (${byType.absence_detection_end?.count || 0} 件)`,
+      `• スマホ検知時間: ${formatDuration(phoneDuration)} (${byType.phone_detection_end?.count || 0} 件)` ,
+      `• 不在検知時間: ${formatDuration(absenceDuration)} (${byType.absence_detection_end?.count || 0} 件)`,
     ];
 
     if (mostActiveBucket) {
       lines.push(`• 最多発生タイミング: ${mostActiveBucket.bucket} (${mostActiveBucket.totalCount} 件)`);
     }
 
-    if (topApp) {
-      lines.push(
-        `• 最多利用アプリ: ${topApp.appName} (${formatDuration(topApp.totalDurationSeconds)} / ${topApp.sessions} セッション)`
-      );
+    if (topApps.length > 0) {
+      const ranking = topApps
+        .map((app, index) => `${index + 1}. ${app.appName} ${formatDuration(app.totalDurationSeconds)}`)
+        .join(' / ');
+      lines.push(`• 利用アプリ上位5: ${ranking}`);
+    }
+
+    if (topChromeDomains.length > 0) {
+      const chromeRanking = topChromeDomains
+        .map((item, index) => `${index + 1}. ${item.label} ${formatDuration(item.totalDurationSeconds)}`)
+        .join(' / ');
+      lines.push(`• Chromeドメイン上位5: ${chromeRanking}`);
     }
 
     const systemEventSummary = [

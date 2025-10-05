@@ -51,10 +51,12 @@ let soundEnabled, desktopNotification, showDetections;
 let yoloEnabled, voicevoxSpeaker;
 let saveSettingsBtn, resetSettingsBtn, saveMessage;
 let slackReporterEnabled, slackWebhookUrlInput, slackScheduleTimesInput, slackTimezoneInput;
-let slackSaveBtn, slackSendNowBtn, slackRefreshBtn, slackReporterStatus, slackHistoryList, slackReporterMessage;
+let slackSaveBtn, slackSendNowBtn, slackReporterMessage;
 let slackSettingsCache = null;
-let slackHistoryCache = [];
 let slackControlsBusy = false;
+let typingMonitorEnabledCheckbox, typingMonitorPauseSettingsBtn, typingMonitorSettingsStatus, typingMonitorSettingsMessage;
+let typingStatusCache = null;
+let typingSettingsBusy = false;
 
 // 初期化
 document.addEventListener('DOMContentLoaded', () => {
@@ -87,10 +89,12 @@ document.addEventListener('DOMContentLoaded', () => {
   slackTimezoneInput = document.getElementById('slackTimezone');
   slackSaveBtn = document.getElementById('slackSaveBtn');
   slackSendNowBtn = document.getElementById('slackSendNowBtn');
-  slackRefreshBtn = document.getElementById('slackRefreshStatusBtn');
-  slackReporterStatus = document.getElementById('slackReporterStatus');
-  slackHistoryList = document.getElementById('slackHistoryList');
   slackReporterMessage = document.getElementById('slackReporterMessage');
+
+  typingMonitorEnabledCheckbox = document.getElementById('typingMonitorEnabled');
+  typingMonitorPauseSettingsBtn = document.getElementById('typingMonitorPauseSettingsBtn');
+  typingMonitorSettingsStatus = document.getElementById('typingMonitorSettingsStatus');
+  typingMonitorSettingsMessage = document.getElementById('typingMonitorSettingsMessage');
 
   // 動的にUI要素を生成
   populateVoicevoxSpeakers();
@@ -101,6 +105,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupEventListeners();
   setupAccordion();
   initializeSlackReporterSection();
+  initializeTypingMonitorSection();
 });
 
 // VOICEVOX話者選択を動的に生成
@@ -323,10 +328,8 @@ async function initializeSlackReporterSection() {
 
   slackSaveBtn?.addEventListener('click', handleSlackSettingsSave);
   slackSendNowBtn?.addEventListener('click', handleSlackSendNow);
-  slackRefreshBtn?.addEventListener('click', () => refreshSlackHistory(true));
 
   await refreshSlackSettings(false);
-  await refreshSlackHistory(false);
   renderSlackStatus();
 }
 
@@ -338,7 +341,6 @@ function setSlackFieldsDisabled(disabled) {
     slackTimezoneInput,
     slackSaveBtn,
     slackSendNowBtn,
-    slackRefreshBtn,
   ].forEach((element) => {
     if (element) {
       element.disabled = disabled;
@@ -411,77 +413,10 @@ async function refreshSlackHistory(showMessageOnError = false) {
     return;
   }
 
-  try {
-    setSlackBusy(true);
-    const response = await window.electronAPI.slackReporterHistory({ limit: 10 });
-    if (!response?.success) {
-      throw new Error(response?.error || 'Slack 履歴の取得に失敗しました');
-    }
-    slackHistoryCache = Array.isArray(response.history) ? response.history : [];
-    renderSlackHistoryList();
-    renderSlackStatus();
-  } catch (error) {
-    console.error('[Settings] Slack 履歴取得エラー:', error);
-    if (showMessageOnError) {
-      showSlackMessage(error.message || 'Slack 履歴の取得に失敗しました', 'error');
-    }
-  } finally {
-    setSlackBusy(false);
-  }
+  slackHistoryCache = [];
 }
 
 function renderSlackStatus() {
-  if (!slackReporterStatus) {
-    return;
-  }
-
-  if (!slackSettingsCache?.enabled || !slackSettingsCache?.webhookUrl) {
-    slackReporterStatus.textContent = 'Slack レポートは無効です。Webhook URL を設定して有効化してください。';
-    return;
-  }
-
-  if (!slackHistoryCache.length) {
-    const scheduleText = slackSettingsCache.scheduleTimes?.join(', ') || DEFAULT_SLACK_SCHEDULE.join(', ');
-    slackReporterStatus.textContent = `Slack レポートは有効です。送信予定: ${scheduleText}`;
-    return;
-  }
-
-  const latest = slackHistoryCache[0];
-  const icon = latest.status === 'success' ? '✅' : '⚠️';
-  const statusLabel = latest.status === 'success' ? '成功' : '失敗';
-  const base = `${icon} 最終送信: ${formatSlackTimestamp(latest.sentAt)} (${statusLabel}${latest.reason ? ` / ${latest.reason}` : ''})`;
-  slackReporterStatus.textContent = latest.error ? `${base} - ${latest.error}` : base;
-}
-
-function renderSlackHistoryList() {
-  if (!slackHistoryList) {
-    return;
-  }
-
-  if (!slackHistoryCache.length) {
-    slackHistoryList.innerHTML = '<li class="empty">履歴がありません</li>';
-    return;
-  }
-
-  slackHistoryList.innerHTML = slackHistoryCache
-    .map((entry) => {
-      const icon = entry.status === 'success' ? '✅' : '⚠️';
-      const reason = entry.reason === 'schedule' ? '定期' : '手動';
-      const statusClass = entry.status === 'success' ? 'success' : 'failure';
-      const errorLine = entry.error ? `<div class="slack-history-error">${escapeHtml(entry.error)}</div>` : '';
-      return `
-        <li class="slack-history-item ${statusClass}">
-          <div class="slack-history-header">
-            <span class="slack-history-icon">${icon}</span>
-            <span class="slack-history-time">${formatSlackTimestamp(entry.sentAt)}</span>
-            <span class="slack-history-status">${entry.status === 'success' ? '成功' : '失敗'}</span>
-            <span class="slack-history-reason">${reason}</span>
-          </div>
-          ${errorLine}
-        </li>
-      `;
-    })
-    .join('');
 }
 
 async function handleSlackSettingsSave() {
@@ -532,8 +467,6 @@ async function handleSlackSendNow() {
     if (!response?.success) {
       throw new Error(response?.error || 'Slack 送信に失敗しました');
     }
-    showSlackMessage('Slack に送信しました', 'success');
-    await refreshSlackHistory(false);
   } catch (error) {
     console.error('[Settings] Slack 手動送信エラー:', error);
     showSlackMessage(error.message || 'Slack 手動送信に失敗しました', 'error');
@@ -548,10 +481,12 @@ function showSlackMessage(text, type = 'info') {
   }
   slackReporterMessage.textContent = text;
   slackReporterMessage.className = `slack-message show ${type}`;
+  adjustAccordionHeight(slackReporterMessage);
   setTimeout(() => {
     if (slackReporterMessage) {
       slackReporterMessage.textContent = '';
       slackReporterMessage.className = 'slack-message';
+      adjustAccordionHeight(slackReporterMessage);
     }
   }, 4000);
 }
@@ -577,4 +512,211 @@ function escapeHtml(value) {
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;')
     .replace(/'/g, '&#039;');
+}
+
+async function initializeTypingMonitorSection() {
+  if (!typingMonitorEnabledCheckbox) {
+    return;
+  }
+
+  if (!window.electronAPI?.typingMonitorStatus) {
+    typingMonitorEnabledCheckbox.disabled = true;
+    typingMonitorPauseSettingsBtn?.setAttribute('disabled', 'disabled');
+    if (typingMonitorSettingsStatus) {
+      typingMonitorSettingsStatus.textContent = 'タイピング監視機能は利用できません (electronAPI 未連携)';
+    }
+    return;
+  }
+
+  typingMonitorEnabledCheckbox.addEventListener('change', handleTypingMonitorEnabledChange);
+  typingMonitorPauseSettingsBtn?.addEventListener('click', handleTypingMonitorPauseSettings);
+
+  await refreshTypingMonitorStatus({ showBusy: true, showError: false });
+}
+
+function setTypingSettingsBusy(isBusy) {
+  typingSettingsBusy = isBusy;
+  updateTypingMonitorSettingsUI();
+}
+
+function updateTypingMonitorSettingsUI() {
+  const status = typingStatusCache;
+  const available = status?.available !== false;
+
+  if (typingMonitorEnabledCheckbox) {
+    typingMonitorEnabledCheckbox.checked = Boolean(available && status?.enabled);
+    typingMonitorEnabledCheckbox.disabled = typingSettingsBusy || !available;
+  }
+
+  if (typingMonitorPauseSettingsBtn) {
+    typingMonitorPauseSettingsBtn.disabled = typingSettingsBusy || !available || !status?.enabled;
+    typingMonitorPauseSettingsBtn.textContent = status?.paused ? '再開' : '休止';
+  }
+
+  if (typingMonitorSettingsStatus) {
+    let text = '状態取得中...';
+    if (!status) {
+      text = '状態取得中...';
+    } else if (!available) {
+      text = 'uiohook-napi が読み込めません。ビルド状態を確認してください。';
+    } else if (!status.enabled) {
+      text = 'タイピング監視は無効です。設定で有効化できます。';
+    } else if (status.paused) {
+      text = 'タイピング監視は休止中です。再開ボタンを押して復帰できます。';
+    } else {
+      const lastKeyText = status.lastKeyAt ? formatTypingSettingsTimestamp(status.lastKeyAt) : '記録なし';
+      text = `タイピング監視は稼働中（最終入力: ${lastKeyText}）`;
+    }
+    typingMonitorSettingsStatus.textContent = text;
+  }
+}
+
+async function refreshTypingMonitorStatus({ showBusy = false, showError = true } = {}) {
+  if (!window.electronAPI?.typingMonitorStatus) {
+    return;
+  }
+
+  try {
+    if (showBusy) {
+      setTypingSettingsBusy(true);
+    }
+    const response = await window.electronAPI.typingMonitorStatus();
+    if (!response?.success) {
+      throw new Error(response?.error || 'タイピング監視の状態取得に失敗しました');
+    }
+    typingStatusCache = response.status;
+    updateTypingMonitorSettingsUI();
+  } catch (error) {
+    console.error('[Settings] タイピング監視状態取得エラー:', error);
+    if (showError) {
+      showTypingSettingsMessage(error.message || 'タイピング監視の状態取得に失敗しました', 'error');
+    }
+  } finally {
+    if (showBusy) {
+      setTypingSettingsBusy(false);
+    } else {
+      updateTypingMonitorSettingsUI();
+    }
+  }
+}
+
+async function handleTypingMonitorEnabledChange(event) {
+  if (typingSettingsBusy) {
+    event.target.checked = Boolean(typingStatusCache?.enabled);
+    return;
+  }
+  if (!window.electronAPI?.typingMonitorSetEnabled) {
+    showTypingSettingsMessage('タイピング監視の切替 API が利用できません', 'error');
+    event.target.checked = Boolean(typingStatusCache?.enabled);
+    return;
+  }
+
+  const enabled = Boolean(event.target.checked);
+
+  try {
+    setTypingSettingsBusy(true);
+    showTypingSettingsMessage(enabled ? 'タイピング監視を有効化しています...' : 'タイピング監視を無効化しています...', 'info');
+    const response = await window.electronAPI.typingMonitorSetEnabled(enabled);
+    if (!response?.success) {
+      throw new Error(response?.error || 'タイピング監視の切替に失敗しました');
+    }
+    typingStatusCache = response.status;
+    updateTypingMonitorSettingsUI();
+    showTypingSettingsMessage(enabled ? 'タイピング監視を有効化しました' : 'タイピング監視を無効化しました', 'success');
+    window.dispatchEvent(new CustomEvent('typing-monitor-status-updated'));
+  } catch (error) {
+    console.error('[Settings] タイピング監視切替エラー:', error);
+    showTypingSettingsMessage(error.message || 'タイピング監視の切替に失敗しました', 'error');
+    event.target.checked = Boolean(typingStatusCache?.enabled);
+  } finally {
+    setTypingSettingsBusy(false);
+    updateTypingMonitorSettingsUI();
+  }
+}
+
+async function handleTypingMonitorPauseSettings() {
+  if (typingSettingsBusy) {
+    return;
+  }
+  if (!window.electronAPI?.typingMonitorSetPaused) {
+    showTypingSettingsMessage('休止制御が利用できません', 'error');
+    return;
+  }
+
+  if (!typingStatusCache) {
+    await refreshTypingMonitorStatus({ showBusy: true });
+  }
+
+  const status = typingStatusCache;
+  if (!status?.available) {
+    showTypingSettingsMessage('uiohook-napi が読み込まれていないため操作できません', 'error');
+    return;
+  }
+  if (!status.enabled) {
+    showTypingSettingsMessage('監視が無効のため休止操作はできません', 'error');
+    return;
+  }
+
+  const nextPaused = !status.paused;
+
+  try {
+    setTypingSettingsBusy(true);
+    showTypingSettingsMessage(nextPaused ? 'タイピング監視を休止しています...' : 'タイピング監視を再開しています...', 'info');
+    const response = await window.electronAPI.typingMonitorSetPaused(nextPaused);
+    if (!response?.success) {
+      throw new Error(response?.error || 'タイピング監視の休止切替に失敗しました');
+    }
+    typingStatusCache = response.status;
+    updateTypingMonitorSettingsUI();
+    showTypingSettingsMessage(nextPaused ? 'タイピング監視を休止しました' : 'タイピング監視を再開しました', 'success');
+    window.dispatchEvent(new CustomEvent('typing-monitor-status-updated'));
+  } catch (error) {
+    console.error('[Settings] タイピング監視休止エラー:', error);
+    showTypingSettingsMessage(error.message || 'タイピング監視の休止切替に失敗しました', 'error');
+  } finally {
+    setTypingSettingsBusy(false);
+    updateTypingMonitorSettingsUI();
+  }
+}
+
+function showTypingSettingsMessage(text, type = 'info') {
+  if (!typingMonitorSettingsMessage) {
+    return;
+  }
+  typingMonitorSettingsMessage.textContent = text;
+  typingMonitorSettingsMessage.className = `slack-message show ${type}`;
+  adjustAccordionHeight(typingMonitorSettingsMessage);
+  setTimeout(() => {
+    if (typingMonitorSettingsMessage) {
+      typingMonitorSettingsMessage.textContent = '';
+      typingMonitorSettingsMessage.className = 'slack-message';
+      adjustAccordionHeight(typingMonitorSettingsMessage);
+    }
+  }, 4000);
+}
+
+function formatTypingSettingsTimestamp(value) {
+  if (!value) {
+    return '記録なし';
+  }
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return '記録なし';
+  }
+  return date.toLocaleString('ja-JP', { hour12: false });
+}
+
+function adjustAccordionHeight(innerElement) {
+  if (!innerElement) {
+    return;
+  }
+  const content = innerElement.closest('.accordion-content');
+  if (!content) {
+    return;
+  }
+  if (content.style.maxHeight) {
+    requestAnimationFrame(() => {
+      content.style.maxHeight = `${content.scrollHeight}px`;
+    });
+  }
 }
