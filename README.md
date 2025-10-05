@@ -72,14 +72,23 @@ curl -L https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin 
 # Hugging Face などから取得して models/ に配置
 ```
 
-#### 3. whisper.cpp のビルド
+#### 3. whisper-cli のビルド
 
-初回起動時、または `npm install` 後に自動的に whisper.cpp がビルドされます。手動でビルドする場合:
+whisper.cpp の公式リポジトリから CLI をビルドし、PATH に追加するか `WHISPER_CLI_PATH` 環境変数で場所を指定してください。
 
 ```bash
-cd node_modules/nodejs-whisper/cpp/whisper.cpp
+# 任意の作業ディレクトリで
+git clone https://github.com/ggerganov/whisper.cpp.git
+cd whisper.cpp
 cmake -B build -DCMAKE_BUILD_TYPE=Release -DWHISPER_BUILD_EXAMPLES=ON
 cmake --build build --config Release --target whisper-cli -j 4
+
+# 例: プロジェクト直下の bin/ に配置
+mkdir -p /path/to/kanchichan/bin
+cp build/bin/whisper-cli /path/to/kanchichan/bin/
+
+# whisper-cli へのパスを環境変数で指定（PATH に追加済みなら不要）
+export WHISPER_CLI_PATH=/path/to/kanchichan/bin/whisper-cli
 ```
 
 #### 4. マイク権限の許可
@@ -173,13 +182,8 @@ kanchichan/
 - モデルファイルのパーミッションを確認: `chmod 644 models/*.bin models/*.gguf`
 
 #### 「whisper-cli executable not found」エラー
-- whisper.cpp がビルドされていない可能性があります
-- 手動でビルド:
-  ```bash
-  cd node_modules/nodejs-whisper/cpp/whisper.cpp
-  cmake -B build -DCMAKE_BUILD_TYPE=Release -DWHISPER_BUILD_EXAMPLES=ON
-  cmake --build build --config Release --target whisper-cli -j 4
-  ```
+- whisper.cpp のビルドに失敗しているか、CLI へのパスが通っていない可能性があります
+- `whisper-cli` を再ビルドし、PATH へ追加するか `WHISPER_CLI_PATH` を設定してください
 
 #### 「音声ファイルの変換に失敗しました」エラー
 - ffmpeg がインストールされているか確認: `which ffmpeg`

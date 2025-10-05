@@ -6,7 +6,7 @@
  * - 依存: src/main/services/whisper.js, src/main/services/llm.js
  */
 
-const { transcribeAudio } = require('./whisper');
+const { transcribeAudio, validateWhisperEnvironment } = require('./whisper');
 const { extractScheduleFromText } = require('./llm');
 
 /**
@@ -85,8 +85,7 @@ async function checkVoiceInputAvailability() {
   };
 
   try {
-    const { loadWhisperModel } = require('./whisper');
-    await loadWhisperModel();
+    await validateWhisperEnvironment();
     status.models.whisper = true;
   } catch (error) {
     status.errors.push(`Whisper: ${error.message}`);

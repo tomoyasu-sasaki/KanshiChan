@@ -1,27 +1,107 @@
 /**
  * Whisper (音声認識) サービス。
- * - nodejs-whisper を使用して音声データから文字起こしを実行。
- * - モデルロードは初回呼び出し時に遅延実行し、以降はインスタンスを再利用。
- * - 依存: nodejs-whisper, models/ggml-base.bin
+ * - whisper-cli (whisper.cpp) を直接呼び出して音声データを文字起こし。
+ * - モデルファイル / CLI パスは初回利用時に検証し、以降はキャッシュして再利用。
+ * - 依存: whisper-cli, models/ggml-base.bin, ffmpeg
  */
 
-const { nodewhisper } = require('nodejs-whisper');
 const path = require('path');
-const fs = require('fs').promises;
-const { exec } = require('child_process');
+const os = require('os');
+const fs = require('fs');
+const fsp = fs.promises;
+const { exec, execFile } = require('child_process');
 const { promisify } = require('util');
 
 const execPromise = promisify(exec);
+const execFilePromise = promisify(execFile);
 const {
   DEFAULT_WHISPER_MODEL_PATH,
   DEFAULT_WHISPER_OPTIONS,
   MAX_AUDIO_SIZE_BYTES,
+  DEFAULT_WHISPER_CLI_PATH,
 } = require('../../constants/whisper-config');
 
 /**
  * Whisper モデルインスタンス（遅延初期化）
  */
 let whisperInstance = null;
+let tempWorkspacePromise = null;
+
+/**
+ * whisper-cli の実行パスを解決する。
+ * - 絶対パス/相対パスが指定された場合は存在確認のみ
+ * - コマンド名のみの場合は PATH から探索
+ * @param {string} cliCandidate CLI パスまたはコマンド名
+ * @returns {Promise<string>} 解決済み CLI パス
+ */
+async function resolveWhisperCliPath(cliCandidate = DEFAULT_WHISPER_CLI_PATH) {
+  if (!cliCandidate || typeof cliCandidate !== 'string') {
+    throw new Error('whisper-cli のパスが設定されていません');
+  }
+
+  const hasPathSeparator = cliCandidate.includes('/') || (process.platform === 'win32' && cliCandidate.includes('\\'));
+  const isAbsolutePath = path.isAbsolute(cliCandidate);
+
+  if (isAbsolutePath || hasPathSeparator) {
+    try {
+      await fsp.access(cliCandidate, fs.constants.X_OK);
+      return cliCandidate;
+    } catch (error) {
+      // Windows では実行権限ビットが無いケースがあるため F_OK チェックを許容
+      if (process.platform === 'win32') {
+        await fsp.access(cliCandidate, fs.constants.F_OK);
+        return cliCandidate;
+      }
+      throw new Error(`whisper-cli 実行ファイルにアクセスできません: ${cliCandidate}`);
+    }
+  }
+
+  const whichCmd = process.platform === 'win32' ? 'where' : 'command -v';
+
+  try {
+    const { stdout } = await execPromise(`${whichCmd} ${cliCandidate}`);
+    const resolvedPath = stdout
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .find((line) => line.length > 0);
+
+    if (!resolvedPath) {
+      throw new Error();
+    }
+
+    return resolvedPath;
+  } catch (error) {
+    throw new Error(
+      `whisper-cli が見つかりませんでした。PATH か WHISPER_CLI_PATH を確認してください: ${cliCandidate}`
+    );
+  }
+}
+
+async function ensureTempWorkspace() {
+  if (!tempWorkspacePromise) {
+    tempWorkspacePromise = (async () => {
+      const workspace = path.join(os.tmpdir(), 'kanchichan-whisper');
+      await fsp.mkdir(workspace, { recursive: true });
+      return workspace;
+    })();
+  }
+
+  return tempWorkspacePromise;
+}
+
+async function safeUnlink(filePath) {
+  if (!filePath) {
+    return;
+  }
+
+  try {
+    await fsp.unlink(filePath);
+  } catch (error) {
+    if (error?.code !== 'ENOENT') {
+      console.warn('[Whisper] 一時ファイル削除エラー:', error);
+    }
+  }
+}
 
 /**
  * Whisper モデルをロードする。
@@ -31,13 +111,12 @@ let whisperInstance = null;
  * @returns {Promise<Object>} Whisper インスタンス
  * @throws {Error} モデルファイルが存在しない場合
  */
-async function loadWhisperModel(modelPath = DEFAULT_WHISPER_MODEL_PATH) {
-  if (whisperInstance) {
-    return whisperInstance;
-  }
-
+async function validateWhisperEnvironment({
+  modelPath = DEFAULT_WHISPER_MODEL_PATH,
+  cliPathCandidate,
+} = {}) {
   try {
-    await fs.access(modelPath);
+    await fsp.access(modelPath);
   } catch (error) {
     throw new Error(
       `Whisper モデルが見つかりません: ${modelPath}\n` +
@@ -45,10 +124,26 @@ async function loadWhisperModel(modelPath = DEFAULT_WHISPER_MODEL_PATH) {
     );
   }
 
-  console.log(`[Whisper] モデルをロード中: ${modelPath}`);
+  const cliPath = await resolveWhisperCliPath(cliPathCandidate || DEFAULT_WHISPER_CLI_PATH);
+
+  return {
+    modelPath,
+    cliPath,
+  };
+}
+
+async function loadWhisperModel(modelPath = DEFAULT_WHISPER_MODEL_PATH) {
+  if (whisperInstance) {
+    return whisperInstance;
+  }
+
+  const { modelPath: resolvedModelPath, cliPath } = await validateWhisperEnvironment({ modelPath });
+
+  console.log(`[Whisper] モデルをロード中: ${resolvedModelPath}`);
 
   whisperInstance = {
-    modelPath,
+    modelPath: resolvedModelPath,
+    cliPath,
     isReady: true,
   };
 
@@ -84,16 +179,16 @@ async function transcribeAudio(audioDataBase64, options = {}) {
     throw new Error('Whisper モデルが初期化されていません');
   }
 
-  const tempDir = path.join(__dirname, '../../../temp');
-  await fs.mkdir(tempDir, { recursive: true });
-
-  const timestamp = Date.now();
-  const tempInputPath = path.join(tempDir, `audio_input_${timestamp}.dat`);
-  const tempWavPath = path.join(tempDir, `audio_${timestamp}.wav`);
+  const workspaceDir = await ensureTempWorkspace();
+  const uniqueId = `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  const tempInputPath = path.join(workspaceDir, `audio_input_${uniqueId}.dat`);
+  const tempWavPath = path.join(workspaceDir, `audio_${uniqueId}.wav`);
+  const tempOutputBase = path.join(workspaceDir, `whisper_output_${uniqueId}`);
+  const tempOutputTextPath = `${tempOutputBase}.txt`;
 
   try {
     // まず元の音声データを書き込み
-    await fs.writeFile(tempInputPath, audioBuffer);
+    await fsp.writeFile(tempInputPath, audioBuffer);
     console.log(`[Whisper] 音声ファイル保存: ${tempInputPath} (${audioBuffer.length} bytes)`);
 
     // ffmpeg で任意の音声形式から WAV (16kHz, mono, 16-bit PCM) に変換
@@ -109,34 +204,38 @@ async function transcribeAudio(audioDataBase64, options = {}) {
 
     console.log(`[Whisper] 文字起こし開始: ${tempWavPath}`);
 
-    // nodejs-whisper は 'base', 'tiny', 'small' などのモデル名を期待
-    // モデルファイルは node_modules/nodejs-whisper/cpp/whisper.cpp/models/ に配置済み
-    const whisperOptions = {
-      modelName: 'base', // 短いモデル名を指定
-      autoDownloadModelName: '',
-      language: options.language || DEFAULT_WHISPER_OPTIONS.language,
-      whisperOptions: {
-        outputInText: true,
-        outputInVtt: false,
-        outputInSrt: false,
-        outputInCsv: false,
-        translateToEnglish: false,
-        wordTimestamps: DEFAULT_WHISPER_OPTIONS.wordTimestamps,
-        timestamps_length: DEFAULT_WHISPER_OPTIONS.timestamps_length,
-      },
-    };
+    const whisperArgs = [
+      '-m',
+      model.modelPath,
+      '-f',
+      tempWavPath,
+      '-l',
+      options.language || DEFAULT_WHISPER_OPTIONS.language,
+      '-otxt',
+      '-of',
+      tempOutputBase,
+    ];
 
-    console.log('[Whisper] Whisper推論オプション:', JSON.stringify(whisperOptions, null, 2));
+    console.log('[Whisper] whisper-cli 実行:', `${model.cliPath} ${whisperArgs.join(' ')}`);
 
-    const result = await nodewhisper(tempWavPath, whisperOptions);
-
-    console.log('[Whisper] Whisper推論完了。結果型:', typeof result);
-
-    if (!result || typeof result !== 'string') {
-      throw new Error('Whisper の推論結果が不正です');
+    try {
+      await execFilePromise(model.cliPath, whisperArgs, {
+        maxBuffer: 1024 * 1024 * 20, // 20MB まで stdout/stderr を許可
+      });
+    } catch (cliError) {
+      console.error('[Whisper] whisper-cli 実行エラー:', cliError);
+      throw new Error(
+        `whisper-cli の実行に失敗しました。CLI のビルド状況とパスを確認してください: ${cliError.message}`
+      );
     }
 
-    const trimmedResult = result.trim();
+    const transcript = await fsp.readFile(tempOutputTextPath, 'utf8');
+    const trimmedResult = transcript.trim();
+
+    if (!trimmedResult) {
+      throw new Error('whisper-cli の出力が空でした');
+    }
+
     console.log(`[Whisper] 文字起こし完了: "${trimmedResult.substring(0, 50)}..."`);
 
     return trimmedResult;
@@ -147,8 +246,9 @@ async function transcribeAudio(audioDataBase64, options = {}) {
   } finally {
     // 一時ファイルをクリーンアップ
     try {
-      await fs.unlink(tempInputPath);
-      await fs.unlink(tempWavPath);
+      await safeUnlink(tempInputPath);
+      await safeUnlink(tempWavPath);
+      await safeUnlink(tempOutputTextPath);
     } catch (cleanupError) {
       console.warn('[Whisper] 一時ファイル削除エラー:', cleanupError);
     }
@@ -165,5 +265,6 @@ function resetWhisperInstance() {
 module.exports = {
   loadWhisperModel,
   transcribeAudio,
+  validateWhisperEnvironment,
   resetWhisperInstance,
 };

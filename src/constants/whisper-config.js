@@ -10,6 +10,14 @@ const path = require('path');
 const DEFAULT_WHISPER_MODEL_PATH = path.join(__dirname, '../../models/ggml-base.bin');
 
 /**
+ * Whisper CLI 実行ファイルのデフォルトパス
+ * - 環境変数 WHISPER_CLI_PATH があればそれを優先
+ * - 未指定時は PATH 上の whisper-cli (Windows は whisper-cli.exe) を探索
+ */
+const DEFAULT_WHISPER_CLI_PATH =
+  process.env.WHISPER_CLI_PATH || (process.platform === 'win32' ? 'whisper-cli.exe' : 'whisper-cli');
+
+/**
  * Whisper 推論オプションのデフォルト値
  */
 const DEFAULT_WHISPER_OPTIONS = {
@@ -43,4 +51,5 @@ module.exports = {
   DEFAULT_WHISPER_OPTIONS,
   SUPPORTED_AUDIO_FORMATS,
   MAX_AUDIO_SIZE_BYTES,
+  DEFAULT_WHISPER_CLI_PATH,
 };
