@@ -234,11 +234,12 @@ function collectEditedSchedules() {
     const timeInput = card.querySelector('.schedule-time');
     const descriptionInput = card.querySelector('.schedule-description');
 
-    schedules.push({
-      title: extractedSchedules[index].title,
-      date: dateInput.value,
-      time: timeInput.value,
-      description: descriptionInput.value.trim(),
+   schedules.push({
+     title: extractedSchedules[index].title,
+     date: dateInput.value,
+     time: timeInput.value,
+     description: descriptionInput.value.trim(),
+      ttsMessage: extractedSchedules[index].ttsMessage,
     });
   });
 
@@ -257,6 +258,25 @@ async function confirmSchedules() {
 
     // 新しいスケジュールを追加（IDと通知フラグを付与）
     for (const schedule of newSchedules) {
+      let ttsMessage = schedule.ttsMessage;
+
+      if (window.electronAPI?.generateScheduleTts && schedule.time) {
+        try {
+          const ttsResult = await window.electronAPI.generateScheduleTts({
+            title: schedule.title,
+            date: schedule.date,
+            time: schedule.time,
+            description: schedule.description,
+          });
+
+          if (ttsResult?.success && ttsResult.message) {
+            ttsMessage = ttsResult.message.trim();
+          }
+        } catch (error) {
+          console.warn('[VoiceInput] TTS メッセージ再生成に失敗:', error);
+        }
+      }
+
       const scheduleWithMeta = {
         id: Date.now() + Math.random(), // ユニークなID生成
         title: schedule.title,
@@ -266,6 +286,7 @@ async function confirmSchedules() {
         notified: false,
         preNotified: false,
         startNotified: false,
+        ttsMessage: ttsMessage || schedule.ttsMessage || `${schedule.title} の開始時刻です。`,
       };
       existingSchedules.push(scheduleWithMeta);
       console.log('[VoiceInput] スケジュール登録:', scheduleWithMeta);

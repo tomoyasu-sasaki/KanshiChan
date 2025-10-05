@@ -21,5 +21,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getActiveWindow: () => ipcRenderer.invoke('get-active-window'),
   speakText: (payload) => ipcRenderer.invoke('tts-speak', payload),
   voiceInputTranscribe: (audioDataBase64) => ipcRenderer.invoke('voice-input-transcribe', audioDataBase64),
-  voiceInputCheckAvailability: () => ipcRenderer.invoke('voice-input-check-availability')
+  voiceInputCheckAvailability: () => ipcRenderer.invoke('voice-input-check-availability'),
+  generateScheduleTts: (schedule) => ipcRenderer.invoke('schedule-generate-tts', schedule)
 });

@@ -96,6 +96,25 @@ scheduleForm.addEventListener('submit', async (e) => {
   const time = document.getElementById('time').value;
   const description = document.getElementById('description').value;
 
+  let ttsMessage = `${title} の開始時刻です。`;
+
+  if (title && date && time && window.electronAPI?.generateScheduleTts) {
+    try {
+      const result = await window.electronAPI.generateScheduleTts({
+        title,
+        date,
+        time,
+        description,
+      });
+
+      if (result?.success && typeof result.message === 'string' && result.message.trim().length > 0) {
+        ttsMessage = result.message.trim();
+      }
+    } catch (error) {
+      console.warn('[Schedule] TTS メッセージ生成に失敗:', error);
+    }
+  }
+
   const schedule = {
     id: Date.now(),
     title,
@@ -104,7 +123,8 @@ scheduleForm.addEventListener('submit', async (e) => {
     description,
     notified: false,
     preNotified: false,
-    startNotified: false
+    startNotified: false,
+    ttsMessage,
   };
 
   schedules.push(schedule);
@@ -437,38 +457,40 @@ async function checkScheduleNotifications() {
 
     // 5分前通知: 分境界（秒=0）のときに分差がちょうど5のみ発火
     if (seconds === 0 && minutesLeft === SCHEDULE_NOTIFICATION_LEAD_MINUTES && !schedule.preNotified) {
+      schedule.preNotified = true;
+      schedule.notified = schedule.preNotified || schedule.startNotified;
+      saveSchedules();
+
       await window.electronAPI.sendNotification({
         title: SCHEDULE_MESSAGES.leadTitle(schedule.title),
         body: SCHEDULE_MESSAGES.leadBody(schedule, formatDate(schedule.date))
       });
 
       // 音声読み上げ（TTSキューに追加）
+      const leadMessage = schedule.ttsLeadMessage || `${SCHEDULE_NOTIFICATION_LEAD_MINUTES}分後に ${schedule.title} が始まります。`;
       await playTTS(
-        `${SCHEDULE_NOTIFICATION_LEAD_MINUTES}分後に ${schedule.title} が始まります。`,
+        leadMessage,
         { speakerId: SCHEDULE_NOTIFICATION_SPEAKER_ID, speedScale: 1.05 }
       );
-
-      schedule.preNotified = true;
-      schedule.notified = schedule.preNotified || schedule.startNotified;
-      saveSchedules();
     }
 
     // 開始時通知: 分境界で分差0 または 直前60秒以内の救済
     if (((seconds === 0 && minutesLeft === 0) || (timeDiff > -SCHEDULE_NOTIFICATION_COOLDOWN_MS && timeDiff <= 0)) && !schedule.startNotified) {
+      schedule.startNotified = true;
+      schedule.notified = schedule.preNotified || schedule.startNotified;
+      saveSchedules();
+
       await window.electronAPI.sendNotification({
         title: SCHEDULE_MESSAGES.startTitle(schedule.title),
         body: SCHEDULE_MESSAGES.startBody(schedule.description)
       });
 
       // 音声読み上げ（TTSキューに追加）
+      const startMessage = schedule.ttsMessage || `${schedule.title} の開始時刻です。`;
       await playTTS(
-        `${schedule.title} の開始時刻です。`,
+        startMessage,
         { speakerId: SCHEDULE_NOTIFICATION_SPEAKER_ID, speedScale: 1.0 }
       );
-
-      schedule.startNotified = true;
-      schedule.notified = schedule.preNotified || schedule.startNotified;
-      saveSchedules();
     }
   }
 }

@@ -6,6 +6,7 @@
 const { synthesizeWithVoiceVox } = require('../services/voicevox');
 const { getActiveWindowInfo } = require('../services/active-window');
 const { processVoiceInput, checkVoiceInputAvailability } = require('../services/voice-input');
+const { generateTtsMessageForSchedule } = require('../services/llm');
 
 /**
  * IPC チャネルを初期化する。
@@ -102,6 +103,20 @@ function registerIpcHandlers({ ipcMain, Notification, yoloDetectorProvider }) {
         models: { whisper: false, llm: false },
         errors: [error.message],
       };
+    }
+  });
+
+  ipcMain.handle('schedule-generate-tts', async (_event, schedule) => {
+    try {
+      if (!schedule || typeof schedule !== 'object') {
+        throw new Error('スケジュール情報が不正です');
+      }
+
+      const message = await generateTtsMessageForSchedule(schedule);
+      return { success: true, message };
+    } catch (error) {
+      console.error('[IPC] スケジュールTTS生成エラー:', error);
+      return { success: false, error: error.message };
     }
   });
 }

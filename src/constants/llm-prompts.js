@@ -8,7 +8,7 @@
 const SCHEDULE_EXTRACTION_SYSTEM_PROMPT = `あなたは音声入力から正確にスケジュール情報を抽出するアシスタントです。
 
 【役割】
-ユーザーが話した内容から、スケジュール情報（日時、タイトル、説明）を抽出し、構造化されたJSONフォーマットで出力してください。
+ユーザーが話した内容から、スケジュール情報（日時、タイトル、説明）を抽出し、加えて予定の開始時に読み上げる案内文 (ttsMessage) を生成し、構造化されたJSONフォーマットで出力してください。
 
 【抽出ルール】
 1. 日時情報の解釈:
@@ -26,7 +26,13 @@ const SCHEDULE_EXTRACTION_SYSTEM_PROMPT = `あなたは音声入力から正確�
    - 場所、参加者、準備物などの詳細情報
    - 説明がない場合は空文字列
 
-4. 複数スケジュールの対応:
+4. TTS メッセージの生成:
+   - スケジュール開始時に読み上げる自然な案内文を 30〜80 文字程度で作成
+   - 時刻は 24 時間表記で伝え、必要に応じてタイトルや説明の要点を含める
+   - 礼儀正しく、簡潔でポジティブな表現を心がける
+   - 絵文字や顔文字は使用しない
+
+5. 複数スケジュールの対応:
    - 1回の入力で複数のスケジュールが含まれる場合、それぞれを配列の要素として抽出
 
 【出力フォーマット】
@@ -38,7 +44,8 @@ const SCHEDULE_EXTRACTION_SYSTEM_PROMPT = `あなたは音声入力から正確�
       "title": "スケジュールタイトル",
       "date": "YYYY-MM-DD",
       "time": "HH:MM",
-      "description": "詳細説明（オプション）"
+      "description": "詳細説明（オプション）",
+      "ttsMessage": "開始通知で読み上げる案内文"
     }
   ]
 }
@@ -53,7 +60,8 @@ const SCHEDULE_EXTRACTION_SYSTEM_PROMPT = `あなたは音声入力から正確�
       "title": "田中さんと打ち合わせ",
       "date": "2025-10-06",
       "time": "10:00",
-      "description": "会議室Aで新規プロジェクトについて話す"
+      "description": "会議室Aで新規プロジェクトについて話す",
+      "ttsMessage": "10時に田中さんとの打ち合わせが始まります。会議室Aで新規プロジェクトの確認です。"
     }
   ]
 }
@@ -93,6 +101,32 @@ ${transcribedText}
 }
 
 /**
+ * スケジュール読み上げ文生成用プロンプト
+ * @param {{ title: string, date: string, time: string, description?: string }} schedule
+ * @returns {string}
+ */
+function buildScheduleTtsPrompt(schedule) {
+  const { title, date, time, description } = schedule;
+
+  return `あなたは予定の開始を知らせる日本語アシスタントです。以下の予定情報を参考に、1文で自然な案内文を作成してください。
+
+【出力要件】
+- 24時間表記の時刻を含める (例: 14時30分)
+- 30〜80文字程度で、礼儀正しく前向きな表現にする
+- 場所や目的など重要な要素があれば簡潔に触れる
+- 絵文字や顔文字は使用しない
+- 出力は案内文のみ（引用符や説明は不要）
+
+【予定情報】
+- タイトル: ${title}
+- 日付: ${date}
+- 時刻: ${time}
+- 説明: ${description || '特記事項なし'}
+
+案内文:`;
+}
+
+/**
  * スケジュール抽出用の JSON Schema
  */
 const SCHEDULE_EXTRACTION_JSON_SCHEMA = {
@@ -122,8 +156,13 @@ const SCHEDULE_EXTRACTION_JSON_SCHEMA = {
             type: 'string',
             description: 'スケジュールの詳細説明 (オプション)',
           },
+          ttsMessage: {
+            type: 'string',
+            description: '開始時に読み上げる案内文',
+            maxLength: 80,
+          },
         },
-        required: ['title', 'date', 'time'],
+        required: ['title', 'date', 'time', 'ttsMessage'],
       },
     },
   },
@@ -134,4 +173,5 @@ module.exports = {
   SCHEDULE_EXTRACTION_SYSTEM_PROMPT,
   buildScheduleExtractionUserPrompt,
   SCHEDULE_EXTRACTION_JSON_SCHEMA,
+  buildScheduleTtsPrompt,
 };
