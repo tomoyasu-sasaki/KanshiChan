@@ -112,3 +112,53 @@
   border: 1px solid var(--primary-start);
   color: var(--text-primary);
 }
+
+.slack-action-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.slack-action-group button {
+  flex: 1 1 30%;
+  min-width: 140px;
+}
+
+.slack-message {
+  margin-top: var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  background: rgba(72, 138, 153, 0.15);
+  color: var(--text-primary);
+  font-weight: var(--font-medium);
+  display: none;
+}
+
+.slack-message.show {
+  display: block;
+}
+
+.slack-message.error {
+  background: rgba(201, 42, 42, 0.15);
+  color: #b71c1c;
+}
+
+.slack-message.success {
+  background: rgba(72, 138, 153, 0.25);
+}
+
+.slack-status-block {
+  margin-top: var(--space-4);
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-light);
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.slack-status-text {
+  margin: 0 0 var(--space-2);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: 1.5;
+}

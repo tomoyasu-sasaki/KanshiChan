@@ -27,5 +27,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
   detectionLogStats: (options) => ipcRenderer.invoke('detection-log-stats', options),
   detectionLogRecent: (options) => ipcRenderer.invoke('detection-log-recent', options),
   recordAppUsage: (payload) => ipcRenderer.invoke('app-usage-record', payload),
-  appUsageStats: (options) => ipcRenderer.invoke('app-usage-stats', options)
+  appUsageStats: (options) => ipcRenderer.invoke('app-usage-stats', options),
+  slackReporterGetSettings: () => ipcRenderer.invoke('slack-reporter-get-settings'),
+  slackReporterUpdateSettings: (payload) => ipcRenderer.invoke('slack-reporter-update-settings', payload),
+  slackReporterSendNow: () => ipcRenderer.invoke('slack-reporter-send-now'),
+  slackReporterHistory: (options) => ipcRenderer.invoke('slack-reporter-history', options),
+  typingMonitorStatus: () => ipcRenderer.invoke('typing-monitor-status'),
+  typingMonitorSetEnabled: (enabled) => ipcRenderer.invoke('typing-monitor-set-enabled', enabled),
+  typingMonitorSetPaused: (paused) => ipcRenderer.invoke('typing-monitor-set-paused', paused),
+  typingActivityStats: (options) => ipcRenderer.invoke('typing-activity-stats', options),
+  systemEventsRecent: (options) => ipcRenderer.invoke('system-events-recent', options)
 });

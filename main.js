@@ -4,16 +4,24 @@
  * - ONNX Runtime (onnxruntime-node) を介した YOLOv11 推論を事前初期化する。
  * - 電力節約モードの抑止など Electron 特有の OS 依存処理をまとめる。
  */
-const { app, BrowserWindow, ipcMain, Notification, powerSaveBlocker } = require('electron');
+const { app, BrowserWindow, ipcMain, Notification, powerSaveBlocker, powerMonitor } = require('electron');
 const path = require('path');
 const YOLODetector = require('./src/utils/yolo-detector');
 const { createMainWindow } = require('./src/main/create-window');
 const { registerIpcHandlers } = require('./src/main/ipc/register-handlers');
 const { initializeDatabase, closeDatabase } = require('./src/main/db');
+const { createConfigStore } = require('./src/main/services/config-store');
+const { createSlackReporter } = require('./src/main/services/slack-reporter');
+const { createTypingMonitor } = require('./src/main/services/typing-monitor');
+const { createSystemEventMonitor } = require('./src/main/services/system-events');
 
 let mainWindow = null;
 let yoloDetector = null;
 let powerSaveId = null;
+let configStore = null;
+let slackReporter = null;
+let typingMonitor = null;
+let systemEventMonitor = null;
 
 const appConstantsPromise = import('./src/constants/app.js');
 
@@ -59,6 +67,11 @@ app.whenReady().then(async () => {
     console.error('データベース初期化に失敗しました:', dbError);
   }
 
+  configStore = createConfigStore(app);
+  slackReporter = createSlackReporter({ configStore });
+  typingMonitor = createTypingMonitor({ configStore });
+  systemEventMonitor = createSystemEventMonitor({ powerMonitor });
+
   // macOSのDockアイコンを設定
   if (process.platform === 'darwin' && app.dock) {
     const iconPath = path.join(__dirname, 'assets', 'logo.png');
@@ -97,7 +110,11 @@ app.whenReady().then(async () => {
   registerIpcHandlers({
     ipcMain,
     Notification,
-    yoloDetectorProvider: () => yoloDetector
+    yoloDetectorProvider: () => yoloDetector,
+    slackReporter,
+    configStore,
+    typingMonitor,
+    systemEventMonitor,
   });
 
   app.on('activate', () => {
@@ -115,6 +132,23 @@ app.on('window-all-closed', () => {
 });
 
 app.on('before-quit', () => {
+  if (slackReporter) {
+    try {
+      slackReporter.dispose();
+    } catch (error) {
+      console.warn('SlackReporter dispose でエラー:', error);
+    }
+  }
+  if (typingMonitor) {
+    typingMonitor.dispose().catch((error) => {
+      console.warn('TypingMonitor dispose でエラー:', error);
+    });
+  }
+  if (systemEventMonitor) {
+    systemEventMonitor.dispose().catch((error) => {
+      console.warn('SystemEventMonitor dispose でエラー:', error);
+    });
+  }
   closeDatabase().catch((error) => {
     console.warn('データベースクローズ処理でエラーが発生しました:', error);
   });

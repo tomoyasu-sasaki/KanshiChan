@@ -315,6 +315,55 @@
               </div>
             </div>
           </div>
+
+          <!-- Slack レポート設定 -->
+          <div class="accordion-item">
+            <button class="accordion-header" type="button">
+              <span>📊 Slack レポート設定</span>
+              <span class="accordion-icon">▼</span>
+            </button>
+            <div class="accordion-content">
+              <div class="form-group">
+                <label>
+                  <input type="checkbox" id="slackReporterEnabled">
+                  Slack 定期レポートを有効にする
+                </label>
+              </div>
+
+              <div class="form-group">
+                <label for="slackWebhookUrl">Slack Webhook URL</label>
+                <input type="text" id="slackWebhookUrl" placeholder="https://hooks.slack.com/services/...">
+                <span class="description">Incoming Webhook の URL を貼り付けてください</span>
+              </div>
+
+              <div class="form-group">
+                <label for="slackScheduleTimes">送信時刻 (HH:MM, カンマ区切り)</label>
+                <input type="text" id="slackScheduleTimes" placeholder="13:00,18:00">
+                <span class="description">例: 09:00,13:00,18:00</span>
+              </div>
+
+              <div class="form-group">
+                <label for="slackTimezone">タイムゾーン</label>
+                <input type="text" id="slackTimezone" placeholder="Asia/Tokyo">
+                <span class="description">空欄のままならシステムのタイムゾーンを使用します</span>
+              </div>
+
+              <div class="slack-action-group">
+                <button type="button" id="slackSaveBtn" class="btn-primary">Slack設定を保存</button>
+                <button type="button" id="slackSendNowBtn" class="btn-secondary">今すぐ送信</button>
+                <button type="button" id="slackRefreshStatusBtn" class="btn-secondary">履歴を更新</button>
+              </div>
+
+              <div id="slackReporterMessage" class="slack-message"></div>
+
+              <div class="slack-status-block">
+                <p id="slackReporterStatus" class="slack-status-text">Slack レポートは未設定です。</p>
+                <ul id="slackHistoryList" class="slack-history-list">
+                  <li class="empty">履歴がありません</li>
+                </ul>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div class="button-group">
@@ -386,12 +435,84 @@
               <option value="phone">スマホ検知</option>
               <option value="absence">不在検知</option>
               <option value="alerts">アラートのみ</option>
+              <option value="typing">タイピング</option>
             </select>
           </div>
         </section>
 
         <section class="dashboard-section kpi" id="dashboardKpis">
           <!-- JS で動的に生成 -->
+        </section>
+
+        <section class="dashboard-section slack-report" id="dashboardSlackSection">
+          <div class="section-header">
+            <h3>Slack レポート状況</h3>
+            <div class="section-actions">
+              <button id="dashboardSlackRefresh" class="btn-secondary btn-compact">履歴更新</button>
+              <button id="dashboardSlackSendNow" class="btn-secondary btn-compact">今すぐ送信</button>
+            </div>
+          </div>
+          <div class="slack-report-body">
+            <p id="dashboardSlackSummary" class="slack-summary">Slack レポートは未設定です。</p>
+            <ul id="dashboardSlackHistory" class="slack-history-list">
+              <li class="empty">履歴がありません</li>
+            </ul>
+          </div>
+        </section>
+
+        <section class="dashboard-section typing-activity">
+          <div class="section-header">
+            <h3>タイピングアクティビティ</h3>
+            <div class="section-actions">
+              <label class="toggle-control">
+                <input type="checkbox" id="typingMonitorToggle">
+                <span>監視を有効にする</span>
+              </label>
+              <button id="typingMonitorPauseBtn" class="btn-secondary btn-compact">休止/再開</button>
+              <button id="typingStatsRefreshBtn" class="btn-secondary btn-compact">統計更新</button>
+            </div>
+          </div>
+          <p id="typingMonitorStatus" class="typing-status">タイピング監視は無効です。</p>
+          <div class="table-wrapper">
+            <table id="dashboardTypingTable">
+              <thead>
+                <tr>
+                  <th>開始</th>
+                  <th>終了</th>
+                  <th>キー入力数</th>
+                  <th>最長連続入力</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="empty">
+                  <td colspan="4">データを読み込み中...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="dashboard-section system-events">
+          <div class="section-header">
+            <h3>システムイベント</h3>
+            <button id="systemEventsRefreshBtn" class="btn-secondary btn-compact">最新を更新</button>
+          </div>
+          <div class="table-wrapper">
+            <table id="dashboardSystemEventsTable">
+              <thead>
+                <tr>
+                  <th>発生時刻</th>
+                  <th>イベント</th>
+                  <th>メタ情報</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="empty">
+                  <td colspan="3">データを読み込み中...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </section>
 
         <section class="dashboard-section chart">

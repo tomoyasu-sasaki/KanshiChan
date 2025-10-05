@@ -285,6 +285,67 @@ h2 {
 }
 
 /* ==============================================
+   Slack レポート共通コンポーネント
+   ============================================== */
+.slack-history-list {
+  list-style: none;
+  padding: 0;
+  margin: var(--space-3) 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.slack-history-list .empty {
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  background: rgba(0, 0, 0, 0.03);
+  color: var(--text-tertiary);
+  font-style: italic;
+  text-align: center;
+}
+
+.slack-history-item {
+  background: rgba(255, 255, 255, 0.25);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  backdrop-filter: blur(4px);
+}
+
+.slack-history-item.success {
+  border-left: 4px solid var(--primary-start);
+}
+
+.slack-history-item.failure {
+  border-left: 4px solid #c92a2a;
+}
+
+.slack-history-header {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.slack-history-icon {
+  font-size: var(--text-lg);
+}
+
+.slack-history-status {
+  font-weight: var(--font-semibold);
+}
+
+.slack-history-error {
+  margin-top: var(--space-2);
+  color: #c92a2a;
+  font-size: var(--text-sm);
+  line-height: 1.4;
+}
+
+/* ==============================================
    アクセシビリティ
    ============================================== */
 :focus-visible {

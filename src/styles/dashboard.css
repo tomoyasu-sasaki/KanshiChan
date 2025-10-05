@@ -233,6 +233,87 @@
   margin: 0;
 }
 
+.section-header .section-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.dashboard-section.slack-report {
+  background: rgba(72, 138, 153, 0.08);
+  border: 1px solid rgba(72, 138, 153, 0.25);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+}
+
+.slack-report-body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.slack-summary {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.slack-summary.success {
+  color: var(--text-primary);
+  font-weight: var(--font-medium);
+}
+
+.slack-summary.error {
+  color: #c92a2a;
+  font-weight: var(--font-medium);
+}
+
+.slack-summary.info {
+  color: var(--text-secondary);
+}
+
+.dashboard-section.typing-activity {
+  border: 1px solid rgba(100, 100, 110, 0.25);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.typing-status {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.typing-status.active {
+  color: var(--primary-start);
+  font-weight: var(--font-medium);
+}
+
+.typing-status.error {
+  color: #c92a2a;
+  font-weight: var(--font-medium);
+}
+
+.toggle-control {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.toggle-control input[type='checkbox'] {
+  width: 18px;
+  height: 18px;
+}
+
+.dashboard-section.system-events {
+  border: 1px solid rgba(100, 100, 110, 0.25);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  background: rgba(0, 0, 0, 0.02);
+}
+
 /* ==============================================
    テーブル
    ============================================== */

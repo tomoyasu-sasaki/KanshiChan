@@ -8,6 +8,8 @@ import { DEFAULT_VOICEVOX_SPEAKER_ID } from '../constants/voicevox-config.js';
 import { getSpeakerOptions } from '../constants/voicevox-speakers.js';
 import { YOLO_CLASSES, YOLO_CATEGORIES, getClassesByCategory } from '../constants/yolo-classes.js';
 
+const DEFAULT_SLACK_SCHEDULE = ['13:00', '18:00'];
+
 // 設定を読み込み
 function loadSettings() {
   const saved = localStorage.getItem('monitorSettings');
@@ -48,6 +50,11 @@ let absenceThreshold, absenceThresholdValue, absenceAlertEnabled, absenceConfide
 let soundEnabled, desktopNotification, showDetections;
 let yoloEnabled, voicevoxSpeaker;
 let saveSettingsBtn, resetSettingsBtn, saveMessage;
+let slackReporterEnabled, slackWebhookUrlInput, slackScheduleTimesInput, slackTimezoneInput;
+let slackSaveBtn, slackSendNowBtn, slackRefreshBtn, slackReporterStatus, slackHistoryList, slackReporterMessage;
+let slackSettingsCache = null;
+let slackHistoryCache = [];
+let slackControlsBusy = false;
 
 // 初期化
 document.addEventListener('DOMContentLoaded', () => {
@@ -74,6 +81,17 @@ document.addEventListener('DOMContentLoaded', () => {
   resetSettingsBtn = document.getElementById('resetSettingsBtn');
   saveMessage = document.getElementById('saveMessage');
 
+  slackReporterEnabled = document.getElementById('slackReporterEnabled');
+  slackWebhookUrlInput = document.getElementById('slackWebhookUrl');
+  slackScheduleTimesInput = document.getElementById('slackScheduleTimes');
+  slackTimezoneInput = document.getElementById('slackTimezone');
+  slackSaveBtn = document.getElementById('slackSaveBtn');
+  slackSendNowBtn = document.getElementById('slackSendNowBtn');
+  slackRefreshBtn = document.getElementById('slackRefreshStatusBtn');
+  slackReporterStatus = document.getElementById('slackReporterStatus');
+  slackHistoryList = document.getElementById('slackHistoryList');
+  slackReporterMessage = document.getElementById('slackReporterMessage');
+
   // 動的にUI要素を生成
   populateVoicevoxSpeakers();
   populateDetectionClasses();
@@ -82,6 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
   applySettings(settings);
   setupEventListeners();
   setupAccordion();
+  initializeSlackReporterSection();
 });
 
 // VOICEVOX話者選択を動的に生成
@@ -290,3 +309,272 @@ function setupAccordion() {
 window.getSettings = function() {
   return loadSettings();
 };
+
+async function initializeSlackReporterSection() {
+  if (!slackReporterEnabled) {
+    return;
+  }
+
+  if (!window.electronAPI?.slackReporterGetSettings) {
+    setSlackFieldsDisabled(true);
+    showSlackMessage('Slack レポート機能を初期化できません (electronAPI 未接続)', 'error');
+    return;
+  }
+
+  slackSaveBtn?.addEventListener('click', handleSlackSettingsSave);
+  slackSendNowBtn?.addEventListener('click', handleSlackSendNow);
+  slackRefreshBtn?.addEventListener('click', () => refreshSlackHistory(true));
+
+  await refreshSlackSettings(false);
+  await refreshSlackHistory(false);
+  renderSlackStatus();
+}
+
+function setSlackFieldsDisabled(disabled) {
+  [
+    slackReporterEnabled,
+    slackWebhookUrlInput,
+    slackScheduleTimesInput,
+    slackTimezoneInput,
+    slackSaveBtn,
+    slackSendNowBtn,
+    slackRefreshBtn,
+  ].forEach((element) => {
+    if (element) {
+      element.disabled = disabled;
+    }
+  });
+}
+
+function setSlackBusy(isBusy) {
+  slackControlsBusy = isBusy;
+  setSlackFieldsDisabled(isBusy);
+}
+
+function applySlackSettingsToInputs(settings) {
+  if (!slackReporterEnabled) return;
+  slackSettingsCache = settings || null;
+
+  const enabled = Boolean(slackSettingsCache?.enabled);
+  slackReporterEnabled.checked = enabled;
+  if (slackWebhookUrlInput) {
+    slackWebhookUrlInput.value = slackSettingsCache?.webhookUrl || '';
+  }
+  if (slackScheduleTimesInput) {
+    const schedule = slackSettingsCache?.scheduleTimes?.length
+      ? slackSettingsCache.scheduleTimes.join(', ')
+      : DEFAULT_SLACK_SCHEDULE.join(', ');
+    slackScheduleTimesInput.value = schedule;
+  }
+  if (slackTimezoneInput) {
+    slackTimezoneInput.value = slackSettingsCache?.timezone || '';
+  }
+
+  renderSlackStatus();
+}
+
+function parseScheduleInput(value) {
+  if (typeof value !== 'string') {
+    return DEFAULT_SLACK_SCHEDULE;
+  }
+  const parts = value
+    .split(',')
+    .map((part) => part.trim())
+    .filter((part) => part.length > 0);
+  return parts.length > 0 ? parts : DEFAULT_SLACK_SCHEDULE;
+}
+
+async function refreshSlackSettings(showError = true) {
+  if (!window.electronAPI?.slackReporterGetSettings) {
+    return;
+  }
+
+  try {
+    setSlackBusy(true);
+    const response = await window.electronAPI.slackReporterGetSettings();
+    if (!response?.success) {
+      throw new Error(response?.error || 'Slack 設定の取得に失敗しました');
+    }
+    applySlackSettingsToInputs(response.settings);
+  } catch (error) {
+    console.error('[Settings] Slack 設定取得エラー:', error);
+    if (showError) {
+      showSlackMessage(error.message || 'Slack 設定の取得に失敗しました', 'error');
+    }
+  } finally {
+    setSlackBusy(false);
+  }
+}
+
+async function refreshSlackHistory(showMessageOnError = false) {
+  if (!window.electronAPI?.slackReporterHistory || !slackHistoryList) {
+    return;
+  }
+
+  try {
+    setSlackBusy(true);
+    const response = await window.electronAPI.slackReporterHistory({ limit: 10 });
+    if (!response?.success) {
+      throw new Error(response?.error || 'Slack 履歴の取得に失敗しました');
+    }
+    slackHistoryCache = Array.isArray(response.history) ? response.history : [];
+    renderSlackHistoryList();
+    renderSlackStatus();
+  } catch (error) {
+    console.error('[Settings] Slack 履歴取得エラー:', error);
+    if (showMessageOnError) {
+      showSlackMessage(error.message || 'Slack 履歴の取得に失敗しました', 'error');
+    }
+  } finally {
+    setSlackBusy(false);
+  }
+}
+
+function renderSlackStatus() {
+  if (!slackReporterStatus) {
+    return;
+  }
+
+  if (!slackSettingsCache?.enabled || !slackSettingsCache?.webhookUrl) {
+    slackReporterStatus.textContent = 'Slack レポートは無効です。Webhook URL を設定して有効化してください。';
+    return;
+  }
+
+  if (!slackHistoryCache.length) {
+    const scheduleText = slackSettingsCache.scheduleTimes?.join(', ') || DEFAULT_SLACK_SCHEDULE.join(', ');
+    slackReporterStatus.textContent = `Slack レポートは有効です。送信予定: ${scheduleText}`;
+    return;
+  }
+
+  const latest = slackHistoryCache[0];
+  const icon = latest.status === 'success' ? '✅' : '⚠️';
+  const statusLabel = latest.status === 'success' ? '成功' : '失敗';
+  const base = `${icon} 最終送信: ${formatSlackTimestamp(latest.sentAt)} (${statusLabel}${latest.reason ? ` / ${latest.reason}` : ''})`;
+  slackReporterStatus.textContent = latest.error ? `${base} - ${latest.error}` : base;
+}
+
+function renderSlackHistoryList() {
+  if (!slackHistoryList) {
+    return;
+  }
+
+  if (!slackHistoryCache.length) {
+    slackHistoryList.innerHTML = '<li class="empty">履歴がありません</li>';
+    return;
+  }
+
+  slackHistoryList.innerHTML = slackHistoryCache
+    .map((entry) => {
+      const icon = entry.status === 'success' ? '✅' : '⚠️';
+      const reason = entry.reason === 'schedule' ? '定期' : '手動';
+      const statusClass = entry.status === 'success' ? 'success' : 'failure';
+      const errorLine = entry.error ? `<div class="slack-history-error">${escapeHtml(entry.error)}</div>` : '';
+      return `
+        <li class="slack-history-item ${statusClass}">
+          <div class="slack-history-header">
+            <span class="slack-history-icon">${icon}</span>
+            <span class="slack-history-time">${formatSlackTimestamp(entry.sentAt)}</span>
+            <span class="slack-history-status">${entry.status === 'success' ? '成功' : '失敗'}</span>
+            <span class="slack-history-reason">${reason}</span>
+          </div>
+          ${errorLine}
+        </li>
+      `;
+    })
+    .join('');
+}
+
+async function handleSlackSettingsSave() {
+  if (slackControlsBusy) {
+    return;
+  }
+  if (!window.electronAPI?.slackReporterUpdateSettings) {
+    showSlackMessage('Slack 設定を保存できません (electronAPI 未接続)', 'error');
+    return;
+  }
+
+  const payload = {
+    enabled: slackReporterEnabled?.checked ?? false,
+    webhookUrl: slackWebhookUrlInput?.value?.trim() || '',
+    scheduleTimes: parseScheduleInput(slackScheduleTimesInput?.value || ''),
+    timezone: slackTimezoneInput?.value?.trim() || undefined,
+  };
+
+  try {
+    setSlackBusy(true);
+    const response = await window.electronAPI.slackReporterUpdateSettings(payload);
+    if (!response?.success) {
+      throw new Error(response?.error || 'Slack 設定の保存に失敗しました');
+    }
+    applySlackSettingsToInputs(response.settings);
+    showSlackMessage('Slack 設定を保存しました', 'success');
+    await refreshSlackHistory(false);
+  } catch (error) {
+    console.error('[Settings] Slack 設定保存エラー:', error);
+    showSlackMessage(error.message || 'Slack 設定の保存に失敗しました', 'error');
+  } finally {
+    setSlackBusy(false);
+  }
+}
+
+async function handleSlackSendNow() {
+  if (slackControlsBusy) {
+    return;
+  }
+  if (!window.electronAPI?.slackReporterSendNow) {
+    showSlackMessage('Slack 送信 API が利用できません', 'error');
+    return;
+  }
+
+  try {
+    setSlackBusy(true);
+    const response = await window.electronAPI.slackReporterSendNow();
+    if (!response?.success) {
+      throw new Error(response?.error || 'Slack 送信に失敗しました');
+    }
+    showSlackMessage('Slack に送信しました', 'success');
+    await refreshSlackHistory(false);
+  } catch (error) {
+    console.error('[Settings] Slack 手動送信エラー:', error);
+    showSlackMessage(error.message || 'Slack 手動送信に失敗しました', 'error');
+  } finally {
+    setSlackBusy(false);
+  }
+}
+
+function showSlackMessage(text, type = 'info') {
+  if (!slackReporterMessage) {
+    return;
+  }
+  slackReporterMessage.textContent = text;
+  slackReporterMessage.className = `slack-message show ${type}`;
+  setTimeout(() => {
+    if (slackReporterMessage) {
+      slackReporterMessage.textContent = '';
+      slackReporterMessage.className = 'slack-message';
+    }
+  }, 4000);
+}
+
+function formatSlackTimestamp(value) {
+  if (!value) {
+    return '-';
+  }
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) {
+    return '-';
+  }
+  return date.toLocaleString('ja-JP', { hour12: false });
+}
+
+function escapeHtml(value) {
+  if (typeof value !== 'string') {
+    return '';
+  }
+  return value
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}

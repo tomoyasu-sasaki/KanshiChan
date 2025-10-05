@@ -18,8 +18,27 @@ const kpiContainer = document.getElementById('dashboardKpis');
 const logTableBody = document.querySelector('#dashboardLogTable tbody');
 const appUsageTableBody = document.querySelector('#dashboardAppUsageTable tbody');
 const chartCanvas = document.getElementById('dashboardTrendChart');
+const slackSummaryEl = document.getElementById('dashboardSlackSummary');
+const slackHistoryListEl = document.getElementById('dashboardSlackHistory');
+const slackSendNowBtn = document.getElementById('dashboardSlackSendNow');
+const slackRefreshBtn = document.getElementById('dashboardSlackRefresh');
+const typingMonitorToggle = document.getElementById('typingMonitorToggle');
+const typingMonitorPauseBtn = document.getElementById('typingMonitorPauseBtn');
+const typingStatsRefreshBtn = document.getElementById('typingStatsRefreshBtn');
+const typingMonitorStatusEl = document.getElementById('typingMonitorStatus');
+const typingTableBody = document.querySelector('#dashboardTypingTable tbody');
+const systemEventsRefreshBtn = document.getElementById('systemEventsRefreshBtn');
+const systemEventsTableBody = document.querySelector('#dashboardSystemEventsTable tbody');
 const Chart = window.Chart;
 let autoRefreshHandle = null;
+let slackBusy = false;
+let slackSummaryResetHandle = null;
+let typingBusy = false;
+let typingStatusResetHandle = null;
+let lastRange = null;
+let systemEventsBusy = false;
+
+const DEFAULT_SLACK_SCHEDULE = ['13:00', '18:00'];
 
 const DATASET_GROUPS = {
   all: [
@@ -43,6 +62,11 @@ const state = {
   chart: null,
   appUsage: [],
   appUsageTotalDuration: 0,
+  slackSettings: null,
+  slackHistory: [],
+  typingStats: null,
+  typingStatus: null,
+  systemEvents: [],
 };
 
 function openModal() {
@@ -84,6 +108,44 @@ if (exportBtn) {
   exportBtn.addEventListener('click', exportCsv);
 }
 
+if (slackSendNowBtn && window.electronAPI?.slackReporterSendNow) {
+  slackSendNowBtn.addEventListener('click', handleDashboardSlackSendNow);
+}
+
+if (slackRefreshBtn && window.electronAPI?.slackReporterHistory) {
+  slackRefreshBtn.addEventListener('click', () => {
+    refreshSlackSection({ showLoadingIndicator: true });
+  });
+}
+
+if (typingMonitorToggle && window.electronAPI?.typingMonitorSetEnabled) {
+  typingMonitorToggle.addEventListener('change', handleTypingMonitorToggle);
+}
+
+if (typingMonitorPauseBtn && window.electronAPI?.typingMonitorSetPaused) {
+  typingMonitorPauseBtn.addEventListener('click', handleTypingPauseToggle);
+}
+
+if (typingStatsRefreshBtn && window.electronAPI?.typingActivityStats) {
+  typingStatsRefreshBtn.addEventListener('click', () => {
+    refreshTypingSection({
+      start: lastRange?.start,
+      end: lastRange?.end,
+      showLoading: true,
+    });
+  });
+}
+
+if (systemEventsRefreshBtn && window.electronAPI?.systemEventsRecent) {
+  systemEventsRefreshBtn.addEventListener('click', () => {
+    refreshSystemEvents({
+      showLoading: true,
+      start: lastRange?.start,
+      end: lastRange?.end,
+    });
+  });
+}
+
 if (rangeSelect) {
   rangeSelect.addEventListener('change', () => {
     const isCustom = rangeSelect.value === 'custom';
@@ -120,6 +182,7 @@ if (startInput && endInput) {
 function loadDashboardData() {
   const { start, end } = computeRange();
   const groupBy = granularitySelect?.value === 'hour' ? 'hour' : 'day';
+  lastRange = { start, end };
 
   Promise.all([
     window.electronAPI?.detectionLogStats?.({ start, end, groupBy }) ?? Promise.resolve({ success: false }),
@@ -148,6 +211,24 @@ function loadDashboardData() {
 
       renderAppUsageTable();
       renderKpis();
+    })
+    .then(() => {
+      if (window.electronAPI?.slackReporterGetSettings) {
+        return refreshSlackSection({ showLoadingIndicator: false });
+      }
+      return null;
+    })
+    .then(() => {
+      if (window.electronAPI?.typingActivityStats) {
+        return refreshTypingSection({ start, end, showLoading: false });
+      }
+      return null;
+    })
+    .then(() => {
+      if (window.electronAPI?.systemEventsRecent) {
+        return refreshSystemEvents({ start, end, showLoading: false });
+      }
+      return null;
     })
     .catch((error) => {
       console.error('[Dashboard] データ取得エラー:', error);
@@ -239,13 +320,27 @@ function renderKpis() {
           label: '最多発生タイミング',
           value: `${mostActiveBucket.bucket}`,
           subtext: `${mostActiveBucket.totalCount} 件`,
-        }
+      }
       : null,
     state.appUsageTotalDuration > 0 && topApp
       ? {
           label: '最も使用したアプリ',
           value: topApp.appName,
           subtext: `${formatDuration(topApp.totalDurationSeconds)} / ${topApp.sessions} セッション`,
+        }
+      : null,
+    state.typingStats?.summary
+      ? {
+          label: '総キー入力数',
+          value: state.typingStats.summary.totalKeyPresses || 0,
+          subtext: `平均 ${state.typingStats.summary.averageKeyPressesPerMinute || 0} 回/分`,
+        }
+      : null,
+    state.typingStats?.summary
+      ? {
+          label: '最長連続入力',
+          value: formatDuration(state.typingStats.summary.longestStreakSeconds || 0),
+          subtext: '休止なしで入力した最長時間',
         }
       : null,
   ].filter(Boolean);
@@ -264,9 +359,18 @@ function renderKpis() {
 }
 
 function renderChart() {
-  if (!chartCanvas || !state.stats || !Chart) return;
+  if (!chartCanvas || !Chart) return;
 
   const groupKey = typeFilterSelect?.value || 'all';
+  if (groupKey === 'typing') {
+    renderTypingChart();
+    return;
+  }
+
+  if (!state.stats) {
+    return;
+  }
+
   const datasetGroup = DATASET_GROUPS[groupKey] || DATASET_GROUPS.all;
 
   const labels = (state.stats.buckets || []).map((bucket) => bucket.bucket);
@@ -372,10 +476,101 @@ function renderChart() {
   }
 }
 
+function renderTypingChart() {
+  if (!chartCanvas || !Chart) return;
+
+  const typing = state.typingStats;
+  if (!typing || !typing.buckets) {
+    if (state.chart) {
+      state.chart.data.labels = [];
+      state.chart.data.datasets = [];
+      state.chart.update();
+    }
+    return;
+  }
+
+  const labels = typing.buckets.map((bucket) => formatTypingBucketLabel(bucket));
+  const data = typing.buckets.map((bucket) => bucket.keyPresses || 0);
+
+  const dataset = {
+    label: 'キー入力数/分',
+    data,
+    fill: false,
+    borderColor: '#ff922b',
+    backgroundColor: '#ff922b',
+    tension: 0.2,
+  };
+
+  if (!state.chart) {
+    state.chart = new Chart(chartCanvas, {
+      type: 'line',
+      data: {
+        labels,
+        datasets: [dataset],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: {
+            display: true,
+            position: 'top',
+          },
+        },
+        interaction: {
+          mode: 'index',
+          intersect: false,
+        },
+        scales: {
+          x: {
+            ticks: {
+              color: 'rgba(255, 255, 255, 0.7)',
+              font: {
+                size: 11,
+              },
+            },
+            grid: {
+              color: 'rgba(255, 255, 255, 0.05)',
+              drawBorder: false,
+            },
+          },
+          y: {
+            beginAtZero: true,
+            ticks: {
+              precision: 0,
+              color: 'rgba(255, 255, 255, 0.7)',
+              font: {
+                size: 11,
+              },
+            },
+            grid: {
+              color: 'rgba(255, 255, 255, 0.05)',
+              drawBorder: false,
+            },
+          },
+        },
+      },
+    });
+  } else {
+    state.chart.data.labels = labels;
+    state.chart.data.datasets = [dataset];
+    state.chart.update();
+  }
+}
+
 function renderLogTable() {
   if (!logTableBody) return;
 
   const filter = typeFilterSelect?.value || 'all';
+
+  if (filter === 'typing') {
+    logTableBody.innerHTML = `
+      <tr class="empty">
+        <td colspan="4">タイピングログは「タイピングアクティビティ」セクションを参照してください。</td>
+      </tr>
+    `;
+    return;
+  }
 
   const filtered = state.recentLogs.filter((item) => {
     if (filter === 'all') return true;
@@ -438,6 +633,496 @@ function renderAppUsageTable() {
     .join('');
 }
 
+function setSlackBusy(isBusy) {
+  slackBusy = isBusy;
+  const shouldDisable = isBusy || !window.electronAPI?.slackReporterGetSettings;
+  if (slackSendNowBtn) {
+    slackSendNowBtn.disabled = shouldDisable;
+  }
+  if (slackRefreshBtn) {
+    slackRefreshBtn.disabled = shouldDisable;
+  }
+}
+
+async function refreshSlackSection({ showLoadingIndicator = false } = {}) {
+  if (!window.electronAPI?.slackReporterGetSettings) {
+    renderSlackSection();
+    return Promise.resolve(null);
+  }
+
+  try {
+    if (showLoadingIndicator) {
+      setSlackBusy(true);
+      showSlackSummaryMessage('Slack 情報を更新中...', 'info');
+    }
+
+    const [settingsRes, historyRes] = await Promise.all([
+      window.electronAPI.slackReporterGetSettings(),
+      window.electronAPI.slackReporterHistory({ limit: 5 }),
+    ]);
+
+    state.slackSettings = settingsRes?.success ? settingsRes.settings : null;
+    state.slackHistory = historyRes?.success && Array.isArray(historyRes.history) ? historyRes.history : [];
+    renderSlackSection();
+  } catch (error) {
+    console.error('[Dashboard] Slack 情報更新エラー:', error);
+    showSlackSummaryMessage(error.message || 'Slack 情報の取得に失敗しました', 'error', { temporary: true });
+  } finally {
+    if (showLoadingIndicator) {
+      setSlackBusy(false);
+    }
+  }
+}
+
+async function handleDashboardSlackSendNow() {
+  if (slackBusy) {
+    return;
+  }
+  if (!window.electronAPI?.slackReporterSendNow) {
+    showSlackSummaryMessage('Slack 送信機能が利用できません', 'error', { temporary: true });
+    return;
+  }
+
+  try {
+    setSlackBusy(true);
+    showSlackSummaryMessage('Slack に送信中...', 'info');
+    const response = await window.electronAPI.slackReporterSendNow();
+    if (!response?.success) {
+      throw new Error(response?.error || 'Slack 送信に失敗しました');
+    }
+    await refreshSlackSection({ showLoadingIndicator: false });
+    showSlackSummaryMessage('Slack に送信しました ✅', 'success', { temporary: true });
+  } catch (error) {
+    console.error('[Dashboard] Slack 手動送信エラー:', error);
+    showSlackSummaryMessage(error.message || 'Slack 手動送信に失敗しました', 'error', { temporary: true });
+  } finally {
+    setSlackBusy(false);
+  }
+}
+
+function renderSlackSection() {
+  if (!slackSummaryEl || !slackHistoryListEl) {
+    return;
+  }
+
+  if (!window.electronAPI?.slackReporterGetSettings) {
+    slackSummaryEl.textContent = 'Slack レポート機能は利用できません。';
+    slackSummaryEl.className = 'slack-summary error';
+    slackHistoryListEl.innerHTML = '<li class="empty">機能が無効です</li>';
+    if (slackSendNowBtn) slackSendNowBtn.disabled = true;
+    if (slackRefreshBtn) slackRefreshBtn.disabled = true;
+    return;
+  }
+
+  if (!state.slackSettings) {
+    slackSummaryEl.textContent = 'Slack レポート設定を読み込み中...';
+    slackSummaryEl.className = 'slack-summary';
+    slackHistoryListEl.innerHTML = '<li class="empty">履歴がありません</li>';
+    return;
+  }
+
+  if (!state.slackSettings.enabled || !state.slackSettings.webhookUrl) {
+    slackSummaryEl.textContent = 'Slack レポートは無効です。設定から有効化してください。';
+    slackSummaryEl.className = 'slack-summary';
+    slackHistoryListEl.innerHTML = '<li class="empty">履歴がありません</li>';
+    return;
+  }
+
+  if (!state.slackHistory?.length) {
+    const scheduleText = state.slackSettings.scheduleTimes?.length
+      ? state.slackSettings.scheduleTimes.join(', ')
+      : DEFAULT_SLACK_SCHEDULE.join(', ');
+    slackSummaryEl.textContent = `Slack レポートは有効です。送信予定: ${scheduleText}`;
+    slackSummaryEl.className = 'slack-summary';
+    slackHistoryListEl.innerHTML = '<li class="empty">履歴がまだありません</li>';
+    return;
+  }
+
+  const latest = state.slackHistory[0];
+  const icon = latest.status === 'success' ? '✅' : '⚠️';
+  const statusLabel = latest.status === 'success' ? '成功' : '失敗';
+  const summary = `${icon} 最終送信: ${formatDateTime(latest.sentAt)} (${statusLabel}${latest.reason ? ` / ${latest.reason}` : ''})`;
+  slackSummaryEl.textContent = latest.error ? `${summary} - ${latest.error}` : summary;
+  slackSummaryEl.className = `slack-summary ${latest.status === 'success' ? 'success' : 'error'}`;
+
+  renderSlackHistory();
+}
+
+function renderSlackHistory() {
+  if (!slackHistoryListEl) {
+    return;
+  }
+
+  if (!state.slackHistory || state.slackHistory.length === 0) {
+    slackHistoryListEl.innerHTML = '<li class="empty">履歴がありません</li>';
+    return;
+  }
+
+  slackHistoryListEl.innerHTML = state.slackHistory
+    .map((entry) => {
+      const icon = entry.status === 'success' ? '✅' : '⚠️';
+      const reason = entry.reason === 'schedule' ? '定期' : '手動';
+      const statusClass = entry.status === 'success' ? 'success' : 'failure';
+      const errorLine = entry.error ? `<div class="slack-history-error">${escapeHtml(entry.error)}</div>` : '';
+      return `
+        <li class="slack-history-item ${statusClass}">
+          <div class="slack-history-header">
+            <span class="slack-history-icon">${icon}</span>
+            <span class="slack-history-time">${formatDateTime(entry.sentAt)}</span>
+            <span class="slack-history-status">${entry.status === 'success' ? '成功' : '失敗'}</span>
+            <span class="slack-history-reason">${reason}</span>
+          </div>
+          ${errorLine}
+        </li>
+      `;
+    })
+    .join('');
+}
+
+function showSlackSummaryMessage(message, type = 'info', options = {}) {
+  if (!slackSummaryEl) {
+    return;
+  }
+
+  if (slackMessageResetHandle) {
+    clearTimeout(slackMessageResetHandle);
+    slackMessageResetHandle = null;
+  }
+
+  slackSummaryEl.textContent = message;
+  slackSummaryEl.className = `slack-summary ${type}`;
+
+  if (options.temporary) {
+    slackMessageResetHandle = setTimeout(() => {
+      slackMessageResetHandle = null;
+      renderSlackSection();
+    }, options.duration ?? 3000);
+  }
+}
+
+function setTypingBusy(isBusy) {
+  typingBusy = isBusy;
+  updateTypingControlsDisabled();
+}
+
+function updateTypingControlsDisabled() {
+  const available =
+    Boolean(window.electronAPI?.typingMonitorStatus) &&
+    state.typingStatus != null &&
+    state.typingStatus.available !== false;
+  if (typingMonitorToggle) {
+    typingMonitorToggle.disabled = typingBusy || !available;
+    if (available && state.typingStatus) {
+      typingMonitorToggle.checked = Boolean(state.typingStatus.enabled);
+    }
+  }
+  if (typingMonitorPauseBtn) {
+    typingMonitorPauseBtn.disabled = typingBusy || !available || !state.typingStatus?.enabled;
+  }
+  if (typingStatsRefreshBtn) {
+    typingStatsRefreshBtn.disabled = typingBusy || !available;
+  }
+}
+
+async function refreshTypingSection({ start, end, showLoading = false } = {}) {
+  if (!window.electronAPI?.typingActivityStats) {
+    renderTypingStatus();
+    renderTypingTable();
+    return null;
+  }
+
+  const rangeStart = Number.isFinite(start) ? start : lastRange?.start;
+  const rangeEnd = Number.isFinite(end) ? end : lastRange?.end;
+
+  try {
+    if (showLoading) {
+      setTypingBusy(true);
+      showTypingStatusMessage('タイピング統計を更新中...', 'info');
+    }
+
+    const [statusRes, statsRes] = await Promise.all([
+      window.electronAPI.typingMonitorStatus(),
+      window.electronAPI.typingActivityStats({ start: rangeStart, end: rangeEnd }),
+    ]);
+
+    if (statusRes?.success) {
+      state.typingStatus = statusRes.status;
+    }
+
+    if (statsRes?.success) {
+      state.typingStats = statsRes.data;
+    } else if (!statsRes?.success) {
+      state.typingStats = null;
+    }
+
+    renderTypingStatus();
+    renderTypingTable();
+    renderKpis();
+
+    if (typeFilterSelect?.value === 'typing') {
+      renderTypingChart();
+    }
+  } catch (error) {
+    console.error('[Dashboard] タイピング統計エラー:', error);
+    showTypingStatusMessage(error.message || 'タイピング統計の取得に失敗しました', 'error', { temporary: true });
+  } finally {
+    if (showLoading) {
+      setTypingBusy(false);
+    } else {
+      updateTypingControlsDisabled();
+    }
+  }
+}
+
+function renderTypingStatus() {
+  if (!typingMonitorStatusEl) {
+    return;
+  }
+
+  if (!window.electronAPI?.typingMonitorStatus) {
+    typingMonitorStatusEl.textContent = 'タイピング監視機能は利用できません。';
+    typingMonitorStatusEl.className = 'typing-status error';
+    updateTypingControlsDisabled();
+    return;
+  }
+
+  const status = state.typingStatus;
+  typingMonitorStatusEl.className = 'typing-status';
+
+  if (!status) {
+    typingMonitorStatusEl.textContent = 'タイピング監視の状態を取得中...';
+    updateTypingControlsDisabled();
+    return;
+  }
+
+  if (!status.available) {
+    typingMonitorStatusEl.textContent = 'タイピング監視は利用できません（iohook が見つかりません）';
+    typingMonitorStatusEl.classList.add('error');
+  } else if (!status.enabled) {
+    typingMonitorStatusEl.textContent = 'タイピング監視は無効です。';
+  } else if (status.paused) {
+    typingMonitorStatusEl.textContent = 'タイピング監視は休止中です。';
+  } else if (!status.running) {
+    typingMonitorStatusEl.textContent = 'タイピング監視は待機状態です。';
+  } else {
+    const lastKey = status.lastKeyAt ? formatDateTime(status.lastKeyAt) : '記録なし';
+    const memoryMb = status.resourceUsage?.memory?.rss
+      ? Math.round(status.resourceUsage.memory.rss / (1024 * 1024))
+      : null;
+    let message = `タイピング監視は稼働中（最終入力: ${lastKey}`;
+    if (memoryMb != null) {
+      message += ` / メモリ ${memoryMb}MB`;
+    }
+    message += '）';
+    typingMonitorStatusEl.textContent = message;
+    typingMonitorStatusEl.classList.add('active');
+  }
+
+  if (typingMonitorPauseBtn) {
+    typingMonitorPauseBtn.textContent = status?.paused ? '再開' : '休止';
+  }
+
+  updateTypingControlsDisabled();
+}
+
+function renderTypingTable() {
+  if (!typingTableBody) {
+    return;
+  }
+
+  const buckets = state.typingStats?.buckets || [];
+  if (buckets.length === 0) {
+    typingTableBody.innerHTML = '<tr class="empty"><td colspan="4">データがありません</td></tr>';
+    return;
+  }
+
+  const latestBuckets = buckets.slice(-120);
+  typingTableBody.innerHTML = latestBuckets
+    .map((bucket) => {
+      const startLabel = formatDateTime(bucket.bucketStart);
+      const endLabel = formatDateTime(bucket.bucketEnd);
+      const duration = formatDuration(bucket.longestStreakSeconds || 0);
+      return `
+        <tr>
+          <td>${startLabel}</td>
+          <td>${endLabel}</td>
+          <td>${bucket.keyPresses ?? 0}</td>
+          <td>${duration}</td>
+        </tr>
+      `;
+    })
+    .join('');
+}
+
+async function handleTypingMonitorToggle(event) {
+  if (typingBusy) {
+    return;
+  }
+  if (!window.electronAPI?.typingMonitorSetEnabled) {
+    showTypingStatusMessage('タイピング監視の切替機能が利用できません', 'error', { temporary: true });
+    return;
+  }
+
+  const enabled = event.currentTarget.checked;
+  const previous = state.typingStatus?.enabled;
+
+  try {
+    setTypingBusy(true);
+    showTypingStatusMessage(enabled ? 'タイピング監視を有効化しています...' : 'タイピング監視を無効化しています...', 'info');
+    const response = await window.electronAPI.typingMonitorSetEnabled(enabled);
+    if (!response?.success) {
+      throw new Error(response?.error || 'タイピング監視の切替に失敗しました');
+    }
+    state.typingStatus = response.status;
+    await refreshTypingSection({ start: lastRange?.start, end: lastRange?.end, showLoading: false });
+    showTypingStatusMessage(enabled ? 'タイピング監視を有効化しました' : 'タイピング監視を無効化しました', 'success', { temporary: true });
+  } catch (error) {
+    console.error('[Dashboard] タイピング監視切替エラー:', error);
+    showTypingStatusMessage(error.message || 'タイピング監視の切替に失敗しました', 'error', { temporary: true });
+    if (typingMonitorToggle) {
+      typingMonitorToggle.checked = Boolean(previous);
+    }
+  } finally {
+    setTypingBusy(false);
+  }
+}
+
+async function handleTypingPauseToggle() {
+  if (typingBusy) {
+    return;
+  }
+  if (!window.electronAPI?.typingMonitorSetPaused) {
+    showTypingStatusMessage('休止制御が利用できません', 'error', { temporary: true });
+    return;
+  }
+  if (!state.typingStatus) {
+    return;
+  }
+
+  const nextPaused = !state.typingStatus.paused;
+
+  try {
+    setTypingBusy(true);
+    showTypingStatusMessage(nextPaused ? 'タイピング監視を休止しています...' : 'タイピング監視を再開しています...', 'info');
+    const response = await window.electronAPI.typingMonitorSetPaused(nextPaused);
+    if (!response?.success) {
+      throw new Error(response?.error || '休止切替に失敗しました');
+    }
+    state.typingStatus = response.status;
+    await refreshTypingSection({ start: lastRange?.start, end: lastRange?.end, showLoading: false });
+    showTypingStatusMessage(nextPaused ? 'タイピング監視を休止しました' : 'タイピング監視を再開しました', 'success', { temporary: true });
+  } catch (error) {
+    console.error('[Dashboard] タイピング休止切替エラー:', error);
+    showTypingStatusMessage(error.message || 'タイピング監視の休止に失敗しました', 'error', { temporary: true });
+  } finally {
+    setTypingBusy(false);
+  }
+}
+
+function showTypingStatusMessage(message, type = 'info', options = {}) {
+  if (!typingMonitorStatusEl) {
+    return;
+  }
+
+  if (typingStatusResetHandle) {
+    clearTimeout(typingStatusResetHandle);
+    typingStatusResetHandle = null;
+  }
+
+  let className = 'typing-status';
+  if (type === 'error') {
+    className += ' error';
+  } else if (type === 'success') {
+    className += ' active';
+  }
+  typingMonitorStatusEl.className = className;
+  typingMonitorStatusEl.textContent = message;
+
+  if (options.temporary) {
+    typingStatusResetHandle = setTimeout(() => {
+      typingStatusResetHandle = null;
+      renderTypingStatus();
+    }, options.duration ?? 3000);
+  }
+}
+
+function setSystemEventsBusy(isBusy) {
+  systemEventsBusy = isBusy;
+  if (systemEventsRefreshBtn) {
+    systemEventsRefreshBtn.disabled = isBusy;
+  }
+}
+
+async function refreshSystemEvents({ start, end, showLoading = false } = {}) {
+  if (!window.electronAPI?.systemEventsRecent) {
+    renderSystemEventsTable('システムイベント機能は利用できません');
+    return null;
+  }
+
+  const rangeStart = Number.isFinite(start) ? start : lastRange?.start;
+  const rangeEnd = Number.isFinite(end) ? end : lastRange?.end;
+
+  try {
+    if (showLoading) {
+      setSystemEventsBusy(true);
+    }
+
+    const response = await window.electronAPI.systemEventsRecent({
+      start: rangeStart,
+      end: rangeEnd,
+      limit: 100,
+    });
+
+    if (response?.success) {
+      state.systemEvents = response.data?.events || [];
+    } else {
+      state.systemEvents = [];
+    }
+
+    renderSystemEventsTable();
+  } catch (error) {
+    console.error('[Dashboard] システムイベント取得エラー:', error);
+    state.systemEvents = [];
+    renderSystemEventsTable('システムイベントの取得に失敗しました');
+  } finally {
+    if (showLoading) {
+      setSystemEventsBusy(false);
+    }
+  }
+}
+
+function renderSystemEventsTable(errorMessage = null) {
+  if (!systemEventsTableBody) {
+    return;
+  }
+
+  if (errorMessage) {
+    systemEventsTableBody.innerHTML = `<tr class="empty"><td colspan="3">${escapeHtml(errorMessage)}</td></tr>`;
+    return;
+  }
+
+  const events = state.systemEvents || [];
+  if (events.length === 0) {
+    systemEventsTableBody.innerHTML = '<tr class="empty"><td colspan="3">イベントはありません</td></tr>';
+    return;
+  }
+
+  systemEventsTableBody.innerHTML = events
+    .map((event) => {
+      const when = formatDateTime(event.occurredAt);
+      const label = formatSystemEventLabel(event.eventType);
+      const meta = event.meta ? escapeHtml(JSON.stringify(event.meta)) : '-';
+      return `
+        <tr>
+          <td>${when}</td>
+          <td>${escapeHtml(label)}</td>
+          <td>${meta}</td>
+        </tr>
+      `;
+    })
+    .join('');
+}
+
 function exportCsv() {
   if (!state.recentLogs?.length) return;
 
@@ -472,6 +1157,37 @@ function formatDuration(seconds) {
   if (m > 0) parts.push(`${m}分`);
   if (s > 0 && h === 0) parts.push(`${s}秒`);
   return parts.join('') || `${s}秒`;
+}
+
+function formatTypingBucketLabel(bucket) {
+  const start = bucket?.bucketStart ?? bucket?.start;
+  if (!start) {
+    return '-';
+  }
+  const date = new Date(start);
+  if (Number.isNaN(date.getTime())) {
+    return '-';
+  }
+  const day = date.toLocaleDateString('ja-JP', { month: '2-digit', day: '2-digit' });
+  const time = date.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+  return `${day} ${time}`;
+}
+
+function formatSystemEventLabel(eventType) {
+  switch (eventType) {
+    case 'lock_screen':
+      return '画面ロック';
+    case 'unlock_screen':
+      return '画面解除';
+    case 'suspend':
+      return 'スリープ開始';
+    case 'resume':
+      return 'スリープ解除';
+    case 'shutdown':
+      return 'システム終了';
+    default:
+      return eventType || '-';
+  }
 }
 
 function formatRange(range) {
@@ -533,6 +1249,9 @@ function csvEscape(value) {
 if (openBtn) {
   // 自動初期表示は行わず、ユーザーが開いたときにロード
 }
+
+renderSlackSection();
+renderTypingStatus();
 
 window.addEventListener('detection-log-recorded', () => {
   if (!modal?.classList.contains('open')) return;

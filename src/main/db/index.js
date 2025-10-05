@@ -104,18 +104,98 @@ function initializeDatabase(app) {
                         return;
                       }
 
+                  db.run(
+                    'CREATE INDEX IF NOT EXISTS idx_app_usage_logs_app_name ON app_usage_logs(app_name)',
+                    (usageNameIdxErr) => {
+                      if (usageNameIdxErr) {
+                        reject(usageNameIdxErr);
+                        return;
+                      }
+
                       db.run(
-                        'CREATE INDEX IF NOT EXISTS idx_app_usage_logs_app_name ON app_usage_logs(app_name)',
-                        (usageNameIdxErr) => {
-                          if (usageNameIdxErr) {
-                            reject(usageNameIdxErr);
+                        `CREATE TABLE IF NOT EXISTS slack_report_logs (
+                          id INTEGER PRIMARY KEY AUTOINCREMENT,
+                          scheduled_for INTEGER,
+                          sent_at INTEGER,
+                          status TEXT NOT NULL,
+                          reason TEXT,
+                          message TEXT,
+                          error TEXT
+                        )`,
+                        (slackTableErr) => {
+                          if (slackTableErr) {
+                            reject(slackTableErr);
                             return;
                           }
 
-                          dbInstance = db;
-                          resolve(dbInstance);
+                          db.run(
+                            'CREATE INDEX IF NOT EXISTS idx_slack_report_logs_sent_at ON slack_report_logs(sent_at DESC)',
+                            (slackIndexErr) => {
+                              if (slackIndexErr) {
+                                reject(slackIndexErr);
+                                return;
+                              }
+
+                              db.run(
+                                `CREATE TABLE IF NOT EXISTS typing_activity_logs (
+                                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                  bucket_start INTEGER NOT NULL,
+                                  bucket_end INTEGER NOT NULL,
+                                  key_presses INTEGER NOT NULL,
+                                  longest_streak_seconds INTEGER NOT NULL,
+                                  created_at INTEGER NOT NULL
+                                )`,
+                                (typingTableErr) => {
+                                  if (typingTableErr) {
+                                    reject(typingTableErr);
+                                    return;
+                                  }
+
+                                  db.run(
+                                    'CREATE INDEX IF NOT EXISTS idx_typing_activity_bucket ON typing_activity_logs(bucket_start)',
+                                    (typingIndexErr) => {
+                                      if (typingIndexErr) {
+                                        reject(typingIndexErr);
+                                        return;
+                                      }
+
+                                      db.run(
+                                        `CREATE TABLE IF NOT EXISTS system_events (
+                                          id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                          event_type TEXT NOT NULL,
+                                          occurred_at INTEGER NOT NULL,
+                                          meta TEXT
+                                        )`,
+                                        (systemTableErr) => {
+                                          if (systemTableErr) {
+                                            reject(systemTableErr);
+                                            return;
+                                          }
+
+                                          db.run(
+                                            'CREATE INDEX IF NOT EXISTS idx_system_events_occurred_at ON system_events(occurred_at DESC)',
+                                            (systemIndexErr) => {
+                                              if (systemIndexErr) {
+                                                reject(systemIndexErr);
+                                                return;
+                                              }
+
+                                              dbInstance = db;
+                                              resolve(dbInstance);
+                                            }
+                                          );
+                                        }
+                                      );
+                                    }
+                                  );
+                                }
+                              );
+                            }
+                          );
                         }
                       );
+                    }
+                  );
                     }
                   );
                 }
