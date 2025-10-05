@@ -59,6 +59,10 @@
           <span class="icon">📋</span>
           <span class="label">ログ</span>
         </button>
+        <button class="tool-button" id="dashboardBtn" title="検知ダッシュボード">
+          <span class="icon">📊</span>
+          <span class="label">ダッシュボード</span>
+        </button>
       </div>
 
       <div class="toolbar-right">
@@ -339,6 +343,116 @@
     </div>
   </div>
 
+  <!-- 検知ダッシュボードダイアログ -->
+  <div class="modal" id="dashboardModal">
+    <div class="modal-backdrop" data-modal="dashboardModal"></div>
+    <div class="modal-content">
+      <div class="drawer-header">
+        <h2>📊 検知ダッシュボード</h2>
+        <div class="header-actions">
+          <button id="dashboardRefreshBtn" class="btn-secondary btn-compact">最新を取得</button>
+          <button class="close-btn" data-modal="dashboardModal">×</button>
+        </div>
+      </div>
+
+      <div class="dashboard-body">
+        <section class="dashboard-section filters">
+          <div class="filter-group">
+            <label for="dashboardRange">期間</label>
+            <select id="dashboardRange">
+              <option value="24h">直近24時間</option>
+              <option value="7d" selected>直近7日</option>
+              <option value="30d">直近30日</option>
+              <option value="custom">カスタム</option>
+            </select>
+          </div>
+          <div class="filter-group" id="dashboardCustomRange" style="display: none;">
+            <label>開始</label>
+            <input type="datetime-local" id="dashboardStart">
+            <label>終了</label>
+            <input type="datetime-local" id="dashboardEnd">
+          </div>
+          <div class="filter-group">
+            <label for="dashboardGranularity">集計単位</label>
+            <select id="dashboardGranularity">
+              <option value="day">日別</option>
+              <option value="hour">時間別</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="dashboardTypeFilter">種別</label>
+            <select id="dashboardTypeFilter">
+              <option value="all" selected>すべて</option>
+              <option value="phone">スマホ検知</option>
+              <option value="absence">不在検知</option>
+              <option value="alerts">アラートのみ</option>
+            </select>
+          </div>
+        </section>
+
+        <section class="dashboard-section kpi" id="dashboardKpis">
+          <!-- JS で動的に生成 -->
+        </section>
+
+        <section class="dashboard-section chart">
+          <div class="section-header">
+            <h3>検知トレンド</h3>
+          </div>
+          <div style="position: relative; height: 280px;">
+            <canvas id="dashboardTrendChart"></canvas>
+          </div>
+        </section>
+
+        <section class="dashboard-section app-usage">
+          <div class="section-header">
+            <h3>前面アプリ滞在時間 (トップ10)</h3>
+          </div>
+          <div class="table-wrapper">
+            <table id="dashboardAppUsageTable">
+              <thead>
+                <tr>
+                  <th>アプリ</th>
+                  <th>ドメイン/タイトル</th>
+                  <th>滞在時間</th>
+                  <th>セッション数</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="empty">
+                  <td colspan="4">データを読み込み中...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="dashboard-section recent-logs">
+          <div class="section-header">
+            <h3>最新ログ</h3>
+            <button id="dashboardExportCsvBtn" class="btn-secondary btn-compact">CSVエクスポート</button>
+          </div>
+          <div class="table-wrapper">
+            <table id="dashboardLogTable">
+              <thead>
+                <tr>
+                  <th>時刻</th>
+                  <th>種別</th>
+                  <th>継続時間</th>
+                  <th>詳細</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr class="empty">
+                  <td colspan="4">ログを読み込み中...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
   <!-- 音声入力ドロワー -->
   <div class="drawer" id="voiceInputDrawer">
     <div class="drawer-content">
@@ -396,11 +510,13 @@
     </div>
   </div>
 
+  <script src="../../node_modules/chart.js/dist/chart.umd.js"></script>
   <script type="module" src="../constants/voicevox-speakers.js"></script>
   <script type="module" src="../constants/yolo-classes.js"></script>
   <script type="module" src="../renderer/schedule.js"></script>
   <script type="module" src="../renderer/settings.js"></script>
   <script type="module" src="../renderer/monitor.js"></script>
+  <script type="module" src="../renderer/dashboard.js"></script>
   <script type="module" src="../renderer/voice-input.js"></script>
   <script type="module" src="../renderer/app.js"></script>
 </body>

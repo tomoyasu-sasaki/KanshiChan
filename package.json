@@ -16,7 +16,9 @@
   "dependencies": {
     "@tensorflow/tfjs-node": "^4.22.0",
     "canvas": "^3.2.0",
+    "chart.js": "^4.5.0",
     "node-llama-cpp": "^3.14.0",
-    "onnxruntime-node": "^1.23.0"
+    "onnxruntime-node": "^1.23.0",
+    "sqlite3": "^5.1.7"
   }
 }

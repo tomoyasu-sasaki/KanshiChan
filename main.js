@@ -9,6 +9,7 @@ const path = require('path');
 const YOLODetector = require('./src/utils/yolo-detector');
 const { createMainWindow } = require('./src/main/create-window');
 const { registerIpcHandlers } = require('./src/main/ipc/register-handlers');
+const { initializeDatabase, closeDatabase } = require('./src/main/db');
 
 let mainWindow = null;
 let yoloDetector = null;
@@ -51,6 +52,12 @@ function stopPowerSaveBlocker() {
 
 app.whenReady().then(async () => {
   const { MAIN_WINDOW_CONFIG, APP_TITLE } = await appConstantsPromise;
+
+  try {
+    await initializeDatabase(app);
+  } catch (dbError) {
+    console.error('データベース初期化に失敗しました:', dbError);
+  }
 
   // macOSのDockアイコンを設定
   if (process.platform === 'darwin' && app.dock) {
@@ -105,4 +112,10 @@ app.on('window-all-closed', () => {
   if (process.platform !== 'darwin') {
     app.quit();
   }
+});
+
+app.on('before-quit', () => {
+  closeDatabase().catch((error) => {
+    console.warn('データベースクローズ処理でエラーが発生しました:', error);
+  });
 });

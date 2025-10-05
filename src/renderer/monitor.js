@@ -257,6 +257,10 @@ function handlePhoneDetection(detected) {
     // 初回検知時は開始時刻を記録
     if (phoneDetectionStartTime === 0) {
       phoneDetectionStartTime = Date.now();
+      recordDetectionLogEntry({
+        type: 'phone_detection_start',
+        detectedAt: phoneDetectionStartTime,
+      });
     }
 
     // 経過時間を計算（秒）
@@ -287,6 +291,14 @@ function handlePhoneDetection(detected) {
       if (phoneClearCandidateSince === 0) phoneClearCandidateSince = nowTs;
       if (nowTs - phoneClearCandidateSince >= PHONE_CLEAR_STABLE_MS) {
         phoneDetectionTime = 0;
+        if (phoneDetectionStartTime !== 0) {
+          const durationSeconds = Math.floor((nowTs - phoneDetectionStartTime) / 1000);
+          recordDetectionLogEntry({
+            type: 'phone_detection_end',
+            detectedAt: nowTs,
+            durationSeconds: durationSeconds > 0 ? durationSeconds : null,
+          });
+        }
         phoneDetectionStartTime = 0;
         phoneAlertTriggered = false;
         phoneClearCandidateSince = 0;
@@ -305,6 +317,10 @@ function handleAbsenceDetection(personDetected) {
     // 初回検知時は開始時刻を記録
     if (absenceDetectionStartTime === 0) {
       absenceDetectionStartTime = Date.now();
+      recordDetectionLogEntry({
+        type: 'absence_detection_start',
+        detectedAt: absenceDetectionStartTime,
+      });
     }
 
     // 経過時間を計算（秒）
@@ -335,6 +351,14 @@ function handleAbsenceDetection(personDetected) {
       if (absenceClearCandidateSince === 0) absenceClearCandidateSince = nowTs;
       if (nowTs - absenceClearCandidateSince >= ABSENCE_CLEAR_STABLE_MS) {
         absenceDetectionTime = 0;
+        if (absenceDetectionStartTime !== 0) {
+          const durationSeconds = Math.floor((nowTs - absenceDetectionStartTime) / 1000);
+          recordDetectionLogEntry({
+            type: 'absence_detection_end',
+            detectedAt: nowTs,
+            durationSeconds: durationSeconds > 0 ? durationSeconds : null,
+          });
+        }
         absenceDetectionStartTime = 0;
         absenceAlertTriggered = false;
         absenceClearCandidateSince = 0;
@@ -357,6 +381,14 @@ function updateTimers() {
 async function triggerPhoneAlert() {
   phoneAlertTriggered = true;
   addLog('⚠️ スマホが検知されました！', 'alert');
+  recordDetectionLogEntry({
+    type: 'phone_alert',
+    detectedAt: Date.now(),
+    durationSeconds: phoneDetectionTime || null,
+    meta: {
+      threshold: settings.phoneThreshold,
+    },
+  });
 
   if (settings.soundEnabled) {
     playAlertSound();
@@ -392,6 +424,14 @@ async function triggerPhoneAlert() {
 async function triggerAbsenceAlert() {
   absenceAlertTriggered = true;
   addLog('⚠️ 不在が検知されました！', 'alert');
+  recordDetectionLogEntry({
+    type: 'absence_alert',
+    detectedAt: Date.now(),
+    durationSeconds: absenceDetectionTime || null,
+    meta: {
+      threshold: settings.absenceThreshold,
+    },
+  });
 
   if (settings.soundEnabled) {
     playAlertSound();
@@ -484,22 +524,30 @@ function addLog(message, type = 'info') {
   }
 }
 
-// 最前面ウィンドウの前回状態（重複ログ抑止・滞在時間集計用）
-let lastActiveWindowKey = null;
-let lastActiveWindowStart = 0;
-
-// 使用時間統計の読み書き
-function readUsageStats() {
-  try {
-    return JSON.parse(localStorage.getItem('appUsageStats') || '{}');
-  } catch {
-    return {};
+function recordDetectionLogEntry({ type, detectedAt = Date.now(), durationSeconds = null, meta = null }) {
+  if (!window.electronAPI || typeof window.electronAPI.recordDetectionLog !== 'function') {
+    return;
   }
+
+  window.electronAPI
+    .recordDetectionLog({
+      type,
+      detectedAt,
+      durationSeconds,
+      meta,
+    })
+    .then(() => {
+      window.dispatchEvent(new CustomEvent('detection-log-recorded'));
+    })
+    .catch((error) => {
+      console.warn('[Monitor] 検知ログ送信に失敗:', error);
+    });
 }
 
-function writeUsageStats(stats) {
-  localStorage.setItem('appUsageStats', JSON.stringify(stats));
-}
+// 最前面ウィンドウの前回状態（重複ログ抑止・滞在時間集計用）
+let lastActiveWindowInfo = null;
+let lastActiveWindowStart = 0;
+const APP_USAGE_MIN_DURATION_SECONDS = 5;
 
 // 最前面ウィンドウを取得してログ + 使用時間集計
 async function trackActiveWindow() {
@@ -520,33 +568,63 @@ async function trackActiveWindow() {
         domain = u.hostname;
       } catch {}
     }
-    const key = domain ? `${appName}::${domain}` : `${appName}::${title.slice(0, 60)}`;
+    const keySource = domain || title.slice(0, 60);
+    const key = `${appName}::${keySource}`;
 
     const now = Date.now();
-    if (lastActiveWindowKey === null) {
-      lastActiveWindowKey = key;
+    if (!lastActiveWindowInfo) {
+      lastActiveWindowInfo = { key, appName, title, domain };
       lastActiveWindowStart = now;
       addLog(`前面: ${appName}${domain ? ` (${domain})` : title ? ` - ${title}` : ''}`);
       return;
     }
 
-    if (key !== lastActiveWindowKey) {
-      // 前のキーに滞在時間を加算
-      const elapsedSec = Math.max(1, Math.floor((now - lastActiveWindowStart) / 1000));
-      const stats = readUsageStats();
-      stats[lastActiveWindowKey] = (stats[lastActiveWindowKey] || 0) + elapsedSec;
-      writeUsageStats(stats);
+    if (key !== lastActiveWindowInfo.key) {
+      recordActiveWindowSession(now);
 
-      // 新しい前面ウィンドウをログ
       addLog(`前面: ${appName}${domain ? ` (${domain})` : title ? ` - ${title}` : ''}`);
 
-      lastActiveWindowKey = key;
+      lastActiveWindowInfo = { key, appName, title, domain };
       lastActiveWindowStart = now;
     }
   } catch (e) {
     // 取得失敗は無視
   }
 }
+
+function recordActiveWindowSession(endTimestamp = Date.now()) {
+  if (!lastActiveWindowInfo || !lastActiveWindowStart) {
+    return;
+  }
+
+  const durationSeconds = Math.floor((endTimestamp - lastActiveWindowStart) / 1000);
+  if (durationSeconds < APP_USAGE_MIN_DURATION_SECONDS) {
+    return;
+  }
+
+  if (!window.electronAPI || typeof window.electronAPI.recordAppUsage !== 'function') {
+    return;
+  }
+
+  window.electronAPI
+    .recordAppUsage({
+      appName: lastActiveWindowInfo.appName,
+      title: lastActiveWindowInfo.title,
+      domain: lastActiveWindowInfo.domain,
+      startedAt: lastActiveWindowStart,
+      endedAt: endTimestamp,
+      durationSeconds,
+    })
+    .catch((error) => {
+      console.warn('[Monitor] アプリ使用時間送信に失敗:', error);
+    });
+
+  lastActiveWindowStart = endTimestamp;
+}
+
+window.addEventListener('beforeunload', () => {
+  recordActiveWindowSession();
+});
 
 // 監視状態のエクスポート（app.jsから参照）
 window.getMonitorState = function() {

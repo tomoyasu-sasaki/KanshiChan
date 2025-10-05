@@ -22,5 +22,10 @@ contextBridge.exposeInMainWorld('electronAPI', {
   speakText: (payload) => ipcRenderer.invoke('tts-speak', payload),
   voiceInputTranscribe: (audioDataBase64) => ipcRenderer.invoke('voice-input-transcribe', audioDataBase64),
   voiceInputCheckAvailability: () => ipcRenderer.invoke('voice-input-check-availability'),
-  generateScheduleTts: (schedule) => ipcRenderer.invoke('schedule-generate-tts', schedule)
+  generateScheduleTts: (schedule) => ipcRenderer.invoke('schedule-generate-tts', schedule),
+  recordDetectionLog: (payload) => ipcRenderer.invoke('detection-log-record', payload),
+  detectionLogStats: (options) => ipcRenderer.invoke('detection-log-stats', options),
+  detectionLogRecent: (options) => ipcRenderer.invoke('detection-log-recent', options),
+  recordAppUsage: (payload) => ipcRenderer.invoke('app-usage-record', payload),
+  appUsageStats: (options) => ipcRenderer.invoke('app-usage-stats', options)
 });
