@@ -43,6 +43,10 @@
       </div>
 
       <div class="toolbar-center">
+        <button class="tool-button" id="voiceInputBtn" title="音声入力">
+          <span class="icon">🎤</span>
+          <span class="label">音声入力</span>
+        </button>
         <button class="tool-button" id="scheduleBtn" title="スケジュール">
           <span class="icon">📅</span>
           <span class="label">スケジュール</span>
@@ -70,7 +74,7 @@
     <div class="drawer-content">
       <div class="drawer-header">
         <h2>📅 スケジュール管理</h2>
-        <button class="close-btn" data-drawer="scheduleDrawer"></button>
+        <button class="close-btn" data-drawer="scheduleDrawer">×</button>
       </div>
       
       <div class="drawer-body">
@@ -326,10 +330,67 @@
         <h2>📋 検知ログ</h2>
         <button class="close-btn" data-drawer="logsDrawer">×</button>
       </div>
-      
+
       <div class="drawer-body">
         <div id="logContainer" class="log-container">
           <p class="empty-message">ログはありません</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 音声入力ドロワー -->
+  <div class="drawer" id="voiceInputDrawer">
+    <div class="drawer-content">
+      <div class="drawer-header">
+        <h2>🎤 音声入力</h2>
+        <button class="close-btn" data-drawer="voiceInputDrawer">×</button>
+      </div>
+
+      <div class="drawer-body">
+        <!-- 録音コントロール -->
+        <div class="voice-input-controls">
+          <button id="startRecordingBtn" class="btn-primary btn-large">
+            <span class="icon">🎤</span>
+            <span>録音開始</span>
+          </button>
+          <button id="stopRecordingBtn" class="btn-danger btn-large" style="display: none;">
+            <span class="icon">⏹️</span>
+            <span>録音停止</span>
+          </button>
+        </div>
+
+        <!-- 録音状態表示 -->
+        <div class="voice-input-status" id="voiceInputStatus">
+          <div class="status-indicator">
+            <span class="status-icon">⚪</span>
+            <span class="status-text">待機中</span>
+          </div>
+        </div>
+
+        <!-- 文字起こし結果プレビュー -->
+        <div class="voice-input-result" id="voiceInputResult" style="display: none;">
+          <h3>文字起こし結果</h3>
+          <div class="transcribed-text" id="transcribedText"></div>
+        </div>
+
+        <!-- スケジュール確認 & 編集 -->
+        <div class="voice-input-schedules" id="voiceInputSchedules" style="display: none;">
+          <h3>抽出されたスケジュール</h3>
+          <div id="extractedSchedules" class="extracted-schedules">
+            <!-- JavaScriptで動的に生成 -->
+          </div>
+
+          <div class="button-group">
+            <button id="confirmSchedulesBtn" class="btn-primary">スケジュール登録</button>
+            <button id="cancelSchedulesBtn" class="btn-secondary">キャンセル</button>
+          </div>
+        </div>
+
+        <!-- エラーメッセージ -->
+        <div class="voice-input-error" id="voiceInputError" style="display: none;">
+          <span class="error-icon">⚠️</span>
+          <span class="error-message" id="voiceInputErrorMessage"></span>
         </div>
       </div>
     </div>
@@ -340,6 +401,7 @@
   <script type="module" src="../renderer/schedule.js"></script>
   <script type="module" src="../renderer/settings.js"></script>
   <script type="module" src="../renderer/monitor.js"></script>
+  <script type="module" src="../renderer/voice-input.js"></script>
   <script type="module" src="../renderer/app.js"></script>
 </body>
 </html>

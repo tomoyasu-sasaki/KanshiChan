@@ -16,6 +16,8 @@
   "dependencies": {
     "@tensorflow/tfjs-node": "^4.22.0",
     "canvas": "^3.2.0",
+    "node-llama-cpp": "^3.14.0",
+    "nodejs-whisper": "^0.2.9",
     "onnxruntime-node": "^1.23.0"
   }
 }

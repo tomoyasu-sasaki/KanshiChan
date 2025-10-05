@@ -1,10 +1,11 @@
 /**
  * メインプロセスでの IPC ハンドラ登録。
- * - レンダラへ露出するメイン機能（通知、検知、VOICEVOX）を一元的に定義する。
+ * - レンダラへ露出するメイン機能（通知、検知、VOICEVOX、音声入力）を一元的に定義する。
  * - 依存オブジェクトを DI することでテストや将来の差し替えを容易にする。
  */
 const { synthesizeWithVoiceVox } = require('../services/voicevox');
 const { getActiveWindowInfo } = require('../services/active-window');
+const { processVoiceInput, checkVoiceInputAvailability } = require('../services/voice-input');
 
 /**
  * IPC チャネルを初期化する。
@@ -71,6 +72,34 @@ function registerIpcHandlers({ ipcMain, Notification, yoloDetectorProvider }) {
       return { success: true, dataUrl };
     } catch (error) {
       return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('voice-input-transcribe', async (_event, audioDataBase64) => {
+    try {
+      if (!audioDataBase64 || typeof audioDataBase64 !== 'string') {
+        return { success: false, error: '音声データが不正です' };
+      }
+
+      const result = await processVoiceInput(audioDataBase64);
+      return result;
+    } catch (error) {
+      console.error('[IPC] 音声入力エラー:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('voice-input-check-availability', async () => {
+    try {
+      const status = await checkVoiceInputAvailability();
+      return status;
+    } catch (error) {
+      console.error('[IPC] 音声入力モデルチェックエラー:', error);
+      return {
+        available: false,
+        models: { whisper: false, llm: false },
+        errors: [error.message],
+      };
     }
   });
 }

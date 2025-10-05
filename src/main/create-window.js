@@ -38,10 +38,13 @@ function createMainWindow({ baseDir, windowConfig, appTitle }) {
     title: appTitle,
     icon: path.join(baseDir, iconRelativePath)
   });
+  mainWindow.webContents.openDevTools()
 
   mainWindow.loadFile(path.join(baseDir, ...entryHtmlPathSegments));
   return mainWindow;
 }
+
+
 
 module.exports = {
   createMainWindow

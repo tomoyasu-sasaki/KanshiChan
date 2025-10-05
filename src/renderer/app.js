@@ -40,12 +40,14 @@ document.addEventListener('DOMContentLoaded', () => {
 // UI初期化
 function initializeUI() {
   // ツールバーボタン
+  const voiceInputBtn = document.getElementById('voiceInputBtn');
   const scheduleBtn = document.getElementById('scheduleBtn');
   const settingsBtn = document.getElementById('settingsBtn');
   const logsBtn = document.getElementById('logsBtn');
   const exitBtn = document.getElementById('exitBtn');
 
   // イベントリスナー設定
+  voiceInputBtn.addEventListener('click', () => toggleDrawer('voiceInputDrawer'));
   scheduleBtn.addEventListener('click', () => toggleDrawer('scheduleDrawer'));
   settingsBtn.addEventListener('click', () => toggleDrawer('settingsDrawer'));
   logsBtn.addEventListener('click', () => toggleDrawer('logsDrawer'));

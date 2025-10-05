@@ -1,0 +1,241 @@
+/**
+ * 音声入力ドロワーのスタイル
+ */
+
+/* 音声入力コントロール */
+.voice-input-controls {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.btn-large {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-large .icon {
+  font-size: 1.5rem;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+.btn-danger {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+  border: none;
+}
+
+.btn-danger:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4);
+}
+
+.btn-secondary {
+  background: #6c757d;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-secondary:hover {
+  background: #5a6268;
+}
+
+/* 録音状態表示 */
+.voice-input-status {
+  text-align: center;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+  margin-bottom: 1.5rem;
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  font-size: 1.2rem;
+}
+
+.status-icon {
+  font-size: 1.8rem;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.status-text {
+  font-weight: 600;
+  color: #e0e0e0;
+}
+
+/* 文字起こし結果プレビュー */
+.voice-input-result {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 8px;
+}
+
+.voice-input-result h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  color: #b0b0b0;
+}
+
+.transcribed-text {
+  padding: 1rem;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 6px;
+  color: #f0f0f0;
+  line-height: 1.6;
+  font-size: 1rem;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+/* スケジュール確認 & 編集 */
+.voice-input-schedules {
+  margin-top: 1.5rem;
+}
+
+.voice-input-schedules h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1rem;
+  color: #b0b0b0;
+}
+
+.extracted-schedules {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.schedule-card {
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  padding: 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.schedule-card-header {
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.schedule-card-header strong {
+  font-size: 1.1rem;
+  color: #f0f0f0;
+}
+
+.schedule-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.schedule-card-body .form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.schedule-card-body .form-group label {
+  font-size: 0.85rem;
+  color: #b0b0b0;
+}
+
+.schedule-card-body .form-group input,
+.schedule-card-body .form-group textarea {
+  padding: 0.5rem;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  color: #f0f0f0;
+  font-size: 0.95rem;
+}
+
+.schedule-card-body .form-group input:focus,
+.schedule-card-body .form-group textarea:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+}
+
+.schedule-card-body .form-group textarea {
+  resize: vertical;
+  font-family: inherit;
+}
+
+/* ボタングループ */
+.button-group {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.button-group button {
+  flex: 1;
+}
+
+/* エラーメッセージ */
+.voice-input-error {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: rgba(245, 87, 108, 0.1);
+  border: 1px solid rgba(245, 87, 108, 0.3);
+  border-radius: 8px;
+  color: #ff6b6b;
+  margin-top: 1rem;
+}
+
+.error-icon {
+  font-size: 1.5rem;
+}
+
+.error-message {
+  flex: 1;
+  line-height: 1.5;
+}
+
+/* 空メッセージ */
+.empty-message {
+  text-align: center;
+  color: #888;
+  padding: 2rem;
+  font-style: italic;
+}
