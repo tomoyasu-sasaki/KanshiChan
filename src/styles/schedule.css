@@ -5,21 +5,21 @@
 .schedule-items {
   display: flex;
   flex-direction: column;
-  gap: 15px;
+  gap: var(--space-4);
 }
 
 .schedule-item {
   background: #ffffff;
-  border-radius: 12px;
-  padding: 20px;
-  border-left: 4px solid #667eea;
-  transition: transform 0.2s, box-shadow 0.2s, border-color 0.3s;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  border-left: var(--space-1) solid var(--primary-start);
+  transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-smooth);
+  box-shadow: var(--shadow-sm);
 }
 
 .schedule-item:hover {
-  transform: translateX(5px);
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
+  transform: translateX(var(--space-1));
+  box-shadow: 0 var(--space-1) var(--space-4) rgba(0, 0, 0, 0.15);
 }
 
 .schedule-item.past {
@@ -29,61 +29,52 @@
 }
 
 .schedule-item.in-progress {
-  border-left-color: #ffd43b;
+  border-left-color: var(--warning);
   background: #fff9e6;
   animation: pulse-glow 2s ease-in-out infinite;
 }
 
 .schedule-item.upcoming {
-  border-left-color: #51cf66;
+  border-left-color: var(--success);
   background: #f0fdf4;
 }
 
 .schedule-item.future {
-  border-left-color: #667eea;
-}
-
-@keyframes pulse-glow {
-  0%, 100% {
-    box-shadow: 0 2px 8px rgba(255, 212, 59, 0.3);
-  }
-  50% {
-    box-shadow: 0 5px 20px rgba(255, 212, 59, 0.6);
-  }
+  border-left-color: var(--primary-start);
 }
 
 .schedule-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: var(--space-3);
 }
 
 .schedule-title-area {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-2);
 }
 
 .schedule-status-icon {
-  font-size: 1.4rem;
+  font-size: var(--text-lg);
 }
 
 .schedule-header h3 {
-  color: #333;
-  font-size: 1.2rem;
+  color: var(--text-primary);
+  font-size: var(--text-lg);
   margin: 0;
 }
 
 .btn-delete {
-  background: #ff6b6b;
+  background: var(--error);
   color: white;
   border: none;
-  padding: 6px 16px;
-  border-radius: 6px;
+  padding: var(--space-1) var(--space-4);
+  border-radius: var(--space-1);
   cursor: pointer;
-  font-size: 0.9rem;
-  transition: background 0.3s;
+  font-size: var(--text-base);
+  transition: background var(--transition-smooth);
 }
 
 .btn-delete:hover {
@@ -91,28 +82,28 @@
 }
 
 .schedule-info {
-  color: #666;
+  color: var(--text-tertiary);
 }
 
 .schedule-meta {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: var(--space-3);
   flex-wrap: wrap;
-  margin-bottom: 8px;
+  margin-bottom: var(--space-2);
 }
 
 .schedule-datetime {
-  font-weight: 600;
+  font-weight: var(--font-semibold);
   color: #495057;
-  font-size: 1rem;
+  font-size: var(--text-md);
 }
 
 .schedule-status {
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 0.85rem;
-  font-weight: 600;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--space-5);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
   display: inline-block;
 }
 
@@ -122,62 +113,62 @@
 }
 
 .schedule-status.in-progress {
-  background: #ffd43b;
+  background: var(--warning);
   color: #856404;
 }
 
 .schedule-status.upcoming {
-  background: #51cf66;
+  background: var(--success);
   color: #ffffff;
 }
 
 .schedule-status.future {
-  background: #667eea;
+  background: var(--primary-start);
   color: #ffffff;
 }
 
 .notification-status {
-  font-size: 1.2rem;
+  font-size: var(--text-lg);
 }
 
 .schedule-description {
   line-height: 1.6;
   color: #6c757d;
-  margin-top: 8px;
-  font-size: 0.95rem;
+  margin-top: var(--space-2);
+  font-size: var(--text-base);
 }
 
 .today-schedule-header {
   text-align: center;
-  font-size: 1.4rem;
-  font-weight: 700;
-  color: #333;
-  margin: 10px 0 12px;
+  font-size: var(--text-lg);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+  margin: var(--space-2) 0 var(--space-3);
 }
 
 .schedule-form-container,
 .schedule-list-container {
-  margin-bottom: 30px;
+  margin-bottom: var(--space-6);
 }
 
 /* タブスタイル */
 .schedule-input-tabs {
   display: flex;
-  gap: 10px;
-  margin-bottom: 20px;
+  gap: var(--space-2);
+  margin-bottom: var(--space-5);
   border-bottom: 2px solid #e9ecef;
 }
 
 .tab-button {
   background: transparent;
   border: none;
-  padding: 10px 20px;
-  font-size: 1rem;
-  font-weight: 600;
+  padding: var(--space-2) var(--space-5);
+  font-size: var(--text-md);
+  font-weight: var(--font-semibold);
   color: #6c757d;
   cursor: pointer;
   border-bottom: 3px solid transparent;
-  transition: all 0.3s;
+  transition: all var(--transition-smooth);
   position: relative;
   bottom: -2px;
 }
@@ -187,8 +178,8 @@
 }
 
 .tab-button.active {
-  color: #667eea;
-  border-bottom-color: #667eea;
+  color: var(--primary-start);
+  border-bottom-color: var(--primary-start);
 }
 
 .tab-content {
@@ -201,14 +192,14 @@
 
 .input-hint {
   display: block;
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   color: #6c757d;
-  font-weight: 400;
-  margin-top: 4px;
+  font-weight: var(--font-normal);
+  margin-top: var(--space-1);
 }
 
 #bulkInput {
   font-family: 'Courier New', monospace;
-  font-size: 0.95rem;
+  font-size: var(--text-base);
   line-height: 1.6;
 }

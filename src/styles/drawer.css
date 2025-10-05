@@ -1,16 +1,20 @@
 /**
- * ドロワー UI と設定パネル共通パーツのスタイル。
+ * ドロワー UI と設定パネル共通パーツのスタイル (デザインシステム準拠)
  * オーバーレイ、アコーディオン、セレクトボックス、レスポンシブ調整を含む。
  */
+
+/* ==============================================
+   ドロワー基本構造
+   ============================================== */
 .drawer {
   position: fixed;
   top: 0;
   right: -450px;
   width: 450px;
   height: 100vh;
-  background: white;
-  box-shadow: -5px 0 15px rgba(0, 0, 0, 0.3);
-  transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: var(--bg-dark-1);
+  box-shadow: -5px 0 var(--space-6) rgba(0, 0, 0, 0.4);
+  transition: right var(--transition-smooth);
   z-index: 1000;
   overflow: hidden;
 }
@@ -23,47 +27,71 @@
   height: 100%;
   display: flex;
   flex-direction: column;
+  background: linear-gradient(135deg, var(--bg-dark-1) 0%, var(--bg-dark-2) 100%);
 }
 
+/* ==============================================
+   ドロワーヘッダー
+   ============================================== */
 .drawer-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--primary-gradient);
   color: white;
-  padding: 20px;
+  padding: var(--space-5);
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-shrink: 0;
+  box-shadow: var(--shadow-sm);
 }
 
 .drawer-header h2 {
   margin: 0;
-  font-size: 1.3rem;
+  font-size: var(--text-lg);
+  font-weight: var(--font-bold);
   color: white;
+  background: none;
+  -webkit-text-fill-color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
 }
 
+/* ==============================================
+   閉じるボタン
+   ============================================== */
 .close-btn {
   background: transparent;
   border: none;
-  color: white;
-  font-size: 2rem;
+  color:  var(--text-secondary);
+  font-size: var(--text-2xl);
   cursor: pointer;
-  width: 40px;
-  height: 40px;
+  width: var(--space-10);
+  height: var(--space-10);
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 50%;
-  transition: background 0.2s;
+  border-radius: var(--radius-full);
+  transition: background var(--transition-base);
   line-height: 1;
+  flex-shrink: 0;
 }
 
 .close-btn:hover {
   background: rgba(255, 255, 255, 0.2);
 }
 
+.close-btn:active {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* ==============================================
+   ドロワーボディ
+   ============================================== */
 .drawer-body {
   flex: 1;
   overflow-y: auto;
-  padding: 20px;
+  overflow-x: hidden;
+  padding: var(--space-5);
 }
 
 .drawer-body .log-container {
@@ -72,24 +100,29 @@
 }
 
 .drawer-body h3 {
-  color: #333;
-  font-size: 1.1rem;
-  margin-bottom: 15px;
-  padding-bottom: 10px;
-  border-bottom: 2px solid #e0e0e0;
+  color: var(--text-primary);
+  font-size: var(--text-lg);
+  font-weight: var(--font-bold);
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom: 2px solid var(--border-light);
 }
 
+/* ==============================================
+   ドロワーオーバーレイ
+   ============================================== */
 .drawer-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--bg-overlay);
+  backdrop-filter: blur(4px);
   z-index: 999;
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.3s;
+  transition: opacity var(--transition-smooth);
 }
 
 .drawer-overlay.show {
@@ -97,93 +130,223 @@
   pointer-events: auto;
 }
 
+/* ==============================================
+   アコーディオン
+   ============================================== */
 .accordion {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: var(--space-3);
 }
 
 .accordion-item {
-  border: 1px solid #e0e0e0;
-  border-radius: 8px;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
   overflow: hidden;
-  background: white;
+  background: rgba(255, 255, 255, 0.03);
+  transition: all var(--transition-base);
+}
+
+.accordion-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--border-medium);
 }
 
 .accordion-header {
   width: 100%;
-  background: #f8f9fa;
+  background: rgba(0, 0, 0, 0.04);
   border: none;
-  padding: 15px 20px;
+  padding: var(--space-4) var(--space-5);
   text-align: left;
   cursor: pointer;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 1rem;
-  font-weight: 600;
-  color: #333;
-  transition: background 0.2s;
+  font-size: var(--text-md);
+  font-weight: var(--font-semibold);
+  color: var(--text-secondary);
+  transition: all var(--transition-base);
 }
 
 .accordion-header:hover {
-  background: #e9ecef;
+  background: rgba(0, 0, 0, 0.08);
+  color: var(--text-primary);
 }
 
 .accordion-header.active {
-  background: linear-gradient(135deg, #667eea22 0%, #764ba222 100%);
-  color: #667eea;
+  background: linear-gradient(135deg, rgba(72, 138, 153, 0.2) 0%, rgba(219, 174, 88, 0.15) 100%);
+  color: var(--text-primary);
 }
 
 .accordion-icon {
-  transition: transform 0.3s;
-  font-size: 0.8rem;
+  transition: transform var(--transition-smooth);
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
 }
 
 .accordion-header.active .accordion-icon {
   transform: rotate(180deg);
+  color: var(--text-primary);
 }
 
 .accordion-content {
   max-height: 0;
   overflow: hidden;
-  transition: max-height 0.3s ease-out;
-  padding: 0 20px;
+  transition: max-height var(--transition-smooth);
+  padding: 0 var(--space-5);
 }
 
 .accordion-content .form-group:first-child {
-  margin-top: 15px;
+  margin-top: var(--space-4);
 }
 
 .accordion-content .form-group:last-child {
-  margin-bottom: 15px;
+  margin-bottom: var(--space-4);
 }
 
+/* ==============================================
+   フォームセレクト
+   ============================================== */
 .form-select {
   width: 100%;
-  padding: 12px;
-  border: 2px solid #e0e0e0;
-  border-radius: 8px;
-  font-size: 1rem;
-  background: white;
+  padding: var(--space-3);
+  border: 2px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-md);
+  background: rgba(255, 255, 255, 0.5);
+  color: var(--text-primary);
   cursor: pointer;
-  transition: border-color 0.3s;
-  font-family: inherit;
+  transition: border-color var(--transition-smooth);
+  font-family: var(--font-primary);
 }
 
 .form-select:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: var(--primary-start);
+  box-shadow: 0 0 0 3px rgba(72, 138, 153, 0.1);
+}
+
+.form-select:hover {
+  border-color: var(--border-medium);
 }
 
 .form-select option {
-  padding: 10px;
+  padding: var(--space-3);
+  background: white;
+  color: #1e1e23;
 }
 
+/* ==============================================
+   追加コンポーネント
+   ============================================== */
+
+/* 設定説明テキスト */
+.setting-description {
+  color: var(--text-tertiary);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  margin-bottom: var(--space-4);
+  padding: var(--space-3);
+  background: rgba(255, 255, 255, 0.02);
+  border-left: 3px solid var(--primary-start);
+  border-radius: var(--space-1);
+}
+
+/* ボタングループ */
+.button-group {
+  display: flex;
+  gap: var(--space-3);
+  margin-top: var(--space-5);
+}
+
+.button-group button {
+  flex: 1;
+}
+
+/* 保存メッセージ */
+.save-message {
+  margin-top: var(--space-4);
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  text-align: center;
+  font-weight: var(--font-medium);
+  opacity: 0;
+  transition: opacity var(--transition-base);
+}
+
+.save-message.show {
+  opacity: 1;
+}
+
+.save-message.success {
+  background: rgba(81, 207, 102, 0.15);
+  color: var(--success);
+  border: 1px solid rgba(81, 207, 102, 0.3);
+}
+
+.save-message.error {
+  background: rgba(255, 107, 107, 0.15);
+  color: var(--error);
+  border: 1px solid rgba(255, 107, 107, 0.3);
+}
+
+/* スライダー */
+.slider-container {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.slider-container input[type="range"] {
+  flex: 1;
+}
+
+.slider-value {
+  min-width: var(--space-10);
+  text-align: right;
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  font-size: var(--text-base);
+}
+
+/* チェックボックス・ラジオボタンのカスタマイズ */
+.form-group input[type="checkbox"],
+.form-group input[type="radio"] {
+  width: auto;
+  margin-right: var(--space-2);
+  cursor: pointer;
+  accent-color: var(--primary-start);
+}
+
+.form-group label:has(input[type="checkbox"]),
+.form-group label:has(input[type="radio"]) {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  color: var(--text-secondary);
+  font-weight: var(--font-normal);
+}
+
+.form-group label:has(input[type="checkbox"]):hover,
+.form-group label:has(input[type="radio"]):hover {
+  color: var(--text-primary);
+}
+
+/* ==============================================
+   レスポンシブ対応
+   ============================================== */
 @media (max-width: 768px) {
   .drawer {
     width: 100%;
     right: -100%;
+  }
+
+  .drawer-header {
+    padding: var(--space-4);
+  }
+
+  .drawer-body {
+    padding: var(--space-4);
   }
 
   .toolbar-center .tool-button .label {
@@ -192,6 +355,6 @@
 
   .tool-button {
     min-width: 50px;
-    padding: 10px;
+    padding: var(--space-3);
   }
 }

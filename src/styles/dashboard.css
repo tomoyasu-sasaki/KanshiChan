@@ -1,7 +1,10 @@
 /**
- * 検知ダッシュボード用スタイル
+ * 検知ダッシュボード用スタイル (デザインシステム準拠)
  */
 
+/* ==============================================
+   モーダル基本構造
+   ============================================== */
 .dashboard-modal-open {
   overflow: hidden;
 }
@@ -13,27 +16,18 @@
   align-items: center;
   justify-content: center;
   z-index: 2000;
-  animation: fadeIn 0.2s ease-out;
+  animation: fadeIn var(--transition-base) ease-out;
 }
 
 #dashboardModal.open {
   display: flex;
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
 #dashboardModal .modal-backdrop {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(8px);
+  background: var(--bg-overlay);
+  backdrop-filter: blur(var(--space-2));
 }
 
 #dashboardModal .modal-content {
@@ -41,139 +35,139 @@
   width: min(1200px, 92vw);
   max-height: 92vh;
   overflow: hidden;
-  background: linear-gradient(135deg, rgba(30, 30, 35, 0.98) 0%, rgba(20, 20, 25, 0.98) 100%);
-  border-radius: 20px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  padding: 24px;
-  backdrop-filter: blur(20px);
-  box-shadow: 0 32px 64px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+  background: linear-gradient(135deg, var(--bg-dark-1) 0%, var(--bg-dark-2) 100%);
+  border-radius: var(--radius-2xl);
+  border: 1px solid var(--border-medium);
+  padding: var(--space-6);
+  backdrop-filter: blur(var(--space-5));
+  box-shadow: var(--shadow-xl), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  animation: slideUp 0.3s ease-out;
+  gap: var(--space-5);
+  animation: slideUp var(--transition-smooth) ease-out;
 }
 
-@keyframes slideUp {
-  from {
-    transform: translateY(20px);
-    opacity: 0;
-  }
-  to {
-    transform: translateY(0);
-    opacity: 1;
-  }
-}
-
+/* ==============================================
+   モーダルヘッダー
+   ============================================== */
 #dashboardModal .drawer-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 12px;
+  gap: var(--space-3);
   flex-shrink: 0;
 }
 
 #dashboardModal .drawer-header h2 {
-  font-size: 1.5rem;
-  font-weight: 700;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-size: var(--text-xl);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
 }
 
 #dashboardModal .header-actions {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: var(--space-3);
 }
 
+/* ==============================================
+   ダッシュボードボディ
+   ============================================== */
 .dashboard-body {
   display: flex;
   flex-direction: column;
-  gap: 18px;
+  gap: var(--space-4);
   overflow-y: auto;
   overflow-x: hidden;
-  padding-right: 8px;
+  padding-right: var(--space-2);
   flex: 1;
   min-height: 0;
 }
 
-.dashboard-body::-webkit-scrollbar {
-  width: 8px;
-}
-
-.dashboard-body::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 4px;
-}
-
-.dashboard-body::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 4px;
-}
-
-.dashboard-body::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.25);
-}
-
+/* ==============================================
+   ダッシュボードセクション
+   ============================================== */
 .dashboard-section {
   background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 14px;
-  padding: 18px;
-  transition: all 0.2s ease;
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
+  transition: all var(--transition-base);
 }
 
 .dashboard-section:hover {
   background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.12);
+  border-color: var(--border-medium);
 }
 
+.dashboard-section.chart {
+  background: linear-gradient(135deg, rgba(72, 138, 153, 0.06) 0%, rgba(219, 174, 88, 0.04) 100%);
+}
+
+/* ==============================================
+   フィルター
+   ============================================== */
 .dashboard-section.filters {
   display: flex;
   flex-wrap: wrap;
-  gap: 12px;
+  gap: var(--space-3);
   align-items: flex-end;
 }
 
 .dashboard-section.filters .filter-group {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: var(--space-1);
 }
 
 .dashboard-section.filters label {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.8);
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  color: var(--text-secondary);
 }
 
 .dashboard-section.filters select,
 .dashboard-section.filters input[type="datetime-local"] {
   min-width: 160px;
-  padding: 6px 10px;
-  border-radius: 6px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: rgba(0, 0, 0, 0.25);
-  color: #fff;
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-medium);
+  background: rgba(255, 255, 255, 0.5);
+  color: var(--text-primary);
+  font-family: var(--font-primary);
+  transition: border-color var(--transition-base);
 }
 
+.dashboard-section.filters select:focus,
+.dashboard-section.filters input[type="datetime-local"]:focus {
+  outline: none;
+  border-color: var(--primary-start);
+  box-shadow: 0 0 0 3px rgba(72, 138, 153, 0.1);
+}
+
+/* ==============================================
+   KPI カード
+   ============================================== */
 .dashboard-section.kpi {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 14px;
-  padding: 14px;
+  gap: var(--space-3);
+  padding: var(--space-3);
 }
 
 .dashboard-kpi-card {
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.08) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 14px;
-  padding: 18px;
+  background: linear-gradient(135deg, rgba(72, 138, 153, 0.1) 0%, rgba(219, 174, 88, 0.08) 100%);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: var(--space-4);
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  gap: var(--space-2);
+  transition: all var(--transition-smooth);
   position: relative;
   overflow: hidden;
 }
@@ -185,16 +179,16 @@
   left: 0;
   right: 0;
   height: 3px;
-  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  background: var(--primary-gradient);
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity var(--transition-smooth);
 }
 
 .dashboard-kpi-card:hover {
   transform: translateY(-2px);
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.12) 100%);
-  border-color: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
+  background: linear-gradient(135deg, rgba(72, 138, 153, 0.15) 0%, rgba(219, 174, 88, 0.12) 100%);
+  border-color: var(--border-medium);
+  box-shadow: var(--shadow-md);
 }
 
 .dashboard-kpi-card:hover::before {
@@ -202,164 +196,152 @@
 }
 
 .dashboard-kpi-card .kpi-label {
-  font-size: 0.88rem;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.75);
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  color: var(--text-secondary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .dashboard-kpi-card .kpi-value {
-  font-size: 2rem;
-  font-weight: 800;
-  color: #fff;
+  font-size: var(--text-2xl);
+  font-weight: var(--font-extrabold);
+  color: #1e1e23;
   line-height: 1.2;
-  background: linear-gradient(135deg, #fff 0%, rgba(255, 255, 255, 0.85) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
 }
 
 .dashboard-kpi-card .kpi-subtext {
-  font-size: 0.78rem;
-  color: rgba(255, 255, 255, 0.55);
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
   line-height: 1.4;
 }
 
+/* ==============================================
+   セクションヘッダー
+   ============================================== */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-4);
+}
+
+.section-header h3 {
+  font-size: var(--text-lg);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+  margin: 0;
+}
+
+/* ==============================================
+   テーブル
+   ============================================== */
 .dashboard-section.recent-logs,
 .dashboard-section.app-usage {
   overflow: visible;
 }
 
-.dashboard-section.chart {
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.06) 0%, rgba(118, 75, 162, 0.04) 100%);
-}
-
-.section-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 16px;
-}
-
-.section-header h3 {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: rgba(255, 255, 255, 0.9);
-  margin: 0;
-}
-
 .table-wrapper {
-  max-height: 320px;
+  max-height: var(--table-max-height);
   overflow-y: auto;
   overflow-x: auto;
-  border-radius: 12px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(0, 0, 0, 0.15);
-}
-
-.table-wrapper::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-
-.table-wrapper::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.03);
-  border-radius: 3px;
-}
-
-.table-wrapper::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 3px;
-}
-
-.table-wrapper::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.25);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--border-light);
 }
 
 .table-wrapper table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.88rem;
+  font-size: var(--text-base);
 }
 
 .table-wrapper thead {
-  background: linear-gradient(180deg, rgba(102, 126, 234, 0.12) 0%, rgba(118, 75, 162, 0.08) 100%);
+  background: linear-gradient(180deg, rgba(72, 138, 153, 0.2) 0%, rgba(219, 174, 88, 0.15) 100%);
   position: sticky;
   top: 0;
   z-index: 10;
 }
 
 .table-wrapper th {
-  padding: 12px 14px;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+  padding: var(--space-3) var(--space-3);
+  border-bottom: 2px solid var(--border-medium);
   text-align: left;
-  font-weight: 700;
-  font-size: 0.82rem;
-  color: rgba(255, 255, 255, 0.85);
+  font-weight: var(--font-bold);
+  font-size: var(--text-sm);
+  color: var(--text-primary);
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .table-wrapper td {
-  padding: 11px 14px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+  padding: var(--space-3) var(--space-3);
+  border-bottom: 1px solid var(--border-light);
   text-align: left;
-  color: rgba(255, 255, 255, 0.75);
+  color: var(--text-secondary);
 }
 
 .table-wrapper tbody tr {
-  transition: background-color 0.2s ease;
+  transition: background-color var(--transition-base);
 }
 
 .table-wrapper tbody tr.empty td {
   text-align: center;
-  color: rgba(255, 255, 255, 0.5);
-  padding: 24px;
+  color: var(--text-tertiary);
+  padding: var(--space-6);
   font-style: italic;
 }
 
 .table-wrapper tbody tr:hover:not(.empty) {
-  background: rgba(102, 126, 234, 0.08);
+  background: rgba(72, 138, 153, 0.15);
 }
 
 .table-wrapper tbody tr:nth-child(even):not(.empty) {
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(0, 0, 0, 0.03);
 }
 
 .table-wrapper tbody tr:nth-child(even):hover:not(.empty) {
-  background: rgba(102, 126, 234, 0.08);
+  background: rgba(72, 138, 153, 0.15);
 }
 
+/* ==============================================
+   ボタン
+   ============================================== */
 .btn-compact {
-  padding: 8px 14px;
-  font-size: 0.82rem;
-  border-radius: 8px;
-  font-weight: 600;
-  transition: all 0.2s ease;
-  background: rgba(102, 126, 234, 0.15);
-  border: 1px solid rgba(102, 126, 234, 0.3);
-  color: rgba(255, 255, 255, 0.9);
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--text-sm);
+  border-radius: var(--radius-sm);
+  font-weight: var(--font-semibold);
+  transition: all var(--transition-base);
+  background: rgba(72, 138, 153, 0.2);
+  border: 1px solid rgba(72, 138, 153, 0.4);
+  color: #1e1e23;
+  cursor: pointer;
 }
 
 .btn-compact:hover {
-  background: rgba(102, 126, 234, 0.25);
-  border-color: rgba(102, 126, 234, 0.5);
+  background: rgba(72, 138, 153, 0.35);
+  border-color: rgba(72, 138, 153, 0.6);
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+  box-shadow: 0 var(--space-1) var(--space-3) rgba(72, 138, 153, 0.3);
 }
 
+/* ==============================================
+   チャート
+   ============================================== */
 #dashboardTrendChart {
   width: 100%;
-  height: 280px !important;
+  height: var(--chart-height) !important;
 }
 
-@media (max-width: 900px) {
+/* ==============================================
+   レスポンシブ対応
+   ============================================== */
+@media (max-width: 768px) {
   #dashboardModal .modal-content {
     width: 95vw;
     max-height: 95vh;
-    border-radius: 12px;
-    padding: 16px;
+    border-radius: var(--radius-md);
+    padding: var(--space-4);
   }
 
   .dashboard-section.filters {
@@ -370,6 +352,20 @@
   .dashboard-section.filters .filter-group,
   .dashboard-section.filters select,
   .dashboard-section.filters input[type="datetime-local"] {
+    width: 100%;
+  }
+
+  .dashboard-section.kpi {
+    grid-template-columns: 1fr;
+  }
+
+  .section-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-2);
+  }
+
+  .btn-compact {
     width: 100%;
   }
 }

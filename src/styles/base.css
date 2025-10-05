@@ -1,7 +1,166 @@
 /**
  * アプリ全体で共有するベーススタイル。
- * リセット・レイアウト・共通フォーム/ボタンをここで定義する。
+ * デザインシステムの CSS 変数定義・リセット・共通フォーム/ボタンをここで定義する。
  */
+
+/* ==============================================
+   CSS 変数定義 (デザインシステム準拠)
+   ============================================== */
+:root {
+  /* プライマリカラー */
+  --primary-start: #488a99;
+  --primary-end: #DBAES8;
+  --primary-gradient: linear-gradient(135deg, #488a99 0%, #DBAES8 100%);
+
+  /* ニュートラルカラー */
+  --charcoal: #FBE9E7;
+  --gray: #B4B4B4;
+  --bg-dark-1: rgba(251, 233, 231, 0.98);
+  --bg-dark-2: rgba(241, 223, 221, 0.96);
+  --bg-overlay: rgba(0, 0, 0, 0.7);
+  --bg-light: #f5f5f7;
+  --bg-muted: #f8f9fa;
+  --bg-monitor-dark: #202124;
+
+  /* テキストカラー (明るい背景用) */
+  --text-primary: rgba(30, 30, 35, 0.95);
+  --text-secondary: rgba(50, 50, 60, 0.85);
+  --text-tertiary: rgba(80, 80, 90, 0.7);
+
+  /* ボーダーカラー (明るい背景用) */
+  --border-light: rgba(0, 0, 0, 0.1);
+  --border-medium: rgba(0, 0, 0, 0.15);
+  --border-strong: rgba(0, 0, 0, 0.25);
+
+  /* フィードバックカラー */
+  --success: #51cf66;
+  --warning: #ffd43b;
+  --error: #ff6b6b;
+  --info: #488a99;
+
+  /* フォントファミリー */
+  --font-primary: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Noto Sans JP', 'Helvetica Neue', Arial, sans-serif;
+
+  /* フォントサイズスケール */
+  --text-xs: 0.75rem;
+  --text-sm: 0.82rem;
+  --text-base: 0.88rem;
+  --text-md: 1rem;
+  --text-lg: 1.1rem;
+  --text-xl: 1.5rem;
+  --text-2xl: 2rem;
+
+  /* フォントウェイト */
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+  --font-extrabold: 800;
+
+  /* スペーシング */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --space-10: 40px;
+
+  /* ボーダーラジウス */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 14px;
+  --radius-xl: 16px;
+  --radius-2xl: 20px;
+  --radius-full: 9999px;
+
+  /* シャドウ */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --shadow-md: 0 8px 24px rgba(72, 138, 153, 0.15);
+  --shadow-lg: 0 16px 48px rgba(72, 138, 153, 0.25);
+  --shadow-xl: 0 32px 64px rgba(0, 0, 0, 0.6);
+  --focus-shadow: 0 0 0 3px rgba(72, 138, 153, 0.1);
+
+  /* トランジション */
+  --transition-fast: 0.15s ease;
+  --transition-base: 0.2s ease;
+  --transition-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* レスポンシブブレークポイント */
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 768px;
+  --breakpoint-lg: 1024px;
+  --breakpoint-xl: 1280px;
+
+  /* コンポーネント固有の値 */
+  --drawer-width: 450px;
+  --table-max-height: 320px;
+  --chart-height: 280px;
+}
+
+/* ==============================================
+   アニメーション定義
+   ============================================== */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes blink {
+  0%, 50%, 100% {
+    opacity: 1;
+  }
+  25%, 75% {
+    opacity: 0.3;
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 2px 8px rgba(255, 212, 59, 0.3);
+  }
+  50% {
+    box-shadow: 0 5px 20px rgba(255, 212, 59, 0.6);
+  }
+}
+
+/* ==============================================
+   リセット & ベーススタイル
+   ============================================== */
 * {
   margin: 0;
   padding: 0;
@@ -9,94 +168,148 @@
 }
 
 body {
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+  font-family: var(--font-primary);
   background: #f5f5f7;
   min-height: 100vh;
   margin: 0;
 }
 
 header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--primary-gradient);
   color: white;
-  padding: 20px 40px;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  padding: var(--space-5) var(--space-10);
+  box-shadow: var(--shadow-sm);
 }
 
 header h1 {
-  font-size: 1.8rem;
+  font-size: var(--text-xl);
   margin: 0;
 }
 
 header p {
-  font-size: 0.9rem;
+  font-size: var(--text-base);
   opacity: 0.9;
-  margin: 5px 0 0 0;
+  margin: var(--space-1) 0 0 0;
 }
 
 main {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 40px 20px;
+  padding: var(--space-10) var(--space-5);
 }
 
 section {
   background: white;
-  padding: 30px;
-  border-radius: 12px;
-  margin-bottom: 30px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+  padding: var(--space-6);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-6);
+  box-shadow: var(--shadow-sm);
 }
 
 h2 {
-  color: #333;
-  margin-bottom: 20px;
-  font-size: 1.5rem;
+  color: var(--text-primary);
+  margin-bottom: var(--space-5);
+  font-size: var(--text-xl);
 }
 
+/* ==============================================
+   フォームコンポーネント
+   ============================================== */
 .form-group {
-  margin-bottom: 20px;
+  margin-bottom: var(--space-5);
 }
 
 .form-group label {
   display: block;
-  margin-bottom: 8px;
-  color: #555;
-  font-weight: 500;
+  margin-bottom: var(--space-2);
+  color: var(--text-secondary);
+  font-weight: var(--font-medium);
 }
 
 .form-group input,
 .form-group textarea {
   width: 100%;
-  padding: 12px;
-  border: 2px solid #e0e0e0;
-  border-radius: 8px;
-  font-size: 1rem;
-  transition: border-color 0.3s;
+  padding: var(--space-3);
+  border: 3px solid #e0e0e0;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-md);
+  transition: border-color var(--transition-smooth);
+  background: rgba(0, 0, 0, 0.03) !important;
 }
 
 .form-group input:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: var(--primary-start);
+  background: rgba(0, 0, 0, 0.03);
 }
 
+/* ==============================================
+   ボタンコンポーネント
+   ============================================== */
 .btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: var(--primary-gradient);
   color: white;
   border: none;
-  padding: 12px 30px;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 600;
+  padding: var(--space-3) var(--space-6);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-md);
+  font-weight: var(--font-semibold);
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s;
+  transition: transform var(--transition-base), box-shadow var(--transition-base);
 }
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+  box-shadow: var(--shadow-md);
 }
 
 .btn-primary:active {
   transform: translateY(0);
+}
+
+.btn-secondary {
+  background: rgba(100, 100, 110, 0.15);
+  border: 1px solid var(--border-medium);
+  padding: var(--space-2) var(--space-5);
+  color: var(--text-primary);
+  border-radius: var(--radius-sm);
+  font-weight: var(--font-semibold);
+  cursor: pointer;
+  transition: all var(--transition-base);
+}
+
+.btn-secondary:hover {
+  background: rgba(100, 100, 110, 0.25);
+  border-color: var(--border-strong);
+}
+
+/* ==============================================
+   アクセシビリティ
+   ============================================== */
+:focus-visible {
+  outline: 2px solid var(--primary-start);
+  outline-offset: 2px;
+}
+
+/* ==============================================
+   スクロールバー (グローバル)
+   ============================================== */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.03);
+  border-radius: var(--space-1);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: var(--space-1);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.25);
 }

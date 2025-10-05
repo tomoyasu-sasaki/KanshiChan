@@ -6,34 +6,34 @@
 .voice-input-controls {
   display: flex;
   justify-content: center;
-  gap: 1rem;
-  margin-bottom: 2rem;
+  gap: var(--space-4);
+  margin-bottom: var(--space-8);
 }
 
 .btn-large {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 1rem 2rem;
-  font-size: 1.1rem;
-  border-radius: 8px;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-8);
+  font-size: var(--text-lg);
+  border-radius: var(--radius-sm);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all var(--transition-smooth) ease;
 }
 
 .btn-large .icon {
-  font-size: 1.5rem;
+  font-size: var(--text-xl);
 }
 
 .btn-primary {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, var(--primary-start) 0%, #764ba2 100%);
   color: white;
   border: none;
 }
 
 .btn-primary:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 var(--space-1) var(--space-3) rgba(102, 126, 234, 0.4);
 }
 
 .btn-danger {
@@ -44,17 +44,17 @@
 
 .btn-danger:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(245, 87, 108, 0.4);
+  box-shadow: 0 var(--space-1) var(--space-3) rgba(245, 87, 108, 0.4);
 }
 
 .btn-secondary {
   background: #6c757d;
   color: white;
   border: none;
-  padding: 0.75rem 1.5rem;
-  border-radius: 6px;
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--space-1);
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: all var(--transition-smooth) ease;
 }
 
 .btn-secondary:hover {
@@ -64,133 +64,124 @@
 /* 録音状態表示 */
 .voice-input-status {
   text-align: center;
-  padding: 1.5rem;
+  padding: var(--space-5);
   background: rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
-  margin-bottom: 1.5rem;
+  border-radius: var(--radius-sm);
+  margin-bottom: var(--space-5);
 }
 
 .status-indicator {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.75rem;
-  font-size: 1.2rem;
+  gap: var(--space-3);
+  font-size: var(--text-lg);
 }
 
 .status-icon {
-  font-size: 1.8rem;
+  font-size: var(--text-xl);
   animation: pulse 2s infinite;
 }
 
-@keyframes pulse {
-  0%, 100% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0.5;
-  }
-}
-
 .status-text {
-  font-weight: 600;
-  color: #e0e0e0;
+  font-weight: var(--font-semibold);
+  color: var(--text-secondary);
 }
 
 /* 文字起こし結果プレビュー */
 .voice-input-result {
-  margin-bottom: 1.5rem;
-  padding: 1rem;
+  margin-bottom: var(--space-5);
+  padding: var(--space-4);
   background: rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
+  border-radius: var(--radius-sm);
 }
 
 .voice-input-result h3 {
   margin-top: 0;
-  margin-bottom: 1rem;
-  font-size: 1rem;
+  margin-bottom: var(--space-4);
+  font-size: var(--text-md);
   color: #b0b0b0;
 }
 
 .transcribed-text {
-  padding: 1rem;
+  padding: var(--space-4);
   background: rgba(0, 0, 0, 0.3);
-  border-radius: 6px;
-  color: #f0f0f0;
+  border-radius: var(--space-1);
+  color: var(--text-secondary);
   line-height: 1.6;
-  font-size: 1rem;
+  font-size: var(--text-md);
   white-space: pre-wrap;
   word-wrap: break-word;
 }
 
 /* スケジュール確認 & 編集 */
 .voice-input-schedules {
-  margin-top: 1.5rem;
+  margin-top: var(--space-5);
 }
 
 .voice-input-schedules h3 {
   margin-top: 0;
-  margin-bottom: 1rem;
-  font-size: 1rem;
+  margin-bottom: var(--space-4);
+  font-size: var(--text-md);
   color: #b0b0b0;
 }
 
 .extracted-schedules {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  margin-bottom: 1.5rem;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
 }
 
 .schedule-card {
   background: rgba(255, 255, 255, 0.08);
-  border-radius: 8px;
-  padding: 1rem;
+  border-radius: var(--radius-sm);
+  padding: var(--space-4);
   border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .schedule-card-header {
-  margin-bottom: 1rem;
-  padding-bottom: 0.75rem;
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-3);
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .schedule-card-header strong {
-  font-size: 1.1rem;
-  color: #f0f0f0;
+  font-size: var(--text-lg);
+  color: var(--text-secondary);
 }
 
 .schedule-card-body {
   display: flex;
   flex-direction: column;
-  gap: 0.75rem;
+  gap: var(--space-3);
 }
 
 .schedule-card-body .form-group {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: var(--space-1);
 }
 
 .schedule-card-body .form-group label {
-  font-size: 0.85rem;
+  font-size: var(--text-sm);
   color: #b0b0b0;
 }
 
 .schedule-card-body .form-group input,
 .schedule-card-body .form-group textarea {
-  padding: 0.5rem;
+  padding: var(--space-2);
   background: rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 4px;
-  color: #f0f0f0;
-  font-size: 0.95rem;
+  border-radius: var(--space-1);
+  color: var(--text-secondary);
+  font-size: var(--text-base);
 }
 
 .schedule-card-body .form-group input:focus,
 .schedule-card-body .form-group textarea:focus {
   outline: none;
-  border-color: #667eea;
+  border-color: var(--primary-start);
   box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
 }
 
@@ -199,32 +190,23 @@
   font-family: inherit;
 }
 
-/* ボタングループ */
-.button-group {
-  display: flex;
-  gap: 1rem;
-  margin-top: 1.5rem;
-}
-
-.button-group button {
-  flex: 1;
-}
+/* button-group は drawer.css で定義 */
 
 /* エラーメッセージ */
 .voice-input-error {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 1rem;
+  gap: var(--space-3);
+  padding: var(--space-4);
   background: rgba(245, 87, 108, 0.1);
   border: 1px solid rgba(245, 87, 108, 0.3);
-  border-radius: 8px;
-  color: #ff6b6b;
-  margin-top: 1rem;
+  border-radius: var(--radius-sm);
+  color: var(--error);
+  margin-top: var(--space-4);
 }
 
 .error-icon {
-  font-size: 1.5rem;
+  font-size: var(--text-xl);
 }
 
 .error-message {
@@ -236,6 +218,6 @@
 .empty-message {
   text-align: center;
   color: #888;
-  padding: 2rem;
+  padding: var(--space-8);
   font-style: italic;
 }
