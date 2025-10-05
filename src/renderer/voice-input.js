@@ -147,7 +147,8 @@ async function processRecording() {
     const result = await window.electronAPI.voiceInputTranscribe(audioDataBase64);
 
     if (!result.success) {
-      throw new Error(result.error || '音声認識に失敗しました');
+      const errorMsg = typeof result.error === 'string' ? result.error : '音声認識に失敗しました';
+      throw new Error(errorMsg);
     }
 
     const { transcribedText, schedules } = result;
@@ -162,7 +163,8 @@ async function processRecording() {
     updateState(VoiceInputState.COMPLETED, 'スケジュール抽出完了');
   } catch (error) {
     console.error('[VoiceInput] 処理エラー:', error);
-    showError(error.message);
+    const errorMessage = error?.message || error?.toString() || '処理中にエラーが発生しました';
+    showError(errorMessage);
   }
 }
 
@@ -248,21 +250,39 @@ function collectEditedSchedules() {
  */
 async function confirmSchedules() {
   try {
-    const schedules = collectEditedSchedules();
+    const newSchedules = collectEditedSchedules();
 
-    for (const schedule of schedules) {
-      await window.electronAPI.saveSchedule(schedule);
-      console.log('[VoiceInput] スケジュール登録:', schedule);
+    // localStorage からスケジュール配列を取得
+    let existingSchedules = JSON.parse(localStorage.getItem('schedules')) || [];
+
+    // 新しいスケジュールを追加（IDと通知フラグを付与）
+    for (const schedule of newSchedules) {
+      const scheduleWithMeta = {
+        id: Date.now() + Math.random(), // ユニークなID生成
+        title: schedule.title,
+        date: schedule.date,
+        time: schedule.time,
+        description: schedule.description || '',
+        notified: false,
+        preNotified: false,
+        startNotified: false,
+      };
+      existingSchedules.push(scheduleWithMeta);
+      console.log('[VoiceInput] スケジュール登録:', scheduleWithMeta);
     }
+
+    // localStorage に保存
+    localStorage.setItem('schedules', JSON.stringify(existingSchedules));
 
     await window.electronAPI.sendNotification({
       title: '音声入力',
-      body: `${schedules.length}件のスケジュールを登録しました`,
+      body: `${newSchedules.length}件のスケジュールを登録しました`,
     });
 
     resetVoiceInput();
     closeDrawer();
 
+    // スケジュール一覧を更新するイベントを発火
     window.dispatchEvent(new Event('schedules-updated'));
   } catch (error) {
     console.error('[VoiceInput] スケジュール登録エラー:', error);

@@ -15,8 +15,9 @@ const {
 } = require('../../constants/llm-prompts');
 
 /**
- * LLM モデルインスタンス（遅延初期化）
+ * LLM インスタンス（遅延初期化）
  */
+let llama = null;
 let llmModel = null;
 let llmContext = null;
 
@@ -27,6 +28,19 @@ const DEFAULT_LLM_MODEL_PATH = path.join(
   __dirname,
   '../../../models/llmjp-3.1-1.8b-instruct4-q5.gguf'
 );
+
+/**
+ * LLM モジュール（node-llama-cpp）を動的にインポート
+ * - node-llama-cpp は ESM で top-level await を使用しているため、require() ではなく import() を使用
+ */
+let nodeLlamaCpp = null;
+
+async function loadNodeLlamaCpp() {
+  if (!nodeLlamaCpp) {
+    nodeLlamaCpp = await import('node-llama-cpp');
+  }
+  return nodeLlamaCpp;
+}
 
 /**
  * LLM モデルをロードする。
@@ -53,14 +67,20 @@ async function loadLLMModel(modelPath = DEFAULT_LLM_MODEL_PATH) {
   console.log(`[LLM] モデルをロード中: ${modelPath}`);
 
   try {
-    const { LlamaModel, LlamaContext, LlamaChatSession } = require('node-llama-cpp');
+    const { getLlama } = await loadNodeLlamaCpp();
 
-    llmModel = new LlamaModel({
+    // まず llama インスタンスを取得
+    if (!llama) {
+      llama = await getLlama();
+    }
+
+    // llama.loadModel() でモデルをロード
+    llmModel = await llama.loadModel({
       modelPath,
     });
 
-    llmContext = new LlamaContext({
-      model: llmModel,
+    // モデルからコンテキストを作成
+    llmContext = await llmModel.createContext({
       contextSize: 2048,
     });
 
@@ -86,19 +106,24 @@ async function extractScheduleFromText(transcribedText) {
     throw new Error('文字起こしテキストが不正です');
   }
 
-  const { model, context } = await loadLLMModel();
+  const { model } = await loadLLMModel();
 
-  if (!model || !context) {
+  if (!model) {
     throw new Error('LLM モデルが初期化されていません');
   }
 
   console.log(`[LLM] スケジュール抽出開始: "${transcribedText.substring(0, 50)}..."`);
 
   try {
-    const { LlamaChatSession } = require('node-llama-cpp');
+    const { LlamaChatSession } = await loadNodeLlamaCpp();
+
+    // 毎回新しいコンテキストを作成（シーケンス再利用の問題を回避）
+    const tempContext = await model.createContext({
+      contextSize: 2048,
+    });
 
     const session = new LlamaChatSession({
-      contextSequence: context.getSequence(),
+      contextSequence: tempContext.getSequence(),
     });
 
     const userPrompt = buildScheduleExtractionUserPrompt(transcribedText);
@@ -113,6 +138,9 @@ async function extractScheduleFromText(transcribedText) {
     });
 
     console.log('[LLM] 推論結果:', response);
+
+    // コンテキストのクリーンアップ
+    await tempContext.dispose();
 
     const jsonMatch = response.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
@@ -130,7 +158,8 @@ async function extractScheduleFromText(transcribedText) {
     return parsedResult.schedules;
   } catch (error) {
     console.error('[LLM] スケジュール抽出エラー:', error);
-    throw new Error(`スケジュール抽出に失敗しました: ${error.message}`);
+    const errorMessage = error?.message || error?.toString() || '不明なエラー';
+    throw new Error(`スケジュール抽出に失敗しました: ${errorMessage}`);
   }
 }
 
@@ -138,6 +167,7 @@ async function extractScheduleFromText(transcribedText) {
  * LLM モデルインスタンスをリセットする（テスト用）。
  */
 function resetLLMInstance() {
+  llama = null;
   llmModel = null;
   llmContext = null;
 }

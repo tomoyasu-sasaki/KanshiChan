@@ -58,10 +58,11 @@ async function processVoiceInput(audioDataBase64, options = {}) {
     };
   } catch (error) {
     console.error('[VoiceInput] 処理エラー:', error);
+    const errorMessage = error?.message || error?.toString() || '不明なエラー';
 
     return {
       success: false,
-      error: error.message,
+      error: errorMessage,
       transcribedText,
       schedules,
     };

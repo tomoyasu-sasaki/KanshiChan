@@ -8,6 +8,10 @@
 const { nodewhisper } = require('nodejs-whisper');
 const path = require('path');
 const fs = require('fs').promises;
+const { exec } = require('child_process');
+const { promisify } = require('util');
+
+const execPromise = promisify(exec);
 const {
   DEFAULT_WHISPER_MODEL_PATH,
   DEFAULT_WHISPER_OPTIONS,
@@ -83,14 +87,32 @@ async function transcribeAudio(audioDataBase64, options = {}) {
   const tempDir = path.join(__dirname, '../../../temp');
   await fs.mkdir(tempDir, { recursive: true });
 
-  const tempFilePath = path.join(tempDir, `audio_${Date.now()}.wav`);
+  const timestamp = Date.now();
+  const tempInputPath = path.join(tempDir, `audio_input_${timestamp}.dat`);
+  const tempWavPath = path.join(tempDir, `audio_${timestamp}.wav`);
 
   try {
-    await fs.writeFile(tempFilePath, audioBuffer);
-    console.log(`[Whisper] 文字起こし開始: ${tempFilePath}`);
+    // まず元の音声データを書き込み
+    await fs.writeFile(tempInputPath, audioBuffer);
+    console.log(`[Whisper] 音声ファイル保存: ${tempInputPath} (${audioBuffer.length} bytes)`);
 
+    // ffmpeg で任意の音声形式から WAV (16kHz, mono, 16-bit PCM) に変換
+    console.log(`[Whisper] 音声データを WAV 形式に変換中...`);
+    try {
+      const ffmpegCmd = `ffmpeg -i "${tempInputPath}" -ar 16000 -ac 1 -c:a pcm_s16le "${tempWavPath}" -y`;
+      await execPromise(ffmpegCmd);
+      console.log(`[Whisper] WAV 変換完了: ${tempWavPath}`);
+    } catch (ffmpegError) {
+      console.error('[Whisper] ffmpeg変換エラー:', ffmpegError.message);
+      throw new Error('音声ファイルの変換に失敗しました。ffmpegがインストールされているか確認してください。');
+    }
+
+    console.log(`[Whisper] 文字起こし開始: ${tempWavPath}`);
+
+    // nodejs-whisper は 'base', 'tiny', 'small' などのモデル名を期待
+    // モデルファイルは node_modules/nodejs-whisper/cpp/whisper.cpp/models/ に配置済み
     const whisperOptions = {
-      modelName: model.modelPath,
+      modelName: 'base', // 短いモデル名を指定
       autoDownloadModelName: '',
       language: options.language || DEFAULT_WHISPER_OPTIONS.language,
       whisperOptions: {
@@ -104,7 +126,11 @@ async function transcribeAudio(audioDataBase64, options = {}) {
       },
     };
 
-    const result = await nodewhisper(tempFilePath, whisperOptions);
+    console.log('[Whisper] Whisper推論オプション:', JSON.stringify(whisperOptions, null, 2));
+
+    const result = await nodewhisper(tempWavPath, whisperOptions);
+
+    console.log('[Whisper] Whisper推論完了。結果型:', typeof result);
 
     if (!result || typeof result !== 'string') {
       throw new Error('Whisper の推論結果が不正です');
@@ -116,10 +142,13 @@ async function transcribeAudio(audioDataBase64, options = {}) {
     return trimmedResult;
   } catch (error) {
     console.error('[Whisper] 文字起こしエラー:', error);
-    throw new Error(`文字起こしに失敗しました: ${error.message}`);
+    const errorMessage = error?.message || error?.toString() || '不明なエラー';
+    throw new Error(`文字起こしに失敗しました: ${errorMessage}`);
   } finally {
+    // 一時ファイルをクリーンアップ
     try {
-      await fs.unlink(tempFilePath);
+      await fs.unlink(tempInputPath);
+      await fs.unlink(tempWavPath);
     } catch (cleanupError) {
       console.warn('[Whisper] 一時ファイル削除エラー:', cleanupError);
     }

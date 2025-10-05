@@ -74,6 +74,16 @@ document.addEventListener('DOMContentLoaded', () => {
   setInterval(() => {
     renderSchedules();
   }, 30000);
+
+  // 外部からのスケジュール更新イベントをリッスン（音声入力など）
+  window.addEventListener('schedules-updated', () => {
+    console.log('[Schedule] スケジュール更新イベントを受信');
+    // localStorageから最新のスケジュールを再読み込み
+    schedules = JSON.parse(localStorage.getItem('schedules')) || [];
+    renderSchedules();
+    // 通知チェックを再起動（新しいスケジュールを認識させる）
+    startNotificationCheck();
+  });
 });
 
 // スケジュール追加

@@ -6,22 +6,85 @@ Web カメラ映像のリアルタイム監視と日次スケジュール管理�
 - **リアルタイム監視**: Web カメラ映像に対して YOLOv11 で人物 / スマホを検知し、バウンディングボックスを描画。
 - **自動監視**: 起動後 0.5 秒で自動的にカメラを開始し、省電力スリープを抑止して監視継続。
 - **スマホ / 不在アラート**: 閾値秒数を超えるとデスクトップ通知・ビープ音・VOICEVOX 読み上げを実施。
+- **音声入力スケジュール登録**: マイクボタンから音声でスケジュールを登録。Whisper (STT) + LLM で日時を自動抽出。
 - **スケジュール管理**: localStorage に予定を保持し、5 分前と開始時刻に通知。
 - **ドロワー UI**: 監視画面、設定、スケジュール、ログを単一ページで切り替え。
 
 ## 必要環境
-- Node.js 18 以上 (Electron v38 が依存)
+- Node.js 20 以上（`node-llama-cpp` の要件）
 - macOS 13 以上を推奨（アクティブウィンドウ取得が AppleScript 依存）
 - Xcode Command Line Tools または同等のビルドツール（`canvas` / `onnxruntime-node` がネイティブビルドを要求）
+- **CMake** (音声入力機能を使用する場合、whisper.cpp のビルドに必要)
+- **ffmpeg** (音声形式変換に使用)
 - VOICEVOX エンジン (HTTP API) がローカルで起動済みであること（オプション: 読み上げ機能）
 
 ## セットアップ
+
+### 基本セットアップ
 ```bash
 npm install
 # YOLO モデルを models/yolo11n.onnx として配置
 npm start
 ```
 起動時に macOS のカメラ許可ダイアログが表示されます。許可後、監視が自動開始されます。
+
+### 音声入力機能のセットアップ（オプション）
+
+音声入力機能を使用する場合は、以下の追加セットアップが必要です。
+
+#### 1. 必要ツールのインストール
+```bash
+# macOS の場合
+brew install cmake ffmpeg
+
+# Ubuntu/Debian の場合
+sudo apt install cmake ffmpeg
+
+# Windows の場合
+# CMake: https://cmake.org/download/
+# ffmpeg: https://ffmpeg.org/download.html
+```
+
+#### 2. モデルファイルの配置
+
+Whisper モデル (`ggml-base.bin`) と LLM モデル (`llmjp-3.1-1.8b-instruct4-q5.gguf`) を `models/` ディレクトリに配置してください。
+
+```bash
+models/
+├── ggml-base.bin                         # Whisper 音声認識モデル (約148MB)
+├── llmjp-3.1-1.8b-instruct4-q5.gguf      # LLM スケジュール抽出モデル (約1.9GB)
+├── yolo11n.onnx                          # YOLO 物体検知モデル
+└── README.md                             # モデル説明
+```
+
+**Whisper モデルのダウンロード:**
+```bash
+# models/ ディレクトリに移動
+cd models
+
+# base モデルをダウンロード
+curl -L https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin -o ggml-base.bin
+```
+
+**LLM モデルのダウンロード:**
+```bash
+# llmjp-3.1-1.8b-instruct4-q5.gguf をダウンロード
+# Hugging Face などから取得して models/ に配置
+```
+
+#### 3. whisper.cpp のビルド
+
+初回起動時、または `npm install` 後に自動的に whisper.cpp がビルドされます。手動でビルドする場合:
+
+```bash
+cd node_modules/nodejs-whisper/cpp/whisper.cpp
+cmake -B build -DCMAKE_BUILD_TYPE=Release -DWHISPER_BUILD_EXAMPLES=ON
+cmake --build build --config Release --target whisper-cli -j 4
+```
+
+#### 4. マイク権限の許可
+
+初めて音声入力を使用する際、macOS のマイク許可ダイアログが表示されます。「許可」を選択してください。
 
 ## ディレクトリ構成
 ```
@@ -77,12 +140,67 @@ kanchichan/
 - 旧 `style.css` を機能別に分割し、コメント規約に従ったファイル概要を付記。
 - 監視ビュー・ドロワー・設定フォームなどは専用 CSS に切り出し、保守性を向上。
 
-## 使い方のヒント
-- スケジュールドロワーで予定を追加すると localStorage に保存され、5 分前と開始時刻に VOICEVOX / 通知が発火します。
-- 設定ドロワーでスマホ / 不在アラートの閾値・感度を調整できます。変更後は自動で `monitor.js` に反映されます。
+## 使い方
 
-## よくある質問
-- **VOICEVOX が起動していないときは？**
-  - 読み上げリクエストはエラー扱いとなり、UI 側にはアラートが表示されません（ログのみに記録）。
-- **Windows / Linux でアクティブウィンドウ取得は動く？**
-  - 現状は macOS の AppleScript 依存です。Windows / Linux では空の結果が返ります。
+### 基本的な使い方
+- **監視機能**: 起動すると自動的にカメラが開始され、人物/スマホを検知します
+- **スケジュール登録**: スケジュールドロワーで予定を追加すると localStorage に保存され、5 分前と開始時刻に通知
+- **設定**: 設定ドロワーでスマホ / 不在アラートの閾値・感度を調整可能
+
+### 音声入力でスケジュール登録
+
+1. **マイクボタンをクリック**: ツールバーのマイクアイコンをクリックして音声入力ドロワーを開く
+2. **録音開始**: 「録音開始」ボタンをクリック（または自動で録音開始）
+3. **音声入力**: 例: 「今日の15時に会議」「明日の10時に歯医者」など話す
+4. **録音停止**: 「録音停止」ボタンをクリック
+5. **自動処理**:
+   - Whisper で音声を文字起こし
+   - LLM でスケジュール情報（日時・タイトル・説明）を抽出
+6. **確認・編集**: 抽出されたスケジュールを確認し、必要に応じて編集
+7. **登録**: 「スケジュール登録」ボタンで確定
+
+**音声入力のヒント:**
+- 日時を明確に話す: 「今日の15時」「明日の午後3時」「10月10日の10時」
+- タイトルを含める: 「〜に会議」「〜で打ち合わせ」「〜を食べる」
+- 詳細も話せる: 「会議室Aで新規プロジェクトについて」など
+
+## トラブルシューティング
+
+### 音声入力が動作しない場合
+
+#### 「モデルが見つかりません」エラー
+- `models/ggml-base.bin` と `models/llmjp-3.1-1.8b-instruct4-q5.gguf` が正しく配置されているか確認
+- モデルファイルのパーミッションを確認: `chmod 644 models/*.bin models/*.gguf`
+
+#### 「whisper-cli executable not found」エラー
+- whisper.cpp がビルドされていない可能性があります
+- 手動でビルド:
+  ```bash
+  cd node_modules/nodejs-whisper/cpp/whisper.cpp
+  cmake -B build -DCMAKE_BUILD_TYPE=Release -DWHISPER_BUILD_EXAMPLES=ON
+  cmake --build build --config Release --target whisper-cli -j 4
+  ```
+
+#### 「音声ファイルの変換に失敗しました」エラー
+- ffmpeg がインストールされているか確認: `which ffmpeg`
+- インストール: `brew install ffmpeg` (macOS)
+
+#### 「文字起こしに失敗しました」エラー
+- マイクの権限が許可されているか確認（システム環境設定 > セキュリティとプライバシー > マイク）
+- 録音した音声が短すぎる可能性があります（最低2-3秒話してください）
+
+#### 「スケジュール抽出に失敗しました」エラー
+- LLMモデルのメモリ不足の可能性があります（2GB以上の空きメモリが必要）
+- 日時を明確に話してください（例: 「今日の15時」「明日の午前10時」）
+
+### その他の問題
+
+#### VOICEVOX が起動していないときは？
+- 読み上げリクエストはエラー扱いとなり、UI 側にはアラートが表示されません（ログのみに記録）
+
+#### Windows / Linux でアクティブウィンドウ取得は動く？
+- 現状は macOS の AppleScript 依存です。Windows / Linux では空の結果が返ります
+
+#### スケジュールが通知されない
+- ブラウザ/Electronの通知権限を確認してください
+- スケジュール登録後、`schedules-updated` イベントが発火しているかコンソールログで確認

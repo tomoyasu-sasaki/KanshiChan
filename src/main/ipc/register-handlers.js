@@ -85,7 +85,9 @@ function registerIpcHandlers({ ipcMain, Notification, yoloDetectorProvider }) {
       return result;
     } catch (error) {
       console.error('[IPC] 音声入力エラー:', error);
-      return { success: false, error: error.message };
+      console.error('[IPC] エラースタック:', error.stack);
+      const errorMessage = error?.message || error?.toString() || '不明なエラー';
+      return { success: false, error: errorMessage };
     }
   });
 
