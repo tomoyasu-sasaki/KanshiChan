@@ -153,27 +153,48 @@ function createSlackReporter({ configStore }, dependencies = {}) {
     );
   }
 
+  async function getLastSuccessfulSentAt() {
+    const rows = await all(
+      'SELECT sent_at FROM slack_report_logs WHERE status = ? ORDER BY sent_at DESC LIMIT 1',
+      ['success']
+    );
+    if (!rows || rows.length === 0) {
+      return null;
+    }
+    const value = Number(rows[0]?.sent_at);
+    return Number.isFinite(value) ? value : null;
+  }
+
   const detectionStatsFn = dependencies.getDetectionStats || getDetectionStats;
   const appUsageStatsFn = dependencies.getAppUsageStats || getAppUsageStats;
   const systemEventsFn = dependencies.getSystemEvents || getSystemEvents;
 
-  async function buildReport(now = new Date()) {
-    const rangeStart = new Date(now);
-    rangeStart.setHours(0, 0, 0, 0);
+  async function buildReport(options = {}) {
+    const now = options.now instanceof Date ? options.now : new Date();
+    const endTimestamp = now.getTime();
+    let startTimestamp = Number.isFinite(options.start) ? Number(options.start) : null;
+
+    if (!Number.isFinite(startTimestamp)) {
+      const rangeStart = new Date(now);
+      rangeStart.setHours(0, 0, 0, 0);
+      startTimestamp = rangeStart.getTime();
+    }
+
+    const rangeStartDate = new Date(startTimestamp);
 
     const detectionStats = await detectionStatsFn({
-      start: rangeStart.getTime(),
-      end: now.getTime(),
+      start: startTimestamp,
+      end: endTimestamp,
       groupBy: 'hour',
     });
     const appUsageStats = await appUsageStatsFn({
-      start: rangeStart.getTime(),
-      end: now.getTime(),
+      start: startTimestamp,
+      end: endTimestamp,
       limit: 5,
     });
     const systemEvents = await systemEventsFn({
-      start: rangeStart.getTime(),
-      end: now.getTime(),
+      start: startTimestamp,
+      end: endTimestamp,
       limit: 50,
     });
 
@@ -196,13 +217,14 @@ function createSlackReporter({ configStore }, dependencies = {}) {
     const topApps = (appUsageStats.items || []).slice(0, 5);
     const topChromeDomains = (appUsageStats.chromeDetails || []).slice(0, 5);
 
-    const rangeText = `${formatDateLabel(new Date(rangeStart.getTime()))} ${formatTimeKey(rangeStart)} 〜 ${formatDateLabel(now)} ${formatTimeKey(now)}`;
+    const rangeText = `${formatDateLabel(rangeStartDate)} ${formatTimeKey(rangeStartDate)} 〜 ${formatDateLabel(now)} ${formatTimeKey(now)}`;
 
+    const header = options.title || ':bar_chart: 監視ちゃんサマリー';
     const lines = [
-      `:bar_chart: 監視ちゃんサマリー (${rangeText})`,
+      `${header} (${rangeText})`,
       `• 総イベント数: ${summary.totalCount || 0}`,
       `• アラート件数: ${alertCount}`,
-      `• スマホ検知時間: ${formatDuration(phoneDuration)} (${byType.phone_detection_end?.count || 0} 件)` ,
+      `• スマホ検知時間: ${formatDuration(phoneDuration)} (${byType.phone_detection_end?.count || 0} 件)`,
       `• 不在検知時間: ${formatDuration(absenceDuration)} (${byType.absence_detection_end?.count || 0} 件)`,
     ];
 
@@ -246,6 +268,10 @@ function createSlackReporter({ configStore }, dependencies = {}) {
       detectionStats,
       appUsageStats,
       systemEvents,
+      range: {
+        start: startTimestamp,
+        end: endTimestamp,
+      },
     };
   }
 
@@ -274,17 +300,45 @@ function createSlackReporter({ configStore }, dependencies = {}) {
 
   async function sendReport({ reason = 'manual', scheduledFor = null, scheduledTimestamp = null } = {}) {
     const now = new Date();
-    const report = await buildReport(now);
     const sentAt = now.getTime();
 
+    const dayStart = new Date(now);
+    dayStart.setHours(0, 0, 0, 0);
+
+    const cumulativeReport = await buildReport({
+      now,
+      start: dayStart.getTime(),
+      title: ':bar_chart: 監視ちゃんサマリー',
+    });
+
+    let deltaReport = null;
+    const lastSuccess = await getLastSuccessfulSentAt();
+    if (Number.isFinite(lastSuccess) && lastSuccess < sentAt) {
+      const deltaStart = lastSuccess + 1;
+      if (deltaStart < sentAt) {
+        deltaReport = await buildReport({
+          now,
+          start: deltaStart,
+          title: ':hourglass_flowing_sand: 直近送信以降',
+        });
+      }
+    }
+
+    const messageParts = [cumulativeReport.text];
+    if (deltaReport) {
+      messageParts.push(deltaReport.text);
+    }
+    const messageText = messageParts.join('\n\n');
+    const payload = { text: messageText };
+
     try {
-      await postToSlack(report);
+      await postToSlack(payload);
       await logResult({
         scheduledFor: scheduledTimestamp,
         sentAt,
         status: 'success',
         reason,
-        message: report.text,
+        message: messageText,
       });
 
       return {
@@ -299,7 +353,7 @@ function createSlackReporter({ configStore }, dependencies = {}) {
         sentAt,
         status: 'failure',
         reason,
-        message: report.text,
+        message: messageText,
         error: error.message,
       });
       throw error;
@@ -355,7 +409,7 @@ function createSlackReporter({ configStore }, dependencies = {}) {
     sendReport,
     getHistory,
     dispose,
-    generateReportPreview: () => buildReport(new Date()),
+    generateReportPreview: () => buildReport({ now: new Date() }),
   };
 }
 
