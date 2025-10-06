@@ -36,6 +36,21 @@ function registerIpcHandlers({
     return { success: true, schedule };
   });
 
+  ipcMain.handle('schedule-sync', async (_event, payload = []) => {
+    try {
+      if (!Array.isArray(payload)) {
+        throw new Error('スケジュール配列が不正です');
+      }
+      if (configStore) {
+        configStore.set('scheduleCache', payload);
+      }
+      return { success: true };
+    } catch (error) {
+      console.error('[IPC] スケジュール同期エラー:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
   ipcMain.handle('send-notification', async (_event, { title, body }) => {
     if (!Notification.isSupported()) {
       return { success: false };

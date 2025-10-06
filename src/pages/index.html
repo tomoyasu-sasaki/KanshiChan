@@ -113,27 +113,83 @@
               <textarea id="description" rows="3"></textarea>
             </div>
 
-            <button type="submit" class="btn-primary">追加</button>
+            <div class="form-group repeat-settings">
+              <label>繰り返し設定</label>
+              <div class="repeat-presets">
+                <button type="button" class="repeat-preset" data-repeat="none">繰り返しなし</button>
+                <button type="button" class="repeat-preset" data-repeat="weekdays">平日</button>
+                <button type="button" class="repeat-preset" data-repeat="everyday">毎日</button>
+              </div>
+              <div class="repeat-weekdays" id="repeatWeekdayContainer">
+                <label class="repeat-day">
+                  <input type="checkbox" class="repeat-day-checkbox" value="1">
+                  月
+                </label>
+                <label class="repeat-day">
+                  <input type="checkbox" class="repeat-day-checkbox" value="2">
+                  火
+                </label>
+                <label class="repeat-day">
+                  <input type="checkbox" class="repeat-day-checkbox" value="3">
+                  水
+                </label>
+                <label class="repeat-day">
+                  <input type="checkbox" class="repeat-day-checkbox" value="4">
+                  木
+                </label>
+                <label class="repeat-day">
+                  <input type="checkbox" class="repeat-day-checkbox" value="5">
+                  金
+                </label>
+                <label class="repeat-day">
+                  <input type="checkbox" class="repeat-day-checkbox" value="6">
+                  土
+                </label>
+                <label class="repeat-day">
+                  <input type="checkbox" class="repeat-day-checkbox" value="0">
+                  日
+                </label>
+              </div>
+              <div class="repeat-summary" id="repeatSummary">繰り返しなし</div>
+            </div>
+
+            <div class="schedule-form-actions">
+              <button type="submit" class="btn-primary" id="scheduleSubmitBtn">追加</button>
+              <button type="button" class="btn-secondary" id="scheduleCancelEditBtn" hidden>キャンセル</button>
+            </div>
+            <p class="schedule-edit-hint" id="scheduleEditHint" hidden>編集中: 内容を更新したら「更新」を押すか、キャンセルで編集を終了します。</p>
           </form>
 
           <!-- 一括入力フォーム -->
           <div class="tab-content" data-tab-content="bulk">
             <div class="form-group">
               <label for="bulkInput">
-                一括入力（1行に1件: 時刻 タイトル）
-                <span class="input-hint">例: 10:00 朝会</span>
+                一括入力（1行に1件: 時刻 タイトル | 繰り返し）
+                <span class="input-hint">例: 10:00 朝会 | mon,wed</span>
               </label>
-              <textarea id="bulkInput" rows="8" placeholder="10:00 朝会&#10;11:30 ランチ&#10;13:00 レビュー会議&#10;15:00 コーディング時間"></textarea>
+              <textarea id="bulkInput" rows="8" placeholder="10:00 朝会 | mon,wed&#10;11:30 ランチ&#10;13:00 レビュー会議 | weekday&#10;15:00 コーディング時間"></textarea>
             </div>
             <button type="button" id="bulkAddBtn" class="btn-primary">一括追加</button>
-          </div>
-        </div>
+      </div>
+    </div>
 
-        <div class="schedule-list-container">
-          <h3>スケジュール一覧</h3>
-          <div id="scheduleItems" class="schedule-items">
-            <p class="empty-message">スケジュールはありません</p>
-          </div>
+    <div class="schedule-tools">
+      <div class="schedule-tools-header">
+        <h4>CSV インポート / エクスポート</h4>
+        <p>列: title, date, time, description, repeat_type, repeat_days</p>
+      </div>
+      <div class="schedule-tools-actions">
+        <button type="button" class="btn-secondary" id="scheduleCsvImportBtn">CSVインポート</button>
+        <button type="button" class="btn-secondary" id="scheduleCsvExportBtn">CSVエクスポート</button>
+      </div>
+      <input type="file" id="scheduleCsvInput" accept=".csv" hidden>
+    </div>
+
+    <div class="schedule-list-container">
+      <h3>スケジュール一覧</h3>
+      <div id="scheduleItems" class="schedule-items">
+        <p class="empty-message">スケジュールはありません</p>
+      </div>
         </div>
       </div>
     </div>
@@ -179,7 +235,7 @@
                   <span class="description">スマホが検知され続けてからアラートを鳴らすまでの秒数</span>
                 </label>
                 <div class="slider-container">
-                  <input type="range" id="phoneThreshold" min="1" max="60" value="10" step="1">
+                  <input type="range" id="phoneThreshold" min="1" max="600" value="10" step="1">
                   <span id="phoneThresholdValue" class="slider-value">10秒</span>
                 </div>
               </div>
@@ -217,7 +273,7 @@
                   <span class="description">人が検知されなくなってからアラートを鳴らすまでの秒数</span>
                 </label>
                 <div class="slider-container">
-                  <input type="range" id="absenceThreshold" min="1" max="120" value="30" step="1">
+                  <input type="range" id="absenceThreshold" min="1" max="600" value="30" step="1">
                   <span id="absenceThresholdValue" class="slider-value">30秒</span>
                 </div>
               </div>
@@ -424,8 +480,8 @@
           <div class="filter-group">
             <label for="dashboardRange">期間</label>
             <select id="dashboardRange">
-              <option value="24h">直近24時間</option>
-              <option value="7d" selected>直近7日</option>
+              <option value="24h"selected>直近24時間</option>
+              <option value="7d">直近7日</option>
               <option value="30d">直近30日</option>
               <option value="custom">カスタム</option>
             </select>
@@ -440,7 +496,7 @@
             <label for="dashboardGranularity">集計単位</label>
             <select id="dashboardGranularity">
               <option value="day">日別</option>
-              <option value="hour">時間別</option>
+              <option value="hour" selected>時間別</option>
             </select>
           </div>
           <div class="filter-group">
@@ -465,6 +521,15 @@
           </div>
           <div class="slack-report-body">
             <p id="dashboardSlackSummary" class="slack-summary">Slack レポートは未設定です。</p>
+            <div class="slack-upcoming" id="dashboardUpcomingSchedules">
+              <div class="slack-upcoming-header">
+                <span class="label">直近の予定</span>
+                <span class="range">24時間以内</span>
+              </div>
+              <ul id="dashboardUpcomingSchedulesList" class="slack-upcoming-list">
+                <li class="empty">スケジュールを読み込み中...</li>
+              </ul>
+            </div>
             <ul id="dashboardSlackHistory" class="slack-history-list">
               <li class="empty">履歴がありません</li>
             </ul>

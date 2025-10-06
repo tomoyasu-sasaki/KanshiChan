@@ -157,6 +157,53 @@
   gap: var(--space-3);
 }
 
+.repeat-group-voice {
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.repeat-group-voice > label {
+  font-weight: var(--font-semibold);
+  color: var(--text-secondary);
+}
+
+.voice-repeat-weekdays {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(64px, 1fr));
+  gap: var(--space-2);
+}
+
+.voice-repeat-weekdays .repeat-day {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2);
+  text-align: center;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: background var(--transition-smooth), border var(--transition-smooth), color var(--transition-smooth);
+}
+
+.voice-repeat-weekdays .repeat-day input {
+  display: none;
+}
+
+.voice-repeat-weekdays .repeat-day.active {
+  background: var(--primary-start);
+  border-color: var(--primary-start);
+  color: #ffffff;
+}
+
+.voice-repeat-summary {
+  font-size: var(--text-sm);
+  color: #b0b0b0;
+}
+
 .schedule-card-body .form-group {
   display: flex;
   flex-direction: column;

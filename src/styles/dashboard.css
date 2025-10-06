@@ -271,6 +271,96 @@
   color: var(--text-secondary);
 }
 
+.slack-upcoming {
+  border: 1px dashed rgba(72, 138, 153, 0.35);
+  border-radius: var(--radius-sm);
+  padding: var(--space-3);
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.slack-upcoming-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-2);
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+.slack-upcoming-header .label {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  font-weight: var(--font-semibold);
+}
+
+.slack-upcoming-header .range {
+  font-size: var(--text-xs);
+}
+
+.slack-upcoming-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.slack-upcoming-list li {
+  background: rgba(72, 138, 153, 0.08);
+  border: 1px solid rgba(72, 138, 153, 0.2);
+  border-radius: var(--radius-sm);
+  padding: var(--space-2) var(--space-3);
+}
+
+.slack-upcoming-list li .upcoming-line {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-primary);
+  font-weight: var(--font-medium);
+}
+
+.slack-upcoming-list li .upcoming-line .time {
+  font-family: var(--font-monospace, 'SFMono-Regular', monospace);
+  font-size: var(--text-sm);
+  color: var(--primary-start);
+}
+
+.slack-upcoming-list li .upcoming-line .title {
+  font-size: var(--text-sm);
+}
+
+.slack-upcoming-list li .upcoming-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+
+.slack-upcoming-list li .upcoming-meta .repeat {
+  background: rgba(72, 138, 153, 0.2);
+  padding: 0 var(--space-2);
+  border-radius: var(--radius-sm);
+}
+
+.slack-upcoming-list li .upcoming-meta .relative {
+  font-weight: var(--font-semibold);
+  color: var(--primary-start);
+}
+
+.slack-upcoming-list .empty {
+  text-align: center;
+  padding: var(--space-3);
+  border: 1px dashed rgba(72, 138, 153, 0.35);
+  border-radius: var(--radius-sm);
+  color: var(--text-tertiary);
+  background: rgba(255, 255, 255, 0.25);
+  font-size: var(--text-sm);
+}
+
 .dashboard-section.typing-activity {
   border: 1px solid rgba(100, 100, 110, 0.25);
   border-radius: var(--radius-md);

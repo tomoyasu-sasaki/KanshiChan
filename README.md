@@ -62,12 +62,12 @@ sudo apt install cmake ffmpeg
 
 #### 2. モデルファイルの配置
 
-Whisper モデル (`ggml-base.bin`) と LLM モデル (`llmjp-3.1-1.8b-instruct4-q5.gguf`) を `models/` ディレクトリに配置してください。
+Whisper モデル (`ggml-base.bin`) と LLM モデル (`swallow-8b-v0.5-q4.gguf`) を `models/` ディレクトリに配置してください。
 
 ```bash
 models/
 ├── ggml-base.bin                         # Whisper 音声認識モデル (約148MB)
-├── llmjp-3.1-1.8b-instruct4-q5.gguf      # LLM スケジュール抽出モデル (約1.9GB)
+├── swallow-8b-v0.5-q4.gguf      # LLM スケジュール抽出モデル (約1.9GB)
 ├── yolo11n.onnx                          # YOLO 物体検知モデル
 └── README.md                             # モデル説明
 ```
@@ -83,7 +83,7 @@ curl -L https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin 
 
 **LLM モデルのダウンロード:**
 ```bash
-# llmjp-3.1-1.8b-instruct4-q5.gguf をダウンロード
+# swallow-8b-v0.5-q4.gguf をダウンロード
 # Hugging Face などから取得して models/ に配置
 ```
 
@@ -213,7 +213,7 @@ kanchichan/
 ### 音声入力が動作しない場合
 
 #### 「モデルが見つかりません」エラー
-- `models/ggml-base.bin` と `models/llmjp-3.1-1.8b-instruct4-q5.gguf` が正しく配置されているか確認
+- `models/ggml-base.bin` と `models/swallow-8b-v0.5-q4.gguf` が正しく配置されているか確認
 - モデルファイルのパーミッションを確認: `chmod 644 models/*.bin models/*.gguf`
 
 #### 「whisper-cli executable not found」エラー

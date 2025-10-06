@@ -43,11 +43,21 @@
   border-left-color: var(--primary-start);
 }
 
+.schedule-item.editing {
+  outline: 2px dashed var(--primary-start);
+  outline-offset: 4px;
+}
+
 .schedule-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
   margin-bottom: var(--space-3);
+}
+
+.schedule-actions {
+  display: flex;
+  gap: var(--space-2);
 }
 
 .schedule-title-area {
@@ -66,18 +76,33 @@
   margin: 0;
 }
 
-.btn-delete {
+.btn-edit {
+  background: var(--primary-start);
+  color: #ffffff;
+  border: none;
+  padding: var(--space-1) var(--space-4);
+  border-radius: var(--space-1);
+  cursor: pointer;
+  font-size: var(--text-sm);
+  transition: background var(--transition-smooth);
+}
+
+.btn-edit:hover {
+  background: var(--primary-end);
+}
+
+.schedule-actions .btn-delete {
   background: var(--error);
   color: white;
   border: none;
   padding: var(--space-1) var(--space-4);
   border-radius: var(--space-1);
   cursor: pointer;
-  font-size: var(--text-base);
+  font-size: var(--text-sm);
   transition: background var(--transition-smooth);
 }
 
-.btn-delete:hover {
+.schedule-actions .btn-delete:hover {
   background: #ee5a52;
 }
 
@@ -138,6 +163,13 @@
   font-size: var(--text-base);
 }
 
+.schedule-repeat {
+  margin-top: var(--space-2);
+  font-size: var(--text-sm);
+  color: #495057;
+  font-weight: var(--font-semibold);
+}
+
 .today-schedule-header {
   text-align: center;
   font-size: var(--text-lg);
@@ -149,6 +181,65 @@
 .schedule-form-container,
 .schedule-list-container {
   margin-bottom: var(--space-6);
+}
+
+.schedule-tools {
+  border: 1px solid rgba(72, 138, 153, 0.25);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  margin-bottom: var(--space-6);
+  background: rgba(72, 138, 153, 0.08);
+}
+
+.schedule-tools-header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-bottom: var(--space-3);
+}
+
+.schedule-tools-header h4 {
+  margin: 0;
+  font-size: var(--text-md);
+  color: var(--text-secondary);
+}
+
+.schedule-tools-header p {
+  margin: 0;
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+.schedule-tools-actions {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.schedule-tools-actions .btn-secondary {
+  flex: 1;
+}
+
+.schedule-form-container.editing {
+  border: 1px dashed var(--primary-start);
+  border-radius: var(--radius-sm);
+  padding: var(--space-4);
+  background: rgba(219, 174, 232, 0.08);
+}
+
+.schedule-form-actions {
+  display: flex;
+  gap: var(--space-3);
+  margin-top: var(--space-4);
+}
+
+.schedule-form-actions button {
+  flex: 1;
+}
+
+.schedule-edit-hint {
+  margin-top: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
 }
 
 /* タブスタイル */
@@ -196,6 +287,82 @@
   color: #6c757d;
   font-weight: var(--font-normal);
   margin-top: var(--space-1);
+}
+
+.repeat-settings {
+  border: 1px solid #e9ecef;
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  background: #f8f9fa;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.repeat-settings > label {
+  font-weight: var(--font-semibold);
+  color: var(--text-secondary);
+}
+
+.repeat-presets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.repeat-preset {
+  background: #ffffff;
+  border: 1px solid #ced4da;
+  color: #495057;
+  padding: var(--space-1) var(--space-4);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: var(--text-sm);
+  transition: background var(--transition-smooth), color var(--transition-smooth), border var(--transition-smooth);
+}
+
+.repeat-preset:hover,
+.repeat-preset.active {
+  background: var(--primary-start);
+  color: #ffffff;
+  border-color: var(--primary-start);
+}
+
+.repeat-weekdays {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+  gap: var(--space-2);
+}
+
+.repeat-day {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-1);
+  padding: var(--space-2);
+  background: #ffffff;
+  border: 1px solid #ced4da;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  color: #495057;
+  cursor: pointer;
+  transition: background var(--transition-smooth), color var(--transition-smooth), border var(--transition-smooth);
+}
+
+.repeat-day input {
+  display: none;
+}
+
+.repeat-day.active {
+  background: var(--primary-start);
+  color: #ffffff;
+  border-color: var(--primary-start);
+}
+
+.repeat-summary {
+  font-size: var(--text-sm);
+  color: #495057;
+  font-weight: var(--font-medium);
 }
 
 #bulkInput {

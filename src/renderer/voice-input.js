@@ -22,6 +22,136 @@ let mediaRecorder = null;
 let audioChunks = [];
 let extractedSchedules = [];
 
+const WEEKDAY_LABELS = ['日', '月', '火', '水', '木', '金', '土'];
+const REPEAT_TYPE_ALIASES = Object.freeze({
+  weekly: 'weekly',
+  week: 'weekly',
+  weekdays: 'weekdays',
+  weekday: 'weekdays',
+  平日: 'weekdays',
+  daily: 'daily',
+  everyday: 'daily',
+  毎日: 'daily',
+});
+const PRESET_REPEAT_DAYS = Object.freeze({
+  weekdays: [1, 2, 3, 4, 5],
+  daily: [0, 1, 2, 3, 4, 5, 6],
+});
+
+function getTodayISODate() {
+  const now = new Date();
+  const y = now.getFullYear();
+  const m = String(now.getMonth() + 1).padStart(2, '0');
+  const d = String(now.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+function normalizeVoiceRepeat(repeat) {
+  if (!repeat || typeof repeat !== 'object') {
+    return null;
+  }
+
+  const rawType = typeof repeat.type === 'string' ? repeat.type.trim().toLowerCase() : '';
+  const mappedType = REPEAT_TYPE_ALIASES[rawType] || 'weekly';
+
+  let candidateDays = Array.isArray(repeat.days) ? repeat.days : [];
+  if (candidateDays.length === 0 && PRESET_REPEAT_DAYS[mappedType]) {
+    candidateDays = PRESET_REPEAT_DAYS[mappedType];
+  }
+
+  const normalizedDays = Array.from(
+    new Set(
+      candidateDays
+        .map((day) => Number(day))
+        .filter((day) => Number.isInteger(day) && day >= 0 && day <= 6)
+    )
+  ).sort((a, b) => a - b);
+
+  if (normalizedDays.length === 0) {
+    return null;
+  }
+
+  return {
+    type: 'weekly',
+    days: normalizedDays,
+  };
+}
+
+function normalizeExtractedSchedule(schedule) {
+  if (!schedule || typeof schedule !== 'object') {
+    return null;
+  }
+
+  const repeat = normalizeVoiceRepeat(schedule.repeat);
+  const base = {
+    title: schedule.title ?? '',
+    date: schedule.date ?? getTodayISODate(),
+    time: schedule.time ?? '',
+    description: schedule.description || '',
+    repeat,
+  };
+
+  const existingMessage = typeof schedule.ttsMessage === 'string' ? schedule.ttsMessage.trim() : '';
+  const ttsMessage = existingMessage || buildRepeatAwareStartFallback(base);
+
+  return {
+    ...base,
+    ttsMessage,
+  };
+}
+
+function formatRepeatLabel(repeat) {
+  if (!repeat || repeat.type !== 'weekly' || !Array.isArray(repeat.days) || repeat.days.length === 0) {
+    return '繰り返しなし';
+  }
+
+  const label = repeat.days
+    .sort((a, b) => a - b)
+    .map((day) => WEEKDAY_LABELS[day])
+    .join('・');
+
+  return `毎週 ${label}`;
+}
+
+function hasWeeklyRepeat(schedule) {
+  return Boolean(
+    schedule &&
+      schedule.repeat &&
+      schedule.repeat.type === 'weekly' &&
+      Array.isArray(schedule.repeat.days) &&
+      schedule.repeat.days.length > 0
+  );
+}
+
+function getScheduleTitle(schedule) {
+  const rawTitle = typeof schedule?.title === 'string' ? schedule.title.trim() : '';
+  return rawTitle || '予定';
+}
+
+function getScheduleTime(schedule) {
+  const rawTime = typeof schedule?.time === 'string' ? schedule.time.trim() : '';
+  return rawTime || null;
+}
+
+function buildRepeatAwareStartFallback(schedule) {
+  const title = getScheduleTitle(schedule);
+  const timeText = getScheduleTime(schedule);
+
+  if (hasWeeklyRepeat(schedule)) {
+    const repeatLabel = formatRepeatLabel(schedule.repeat);
+    if (timeText) {
+      return `${repeatLabel} の ${title} の開始時刻です。${timeText}になりました。`;
+    }
+    return `${repeatLabel} の ${title} の開始時刻です。`;
+  }
+
+  if (timeText) {
+    return `${title} の開始時刻です。${timeText}になりました。`;
+  }
+
+  return `${title} の時間です。`;
+}
+
 /**
  * DOM要素の取得
  */
@@ -156,8 +286,10 @@ async function processRecording() {
     elements.transcribedText.textContent = transcribedText;
     elements.resultSection.style.display = 'block';
 
-    extractedSchedules = schedules;
-    renderExtractedSchedules(schedules);
+    extractedSchedules = (schedules || [])
+      .map(normalizeExtractedSchedule)
+      .filter((item) => item !== null);
+    renderExtractedSchedules(extractedSchedules);
     elements.schedulesSection.style.display = 'block';
 
     updateState(VoiceInputState.COMPLETED, 'スケジュール抽出完了');
@@ -198,6 +330,21 @@ function renderExtractedSchedules(schedules) {
   schedules.forEach((schedule, index) => {
     const scheduleCard = document.createElement('div');
     scheduleCard.className = 'schedule-card';
+    const repeatDays = Array.isArray(schedule.repeat?.days) ? schedule.repeat.days : [];
+    const repeatControls = WEEKDAY_LABELS
+      .map((label, day) => {
+        const isChecked = repeatDays.includes(day);
+        const activeClass = isChecked ? 'active' : '';
+        const checkedAttribute = isChecked ? 'checked' : '';
+        return `
+          <label class="repeat-day ${activeClass}">
+            <input type="checkbox" class="voice-repeat-checkbox" data-index="${index}" data-day="${day}" ${checkedAttribute}>
+            ${label}
+          </label>
+        `;
+      })
+      .join('');
+
     scheduleCard.innerHTML = `
       <div class="schedule-card-header">
         <strong>${schedule.title}</strong>
@@ -215,10 +362,67 @@ function renderExtractedSchedules(schedules) {
           <label>説明</label>
           <textarea class="schedule-description" data-index="${index}" rows="2">${schedule.description || ''}</textarea>
         </div>
+        <div class="form-group repeat-group-voice">
+          <label>繰り返し</label>
+          <div class="repeat-weekdays voice-repeat-weekdays" data-index="${index}">
+            ${repeatControls}
+          </div>
+          <div class="repeat-summary voice-repeat-summary" data-index="${index}">${formatRepeatLabel(schedule.repeat)}</div>
+        </div>
       </div>
     `;
     elements.extractedSchedulesContainer.appendChild(scheduleCard);
+
+    const checkboxNodes = scheduleCard.querySelectorAll('.voice-repeat-checkbox');
+    checkboxNodes.forEach((checkbox) => {
+      const day = Number(checkbox.dataset.day);
+      const wrapper = checkbox.closest('.repeat-day');
+      checkbox.addEventListener('change', (event) => {
+        handleVoiceRepeatToggle(index, day, event.target.checked, wrapper);
+      });
+    });
   });
+}
+
+function updateVoiceRepeatSummary(index) {
+  const summaryEl = elements.extractedSchedulesContainer.querySelector(
+    `.voice-repeat-summary[data-index="${index}"]`
+  );
+  if (!summaryEl) {
+    return;
+  }
+
+  const schedule = extractedSchedules[index];
+  summaryEl.textContent = formatRepeatLabel(schedule?.repeat || null);
+}
+
+function handleVoiceRepeatToggle(index, day, isChecked, wrapper) {
+  if (!extractedSchedules[index]) {
+    return;
+  }
+
+  const schedule = extractedSchedules[index];
+  const currentDays = Array.isArray(schedule.repeat?.days)
+    ? [...schedule.repeat.days]
+    : [];
+
+  let nextDays;
+  if (isChecked) {
+    if (!currentDays.includes(day)) {
+      currentDays.push(day);
+    }
+    nextDays = currentDays.sort((a, b) => a - b);
+  } else {
+    nextDays = currentDays.filter((value) => value !== day);
+  }
+
+  schedule.repeat = nextDays.length > 0 ? { type: 'weekly', days: nextDays } : null;
+
+  if (wrapper) {
+    wrapper.classList.toggle('active', isChecked);
+  }
+
+  updateVoiceRepeatSummary(index);
 }
 
 /**
@@ -233,13 +437,25 @@ function collectEditedSchedules() {
     const dateInput = card.querySelector('.schedule-date');
     const timeInput = card.querySelector('.schedule-time');
     const descriptionInput = card.querySelector('.schedule-description');
+    const base = extractedSchedules[index] || {};
+    const repeat = base.repeat && Array.isArray(base.repeat.days)
+      ? {
+          type: 'weekly',
+          days: [...base.repeat.days],
+        }
+      : null;
 
-   schedules.push({
-     title: extractedSchedules[index].title,
-     date: dateInput.value,
-     time: timeInput.value,
-     description: descriptionInput.value.trim(),
-      ttsMessage: extractedSchedules[index].ttsMessage,
+    base.date = dateInput.value;
+    base.time = timeInput.value;
+    base.description = descriptionInput.value.trim();
+
+    schedules.push({
+      title: base.title,
+      date: base.date,
+      time: base.time,
+      description: base.description,
+      ttsMessage: base.ttsMessage,
+      repeat,
     });
   });
 
@@ -267,6 +483,7 @@ async function confirmSchedules() {
             date: schedule.date,
             time: schedule.time,
             description: schedule.description,
+            repeat: schedule.repeat,
           });
 
           if (ttsResult?.success && ttsResult.message) {
@@ -277,6 +494,30 @@ async function confirmSchedules() {
         }
       }
 
+      const repeat = schedule.repeat && Array.isArray(schedule.repeat.days)
+        ? {
+            type: 'weekly',
+            days: [...schedule.repeat.days],
+          }
+        : null;
+
+      const fallbackStartMessage = buildRepeatAwareStartFallback({
+        title: schedule.title,
+        time: schedule.time,
+        date: schedule.date,
+        repeat,
+      });
+
+      const resolvedScheduleTts = (() => {
+        if (typeof ttsMessage === 'string' && ttsMessage.trim().length > 0) {
+          return ttsMessage.trim();
+        }
+        if (typeof schedule.ttsMessage === 'string' && schedule.ttsMessage.trim().length > 0) {
+          return schedule.ttsMessage.trim();
+        }
+        return fallbackStartMessage;
+      })();
+
       const scheduleWithMeta = {
         id: Date.now() + Math.random(), // ユニークなID生成
         title: schedule.title,
@@ -286,7 +527,9 @@ async function confirmSchedules() {
         notified: false,
         preNotified: false,
         startNotified: false,
-        ttsMessage: ttsMessage || schedule.ttsMessage || `${schedule.title} の開始時刻です。`,
+        ttsMessage: resolvedScheduleTts,
+        repeat,
+        lastOccurrenceKey: null,
       };
       existingSchedules.push(scheduleWithMeta);
       console.log('[VoiceInput] スケジュール登録:', scheduleWithMeta);

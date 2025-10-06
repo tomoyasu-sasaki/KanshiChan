@@ -32,7 +32,13 @@ const SCHEDULE_EXTRACTION_SYSTEM_PROMPT = `あなたは音声入力から正確�
    - 礼儀正しく、簡潔でポジティブな表現を心がける
    - 絵文字や顔文字は使用しない
 
-5. 複数スケジュールの対応:
+5. 繰り返し設定:
+   - 「毎週月曜日」「平日に」「毎日」「隔週」などの表現を解析し、明確に繰り返しが読み取れる場合にのみ設定
+   - 繰り返しが無い場合は "repeat" に null を設定
+   - 繰り返しがある場合は "repeat.type" を "weekly"に固定し、"repeat.days" に 0(日)〜6(土) の配列で曜日を設定
+   - 「平日」は [1,2,3,4,5]、「週末」は [0,6]、「毎日」は [0,1,2,3,4,5,6]
+
+6. 複数スケジュールの対応:
    - 1回の入力で複数のスケジュールが含まれる場合、それぞれを配列の要素として抽出
 
 【出力フォーマット】
@@ -45,14 +51,18 @@ const SCHEDULE_EXTRACTION_SYSTEM_PROMPT = `あなたは音声入力から正確�
       "date": "YYYY-MM-DD",
       "time": "HH:MM",
       "description": "詳細説明（オプション）",
-      "ttsMessage": "開始通知で読み上げる案内文"
+      "ttsMessage": "開始通知で読み上げる案内文",
+      "repeat": {
+        "type": "weekly",
+        "days": [1, 3, 5]
+      }
     }
   ]
 }
 
 【例】
 現在の日時情報: 今日の日付: 2025年10月05日 (2025-10-05)
-入力: "明日の10時に田中さんと打ち合わせ。会議室Aで新規プロジェクトについて話す"
+入力: "今日の10時に田中さんと打ち合わせ。会議室Aで新規プロジェクトについて話す"
 出力:
 {
   "schedules": [
@@ -61,7 +71,8 @@ const SCHEDULE_EXTRACTION_SYSTEM_PROMPT = `あなたは音声入力から正確�
       "date": "2025-10-06",
       "time": "10:00",
       "description": "会議室Aで新規プロジェクトについて話す",
-      "ttsMessage": "10時に田中さんとの打ち合わせが始まります。会議室Aで新規プロジェクトの確認です。"
+      "ttsMessage": "10時に田中さんとの打ち合わせが始まります。会議室Aで新規プロジェクトの確認です。",
+      "repeat": null
     }
   ]
 }
@@ -107,13 +118,23 @@ ${transcribedText}
  */
 function buildScheduleTtsPrompt(schedule) {
   const { title, date, time, description } = schedule;
+  const repeat = schedule.repeat && Array.isArray(schedule.repeat.days) ? schedule.repeat : null;
+  const weekdayLabels = ['日', '月', '火', '水', '木', '金', '土'];
+  const repeatLabel = repeat
+    ? `毎週 ${repeat.days
+        .slice()
+        .sort((a, b) => a - b)
+        .map((day) => weekdayLabels[day])
+        .join('・')}`
+    : '繰り返しなし';
 
   return `あなたは予定の開始を知らせる日本語アシスタントです。以下の予定情報を参考に、1文で自然な案内文を作成してください。
 
 【出力要件】
-- 24時間表記の時刻を含める (例: 14時30分)
-- 30〜80文字程度で、礼儀正しく前向きな表現にする
+- 24時間表記の時刻を含める (例: 14時30分)。「今日」「明日」などの相対表現は避ける
+- 50〜100文字程度で、礼儀正しく前向きな表現にする
 - 場所や目的など重要な要素があれば簡潔に触れる
+- 繰り返し予定の場合は、必要に応じて自然な形で触れてよい（例: "今日も" や "毎週" など）
 - 絵文字や顔文字は使用しない
 - 出力は案内文のみ（引用符や説明は不要）
 
@@ -122,6 +143,7 @@ function buildScheduleTtsPrompt(schedule) {
 - 日付: ${date}
 - 時刻: ${time}
 - 説明: ${description || '特記事項なし'}
+- 繰り返し: ${repeatLabel}
 
 案内文:`;
 }
@@ -161,8 +183,31 @@ const SCHEDULE_EXTRACTION_JSON_SCHEMA = {
             description: '開始時に読み上げる案内文',
             maxLength: 80,
           },
+          repeat: {
+            type: ['object', 'null'],
+            description: '繰り返し設定。null の場合は単発。',
+            properties: {
+              type: {
+                type: 'string',
+                enum: ['weekly'],
+              },
+              days: {
+                type: 'array',
+                items: {
+                  type: 'integer',
+                  minimum: 0,
+                  maximum: 6,
+                },
+                minItems: 1,
+                maxItems: 7,
+              },
+            },
+            required: ['type', 'days'],
+            additionalProperties: false,
+          },
         },
         required: ['title', 'date', 'time', 'ttsMessage'],
+        additionalProperties: false,
       },
     },
   },

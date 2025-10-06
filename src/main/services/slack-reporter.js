@@ -17,6 +17,8 @@ const DEFAULT_SETTINGS = {
   timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
 };
 
+const WEEKDAY_LABELS = ['日', '月', '火', '水', '木', '金', '土'];
+
 function formatTimeKey(date) {
   const hours = String(date.getHours()).padStart(2, '0');
   const minutes = String(date.getMinutes()).padStart(2, '0');
@@ -41,6 +43,202 @@ function formatDuration(seconds) {
     return `${hours}時間${minutes}分`;
   }
   return `${minutes}分`;
+}
+
+const REPEAT_TYPE_ALIASES = Object.freeze({
+  weekly: 'weekly',
+  week: 'weekly',
+  weekdays: 'weekdays',
+  weekday: 'weekdays',
+  平日: 'weekdays',
+  daily: 'daily',
+  everyday: 'daily',
+  毎日: 'daily',
+});
+
+const PRESET_REPEAT_DAYS = Object.freeze({
+  weekdays: [1, 2, 3, 4, 5],
+  daily: [0, 1, 2, 3, 4, 5, 6],
+});
+
+function normalizeRepeatConfig(repeat) {
+  if (!repeat || typeof repeat !== 'object') {
+    return null;
+  }
+
+  const rawType = typeof repeat.type === 'string' ? repeat.type.trim().toLowerCase() : '';
+  const mappedType = REPEAT_TYPE_ALIASES[rawType] || 'weekly';
+
+  let candidateDays = Array.isArray(repeat.days) ? repeat.days : [];
+  if (candidateDays.length === 0 && PRESET_REPEAT_DAYS[mappedType]) {
+    candidateDays = PRESET_REPEAT_DAYS[mappedType];
+  }
+
+  const days = Array.from(
+    new Set(
+      candidateDays
+        .map((day) => Number(day))
+        .filter((day) => Number.isInteger(day) && day >= 0 && day <= 6)
+    )
+  ).sort((a, b) => a - b);
+
+  if (days.length === 0) {
+    return null;
+  }
+
+  return { type: 'weekly', days };
+}
+
+function formatRepeatLabel(repeat) {
+  if (!repeat || repeat.type !== 'weekly' || !Array.isArray(repeat.days) || repeat.days.length === 0) {
+    return '';
+  }
+
+  const label = repeat.days
+    .slice()
+    .sort((a, b) => a - b)
+    .map((day) => WEEKDAY_LABELS[day])
+    .join('・');
+
+  return `毎週 ${label}`;
+}
+
+function getScheduleTitle(schedule) {
+  const rawTitle = typeof schedule?.title === 'string' ? schedule.title.trim() : '';
+  return rawTitle || '予定';
+}
+
+function parseScheduleCache(configStore) {
+  const raw = configStore.get('scheduleCache', []);
+  if (!Array.isArray(raw)) {
+    return [];
+  }
+
+  return raw
+    .map((item) => ({
+      id: item.id,
+      title: getScheduleTitle(item),
+      date: item.date || null,
+      time: typeof item.time === 'string' ? item.time : '',
+      description: typeof item.description === 'string' ? item.description : '',
+      repeat: normalizeRepeatConfig(item.repeat),
+    }))
+    .filter((item) => item.time);
+}
+
+function getNextOccurrence(schedule, referenceDate = new Date()) {
+  if (!schedule || !schedule.time) {
+    return null;
+  }
+
+  const [hoursString, minutesString] = schedule.time.split(':');
+  const hours = Number.parseInt(hoursString, 10);
+  const minutes = Number.parseInt(minutesString, 10);
+  if (!Number.isInteger(hours) || !Number.isInteger(minutes)) {
+    return null;
+  }
+
+  if (!schedule.repeat) {
+    if (!schedule.date) {
+      return null;
+    }
+    const date = new Date(`${schedule.date}T${schedule.time}`);
+    if (Number.isNaN(date.getTime()) || date < referenceDate) {
+      return null;
+    }
+    return {
+      dateTime: date,
+      isRepeat: false,
+    };
+  }
+
+  if (schedule.repeat.type === 'weekly' && Array.isArray(schedule.repeat.days) && schedule.repeat.days.length > 0) {
+    const reference = new Date(referenceDate);
+    reference.setSeconds(0, 0);
+
+    const daysSet = new Set(schedule.repeat.days);
+
+    for (let offset = 0; offset < 14; offset += 1) {
+      const candidate = new Date(reference);
+      candidate.setDate(candidate.getDate() + offset);
+      const candidateDay = candidate.getDay();
+
+      if (!daysSet.has(candidateDay)) {
+        continue;
+      }
+
+      candidate.setHours(hours, minutes, 0, 0);
+
+      if (candidate >= reference) {
+        return {
+          dateTime: candidate,
+          isRepeat: true,
+        };
+      }
+    }
+  }
+
+  return null;
+}
+
+function formatRelativeMinutes(minutes) {
+  if (!Number.isFinite(minutes)) {
+    return '';
+  }
+
+  if (minutes <= 0) {
+    return 'まもなく開始';
+  }
+
+  if (minutes < 60) {
+    return `あと${minutes}分`;
+  }
+
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  if (mins === 0) {
+    return `あと${hours}時間`;
+  }
+  return `あと${hours}時間${mins}分`;
+}
+
+function buildUpcomingScheduleLines(configStore, options = {}) {
+  const now = options.now instanceof Date ? options.now : new Date();
+  const limit = Number.isInteger(options.limit) ? options.limit : 5;
+  const rangeHours = Number.isFinite(options.rangeHours) ? options.rangeHours : 24;
+  const rangeMs = rangeHours * 60 * 60 * 1000;
+
+  const schedules = parseScheduleCache(configStore);
+  const upcoming = [];
+
+  schedules.forEach((schedule) => {
+    const occurrence = getNextOccurrence(schedule, now);
+    if (!occurrence) {
+      return;
+    }
+
+    const diffMs = occurrence.dateTime - now;
+    if (diffMs < 0 || diffMs > rangeMs) {
+      return;
+    }
+
+    upcoming.push({ schedule, occurrence, diffMs });
+  });
+
+  upcoming.sort((a, b) => a.occurrence.dateTime - b.occurrence.dateTime);
+
+  return upcoming.slice(0, limit).map(({ schedule, occurrence, diffMs }) => {
+    const minutesLeft = Math.round(diffMs / 60000);
+    const relative = formatRelativeMinutes(minutesLeft);
+    const timeLabel = occurrence.dateTime.toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit' });
+    const isToday = occurrence.dateTime.toDateString() === now.toDateString();
+    const dayLabel = isToday
+      ? '今日'
+      : `${String(occurrence.dateTime.getMonth() + 1).padStart(2, '0')}/${String(occurrence.dateTime.getDate()).padStart(2, '0')}(${WEEKDAY_LABELS[occurrence.dateTime.getDay()]})`;
+    const repeatLabel = schedule.repeat ? `（${formatRepeatLabel(schedule.repeat)}）` : '';
+    const title = getScheduleTitle(schedule);
+    return `${dayLabel} ${timeLabel} ${title}${repeatLabel} - ${relative}`;
+  });
 }
 
 function normalizeScheduleTimes(times) {
@@ -263,6 +461,18 @@ function createSlackReporter({ configStore }, dependencies = {}) {
       lines.push(`• システムイベント: ${summaryText}`);
     }
 
+    if (options.includeSchedules !== false) {
+      const scheduleLines = buildUpcomingScheduleLines(configStore, { now, limit: 5, rangeHours: 24 });
+      if (scheduleLines.length > 0) {
+        lines.push('• 直近の予定:');
+        scheduleLines.forEach((entry) => {
+          lines.push(`  - ${entry}`);
+        });
+      } else {
+        lines.push('• 直近の予定: なし');
+      }
+    }
+
     return {
       text: lines.join('\n'),
       detectionStats,
@@ -320,6 +530,7 @@ function createSlackReporter({ configStore }, dependencies = {}) {
           now,
           start: deltaStart,
           title: ':hourglass_flowing_sand: 直近送信以降',
+          includeSchedules: false,
         });
       }
     }

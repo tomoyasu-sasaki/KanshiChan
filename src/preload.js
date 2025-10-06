@@ -36,5 +36,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   typingMonitorSetEnabled: (enabled) => ipcRenderer.invoke('typing-monitor-set-enabled', enabled),
   typingMonitorSetPaused: (paused) => ipcRenderer.invoke('typing-monitor-set-paused', paused),
   typingActivityStats: (options) => ipcRenderer.invoke('typing-activity-stats', options),
-  systemEventsRecent: (options) => ipcRenderer.invoke('system-events-recent', options)
+  systemEventsRecent: (options) => ipcRenderer.invoke('system-events-recent', options),
+  syncSchedules: (schedules) => ipcRenderer.invoke('schedule-sync', schedules)
 });

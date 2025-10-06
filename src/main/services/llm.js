@@ -3,7 +3,7 @@
  * - node-llama-cpp を使用して GGUF モデルからテキスト整形を実行。
  * - JSON Schema を強制して構造化されたスケジュール情報を抽出。
  * - モデルロードは初回呼び出し時に遅延実行し、以降はインスタンスを再利用。
- * - 依存: node-llama-cpp, models/llmjp-3.1-1.8b-instruct4-q5.gguf
+ * - 依存: node-llama-cpp, models/swallow-8b-v0.5-q4.gguf
  */
 
 const path = require('path');
@@ -27,7 +27,7 @@ let llmContext = null;
  */
 const DEFAULT_LLM_MODEL_PATH = path.join(
   __dirname,
-  '../../../models/llmjp-3.1-1.8b-instruct4-q5.gguf'
+  '../../../models/swallow-8b-v0.5-q4.gguf'
 );
 
 /**
@@ -92,6 +92,53 @@ async function loadLLMModel(modelPath = DEFAULT_LLM_MODEL_PATH) {
     console.error('[LLM] モデルロードエラー:', error);
     throw new Error(`LLM モデルのロードに失敗しました: ${error.message}`);
   }
+}
+
+const REPEAT_TYPE_ALIASES = Object.freeze({
+  weekly: 'weekly',
+  week: 'weekly',
+  weekdays: 'weekdays',
+  weekday: 'weekdays',
+  平日: 'weekdays',
+  daily: 'daily',
+  everyday: 'daily',
+  毎日: 'daily',
+});
+
+const PRESET_REPEAT_DAYS = Object.freeze({
+  weekdays: [1, 2, 3, 4, 5],
+  daily: [0, 1, 2, 3, 4, 5, 6],
+});
+
+function normalizeRepeatFromLLM(repeat) {
+  if (!repeat || typeof repeat !== 'object') {
+    return null;
+  }
+
+  const rawType = typeof repeat.type === 'string' ? repeat.type.trim().toLowerCase() : '';
+  const mappedType = REPEAT_TYPE_ALIASES[rawType] || 'weekly';
+
+  let candidateDays = Array.isArray(repeat.days) ? repeat.days : [];
+  if (candidateDays.length === 0 && PRESET_REPEAT_DAYS[mappedType]) {
+    candidateDays = PRESET_REPEAT_DAYS[mappedType];
+  }
+
+  const normalizedDays = Array.from(
+    new Set(
+      candidateDays
+        .map((day) => Number(day))
+        .filter((day) => Number.isInteger(day) && day >= 0 && day <= 6)
+    )
+  ).sort((a, b) => a - b);
+
+  if (normalizedDays.length === 0) {
+    return null;
+  }
+
+  return {
+    type: 'weekly',
+    days: normalizedDays,
+  };
 }
 
 /**
@@ -169,6 +216,7 @@ async function extractScheduleFromText(transcribedText) {
         time: item.time,
         description: item.description || '',
         ttsMessage: item.ttsMessage.trim(),
+        repeat: normalizeRepeatFromLLM(item.repeat),
       };
     });
 
@@ -208,7 +256,7 @@ async function generateTtsMessageForSchedule(schedule) {
 
   const { LlamaChatSession } = await loadNodeLlamaCpp();
   const tempContext = await model.createContext({
-    contextSize: 1024,
+    contextSize: 2048,
   });
 
   try {
