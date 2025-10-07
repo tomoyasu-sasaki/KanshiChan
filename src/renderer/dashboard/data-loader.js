@@ -9,7 +9,6 @@ import {
   startInput,
   endInput,
   granularitySelect,
-  typeFilterSelect,
 } from './dom.js';
 import { toLocalDateTimeLocalString } from './utils.js';
 import { renderKpis, renderChart } from './charts.js';
