@@ -1,23 +1,16 @@
 /**
- * 音声入力統合サービス。
- * - Whisper (STT) と LLM (テキスト整形) を組み合わせてエンドツーエンド処理。
- * - 音声データ → 文字起こし → スケジュール抽出 の一連のフローを実行。
- * - エラーハンドリングとロギングを含む。
- * - 依存: src/main/services/whisper.js, src/main/services/llm.js
+ * 旧音声入力 API（スケジュール専用）の互換レイヤ。
+ * - 新しい audio サービスを内部で呼び出し、既存のレンダラコードとの互換性を維持する。
+ * - 既存の IPC 名称 `voice-input-*` の利用者向けに残している。
  */
 
-const { transcribeAudio, validateWhisperEnvironment } = require('./whisper');
-const { extractScheduleFromText } = require('./llm');
+const audioService = require('./audio');
 
 /**
- * 音声データからスケジュール情報を抽出する（エンドツーエンド処理）。
- * - Step 1: Whisper で音声データを文字起こし
- * - Step 2: LLM でテキストからスケジュール情報を抽出
- * @param {string} audioDataBase64 Base64エンコードされた音声データ
- * @param {Object} options オプション
- * @param {string} options.language Whisper の言語設定（デフォルト: 'ja'）
- * @returns {Promise<Object>} 処理結果 { transcribedText, schedules }
- * @throws {Error} 音声認識またはスケジュール抽出が失敗した場合
+ * 音声データからスケジュール情報を抽出するレガシー API。
+ * @param {string} audioDataBase64 Base64 エンコードされた音声データ
+ * @param {{language?:string}} options Whisper 言語設定
+ * @returns {Promise<{success:boolean, transcribedText?:string, schedules?:Array, error?:string}>}
  */
 async function processVoiceInput(audioDataBase64, options = {}) {
   console.log('[VoiceInput] 音声入力処理を開始');
@@ -26,27 +19,21 @@ async function processVoiceInput(audioDataBase64, options = {}) {
   let schedules = [];
 
   try {
-    // Step 1: Whisper で文字起こし
-    console.log('[VoiceInput] Step 1: 音声認識中...');
-    transcribedText = await transcribeAudio(audioDataBase64, {
+    const transcription = await audioService.transcribe({
+      audioDataBase64,
       language: options.language || 'ja',
     });
 
+    transcribedText = transcription.transcribedText;
     if (!transcribedText || transcribedText.trim().length === 0) {
       throw new Error('音声が認識できませんでした。もう一度お試しください。');
     }
 
-    console.log(`[VoiceInput] 文字起こし結果: "${transcribedText}"`);
-
-    // Step 2: LLM でスケジュール抽出
-    console.log('[VoiceInput] Step 2: スケジュール抽出中...');
-    schedules = await extractScheduleFromText(transcribedText);
+    const inference = await audioService.infer('schedule', transcribedText);
+    schedules = inference.schedules;
 
     if (!schedules || schedules.length === 0) {
-      throw new Error(
-        'スケジュール情報を抽出できませんでした。' +
-        '日時とタイトルを含めて話してください。'
-      );
+      throw new Error('スケジュール情報を抽出できませんでした。日時とタイトルを含めて話してください。');
     }
 
     console.log(`[VoiceInput] スケジュール抽出完了: ${schedules.length}件`);
@@ -70,38 +57,12 @@ async function processVoiceInput(audioDataBase64, options = {}) {
 }
 
 /**
- * 音声入力処理の状態を検証する。
- * - Whisper と LLM のモデルが利用可能かチェック。
- * @returns {Promise<Object>} { available: boolean, models: { whisper, llm } }
+ * 旧 API 向けの可用性チェック。
+ * - 実体は新しい audio サービスの `checkAvailability` をそのまま返す。
+ * @returns {Promise<{available:boolean, models:object, errors?:string[]}>}
  */
 async function checkVoiceInputAvailability() {
-  const status = {
-    available: false,
-    models: {
-      whisper: false,
-      llm: false,
-    },
-    errors: [],
-  };
-
-  try {
-    await validateWhisperEnvironment();
-    status.models.whisper = true;
-  } catch (error) {
-    status.errors.push(`Whisper: ${error.message}`);
-  }
-
-  try {
-    const { loadLLMModel } = require('./llm');
-    await loadLLMModel();
-    status.models.llm = true;
-  } catch (error) {
-    status.errors.push(`LLM: ${error.message}`);
-  }
-
-  status.available = status.models.whisper && status.models.llm;
-
-  return status;
+  return audioService.checkAvailability();
 }
 
 module.exports = {

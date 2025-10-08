@@ -147,6 +147,32 @@ function buildScheduleTtsPrompt(schedule) {
 案内文:`;
 }
 
+
+/**
+ * チャット応答生成用のシステムプロンプト
+ */
+const CHAT_ASSISTANT_SYSTEM_PROMPT = `あなたはデスクトップアシスタント「Kanchichan」です。
+- カジュアルで親しみやすい日本語を使って1〜2文で返答してください。
+- 必要に応じてアプリの機能や利用者の集中をサポートする提案を行ってください。
+- エモーティコンや顔文字は使用せず、敬語ではなくフレンドリーな口調で答えてください。
+- 利用者の発話が曖昧な場合は丁寧に確認してください。`;
+
+function buildChatPrompt(history = [], userText = '') {
+  const historyLines = history
+    .slice(-6)
+    .map((turn) => `${turn.role === 'assistant' ? 'アシスタント' : 'ユーザー'}: ${turn.content}`)
+    .join('');
+
+  const contextBlock = historyLines ? `${historyLines}
+` : '';
+  return `${CHAT_ASSISTANT_SYSTEM_PROMPT}
+
+これまでの会話:
+${contextBlock}
+ユーザー: ${userText}
+アシスタント:`;
+}
+
 /**
  * スケジュール抽出用の JSON Schema
  */
@@ -218,4 +244,6 @@ module.exports = {
   buildScheduleExtractionUserPrompt,
   SCHEDULE_EXTRACTION_JSON_SCHEMA,
   buildScheduleTtsPrompt,
+  CHAT_ASSISTANT_SYSTEM_PROMPT,
+  buildChatPrompt,
 };

@@ -9,7 +9,8 @@ Web カメラ映像のリアルタイム監視と日次スケジュール管理�
 - **タイピング監視**: `uiohook-napi` を用いたグローバルキーフックで 1 分単位の入力数・最長連続入力時間を記録。ダッシュボードと Slack レポートで可視化できます。
 - **前面アプリ滞在ログ**: アプリごとの合計滞在時間に加え、Chrome についてはドメイン/タイトル単位のトップ10を表示。
 - **システムイベント記録**: 画面ロック/解除・スリープ/復帰・シャットダウンなどのイベントを取得し、ダッシュボードに時間順で表示。
-- **音声入力スケジュール登録**: マイクボタンから音声でスケジュールを登録。Whisper (STT) + LLM が日時・タイトルを抽出します。
+- **音声入力ショートカット**: スケジュール・設定ドロワーに音声ボタンを内蔵。Whisper (STT) + LLM/ルールベース処理で日時・しきい値・通知設定を抽出し、フォームへ自動反映します。
+- **音声チャットドロワー**: STT→LLM→VOICEVOX のパイプラインでアプリに話しかけると、キャラクター音声で応答します。会話履歴はローカルに保存され、ストリーミングで途中生成も表示。
 - **ドロワー UI とスケジュール管理**: 監視・設定・スケジュール・ログ・ダッシュボードを単一ページで切り替え。
 
 ## 必要環境
@@ -127,6 +128,8 @@ kanchichan/
 │  │  ├─ ipc/register-handlers.js
 │  │  └─ services/
 │  │      ├─ active-window.js
+│  │      ├─ audio.js            # STT / LLM / TTS を束ねる音声サービス
+│  │      ├─ voice-input.js      # 後方互換用の音声入力統合
 │  │      └─ voicevox.js
 │  ├─ pages/
 │  │  └─ index.html              # 監視 UI（単一ページ）
@@ -135,13 +138,16 @@ kanchichan/
 │  │  ├─ app.js                  # ツールバー・ドロワー・時計などの UI 制御
 │  │  ├─ monitor.js              # カメラストリーム、YOLO 検知、通知判定
 │  │  ├─ schedule.js             # スケジュール CRUD と通知
-│  │  └─ settings.js             # 閾値・通知設定の保存と UI 反映
+│  │  ├─ settings.js             # 閾値・通知設定の保存と UI 反映
+│  │  └─ chat.js                 # 音声チャットドロワーの状態管理
 │  ├─ styles/                    # 機能別に分割したスタイルシート
 │  │  ├─ base.css
 │  │  ├─ drawer.css
 │  │  ├─ monitor.css
 │  │  ├─ schedule.css
 │  │  ├─ settings.css
+│  │  ├─ voice-input.css
+│  │  ├─ chat.css
 │  │  └─ style.css               # 各 CSS を @import するエントリーポイント
 │  └─ utils/
 │      └─ yolo-detector.js       # ONNXRuntime を用いた YOLO 推論ユーティリティ

@@ -370,3 +370,96 @@
   font-size: var(--text-base);
   line-height: 1.6;
 }
+.schedule-voice-section {
+  margin-bottom: var(--space-6);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: rgba(72, 138, 153, 0.08);
+  border: 1px solid rgba(72, 138, 153, 0.2);
+}
+
+.schedule-voice-section h4 {
+  margin-top: 0;
+  font-size: var(--text-md);
+  color: var(--text-primary);
+}
+
+.schedule-voice-helper {
+  margin: var(--space-2) 0 var(--space-4);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+}
+
+.schedule-voice-results {
+  margin-top: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.schedule-voice-card {
+  background: #ffffff;
+  border-radius: var(--radius-sm);
+  padding: var(--space-4);
+  border: 1px solid rgba(72, 138, 153, 0.2);
+  box-shadow: var(--shadow-xs);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.schedule-voice-card header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.schedule-voice-card h5 {
+  margin: 0;
+  font-size: var(--text-md);
+  color: var(--text-primary);
+}
+
+.schedule-voice-card .schedule-voice-meta {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  display: flex;
+  gap: var(--space-3);
+}
+
+.schedule-voice-card button {
+  align-self: flex-end;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-sm);
+  border: none;
+  cursor: pointer;
+  background: var(--primary-start);
+  color: #ffffff;
+  transition: background var(--transition-smooth);
+}
+
+.schedule-voice-card button:hover {
+  background: var(--primary-end);
+}
+.schedule-voice-card.applied {
+  border-color: var(--success);
+  box-shadow: 0 0 0 1px rgba(16, 185, 129, 0.2);
+}
+
+.schedule-voice-card.applied button {
+  background: var(--success);
+}
+
+.schedule-voice-card button.applied {
+  background: rgba(16, 185, 129, 0.7);
+  cursor: default;
+}
+.schedule-voice-description {
+  margin: 0;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  font-size: var(--text-sm);
+}

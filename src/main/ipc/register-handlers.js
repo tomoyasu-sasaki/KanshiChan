@@ -6,6 +6,7 @@
 const { synthesizeWithVoiceVox } = require('../services/voicevox');
 const { getActiveWindowInfo } = require('../services/active-window');
 const { processVoiceInput, checkVoiceInputAvailability } = require('../services/voice-input');
+const audioService = require('../services/audio');
 const { generateTtsMessageForSchedule } = require('../services/llm');
 const { run } = require('../db');
 const {
@@ -103,6 +104,36 @@ function registerIpcHandlers({
       const dataUrl = await synthesizeWithVoiceVox(text, options);
       return { success: true, dataUrl };
     } catch (error) {
+      return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('audio-transcribe', async (_event, payload = {}) => {
+    try {
+      const result = await audioService.transcribe(payload);
+      return result;
+    } catch (error) {
+      console.error('[IPC] audio-transcribe エラー:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('audio-infer', async (_event, payload = {}) => {
+    try {
+      const { profileId, text, context } = payload;
+      const result = await audioService.infer(profileId, text, context);
+      return result;
+    } catch (error) {
+      console.error('[IPC] audio-infer エラー:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('audio-check-availability', async () => {
+    try {
+      return await audioService.checkAvailability();
+    } catch (error) {
+      console.error('[IPC] audio-check-availability エラー:', error);
       return { success: false, error: error.message };
     }
   });

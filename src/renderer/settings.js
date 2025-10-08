@@ -7,6 +7,8 @@ import { DEFAULT_MONITOR_SETTINGS } from '../constants/monitor.js';
 import { DEFAULT_VOICEVOX_SPEAKER_ID } from '../constants/voicevox-config.js';
 import { getSpeakerOptions } from '../constants/voicevox-speakers.js';
 import { YOLO_CLASSES, YOLO_CATEGORIES, getClassesByCategory } from '../constants/yolo-classes.js';
+import { SETTINGS_VOICE_MAP, findSettingsKeyBySynonym } from '../constants/settingsVoiceMap.js';
+import { AudioInputControl } from './components/audio-input-control.js';
 
 const DEFAULT_SLACK_SCHEDULE = ['13:00', '18:00'];
 
@@ -57,6 +59,9 @@ let slackControlsBusy = false;
 let typingMonitorEnabledCheckbox, typingMonitorPauseSettingsBtn, typingMonitorSettingsStatus, typingMonitorSettingsMessage;
 let typingStatusCache = null;
 let typingSettingsBusy = false;
+let settingsVoiceResultContainer = null;
+let lastVoiceTranscription = '';
+let voiceCommandBusy = false;
 
 // 初期化
 document.addEventListener('DOMContentLoaded', () => {
@@ -95,6 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
   typingMonitorPauseSettingsBtn = document.getElementById('typingMonitorPauseSettingsBtn');
   typingMonitorSettingsStatus = document.getElementById('typingMonitorSettingsStatus');
   typingMonitorSettingsMessage = document.getElementById('typingMonitorSettingsMessage');
+  settingsVoiceResultContainer = document.getElementById('settingsVoiceResult');
 
   // 動的にUI要素を生成
   populateVoicevoxSpeakers();
@@ -106,6 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupAccordion();
   initializeSlackReporterSection();
   initializeTypingMonitorSection();
+  setupVoiceCommandSection();
 });
 
 // VOICEVOX話者選択を動的に生成
@@ -719,4 +726,401 @@ function adjustAccordionHeight(innerElement) {
       content.style.maxHeight = `${content.scrollHeight}px`;
     });
   }
+}
+/**
+ * 設定ドロワーの音声入力 UI を初期化する。
+ */
+function setupVoiceCommandSection() {
+  const controlRoot = document.getElementById('settingsVoiceControl');
+  if (!controlRoot || !settingsVoiceResultContainer) {
+    return;
+  }
+
+  new AudioInputControl(controlRoot, {
+    promptProfile: 'settings',
+    contextId: 'settings-drawer',
+    title: '音声で設定変更',
+    description: '例:「通知をオフ」「スマホアラートを70秒に」',
+    onTranscription: (text) => {
+      lastVoiceTranscription = text || '';
+    },
+    onResult: (result) => {
+      handleVoiceCommandResult(result).catch((error) => {
+        renderVoiceCommandResult([
+          {
+            success: false,
+            label: 'エラー',
+            message: error?.message || '音声コマンド処理中に問題が発生しました',
+          },
+        ]);
+      });
+    },
+    onError: (error) => {
+      renderVoiceCommandResult([
+        {
+          success: false,
+          label: 'エラー',
+          message: error?.message || '音声コマンドを処理できませんでした',
+        },
+      ]);
+    },
+  });
+}
+
+/**
+ * 音声入力の推論結果を適用し、設定保存までをハンドリングする。
+ * @param {object} result
+ */
+async function handleVoiceCommandResult(result) {
+  if (voiceCommandBusy) {
+    renderVoiceCommandResult([
+      {
+        success: false,
+        label: '処理中',
+        message: '前のコマンドを処理中です。少し待ってからもう一度お試しください。',
+      },
+    ]);
+    return;
+  }
+
+  if (typingSettingsBusy || slackControlsBusy) {
+    renderVoiceCommandResult([
+      {
+        success: false,
+        label: '操作保留',
+        message: '現在別の設定操作を処理中のため音声コマンドを受け付けませんでした。',
+      },
+    ]);
+    return;
+  }
+
+  voiceCommandBusy = true;
+
+  let commands = Array.isArray(result?.commands) ? [...result.commands] : [];
+  if (commands.length === 0) {
+    const fallback = extractFallbackCommands(lastVoiceTranscription);
+    if (fallback.length > 0) {
+      commands = fallback;
+    }
+  }
+
+  if (commands.length === 0) {
+    renderVoiceCommandResult([
+      {
+        success: false,
+        label: '未検出',
+        message: '変更対象の設定を特定できませんでした。別の言い回しで試してください。',
+      },
+    ]);
+    voiceCommandBusy = false;
+    return;
+  }
+
+  const results = commands.map((command) => applySingleVoiceCommand(command));
+  const shouldPersist = results.some((entry) => entry.success);
+
+  if (shouldPersist) {
+    try {
+      await handleSaveSettings();
+    } catch (error) {
+      results.push({
+        success: false,
+        label: '保存',
+        message: error?.message || '設定の保存に失敗しました',
+      });
+    }
+  }
+
+  renderVoiceCommandResult(results);
+  voiceCommandBusy = false;
+}
+
+/**
+ * 音声コマンドの実行結果をカード表示する。
+ * @param {Array<object>} entries
+ */
+function renderVoiceCommandResult(entries) {
+  if (!settingsVoiceResultContainer) {
+    return;
+  }
+  settingsVoiceResultContainer.innerHTML = '';
+
+  entries.forEach((entry) => {
+    const card = document.createElement('div');
+    card.className = `result-card ${entry.success ? 'success' : 'error'}`;
+
+    const title = document.createElement('strong');
+    title.textContent = entry.label || '設定';
+    card.appendChild(title);
+
+    if (entry.message) {
+      const messageEl = document.createElement('span');
+      messageEl.textContent = entry.message;
+      card.appendChild(messageEl);
+    }
+
+    settingsVoiceResultContainer.appendChild(card);
+  });
+}
+
+/**
+ * 単一の音声コマンドを UI 上の設定へ反映する。
+ * @param {object} command
+ * @returns {{success:boolean,label:string,message:string}}
+ */
+function applySingleVoiceCommand(command) {
+  const key = command?.key || findSettingsKeyBySynonym(command?.target) || findSettingsKeyBySynonym(command?.label);
+  const entry = SETTINGS_VOICE_MAP[key];
+  if (!entry) {
+    return {
+      success: false,
+      label: command?.key || '不明な設定',
+      message: 'この設定は音声操作に対応していません',
+    };
+  }
+
+  const element = document.getElementById(entry.elementId);
+  if (!element) {
+    return {
+      success: false,
+      label: entry.label,
+      message: '該当する UI 要素が見つかりませんでした',
+    };
+  }
+
+  try {
+    if (entry.type === 'boolean') {
+      const resolved = resolveBooleanValue(command, element);
+      if (resolved === null) {
+        return {
+          success: false,
+          label: entry.label,
+          message: 'ON/OFF の意図を判別できませんでした',
+        };
+      }
+      element.checked = resolved;
+      element.dispatchEvent(new Event('change', { bubbles: true }));
+      updateLinkedDisplays(entry.key, resolved);
+      return {
+        success: true,
+        label: entry.label,
+        message: resolved ? 'オンに変更しました' : 'オフに変更しました',
+      };
+    }
+
+    if (entry.type === 'number') {
+      const value = resolveNumberValue(command, entry);
+      if (value === null) {
+        return {
+          success: false,
+          label: entry.label,
+          message: '数値が認識できませんでした',
+        };
+      }
+      element.value = value;
+      element.dispatchEvent(new Event('input', { bubbles: true }));
+      updateLinkedDisplays(entry.key, value);
+      return {
+        success: true,
+        label: entry.label,
+        message: `${value}${entry.unit || ''} に設定しました`,
+      };
+    }
+
+    if (entry.type === 'select') {
+      const matchedValue = resolveSelectValue(command, element);
+      if (!matchedValue) {
+        return {
+          success: false,
+          label: entry.label,
+          message: '指定された値に一致する話者が見つかりませんでした',
+        };
+      }
+      element.value = matchedValue;
+      element.dispatchEvent(new Event('change', { bubbles: true }));
+      return {
+        success: true,
+        label: entry.label,
+        message: `${element.selectedOptions[0]?.textContent || '選択肢'} を選びました`,
+      };
+    }
+  } catch (error) {
+    return {
+      success: false,
+      label: entry.label,
+      message: error?.message || '操作に失敗しました',
+    };
+  }
+
+  return {
+    success: false,
+    label: entry.label,
+    message: '未対応の設定タイプです',
+  };
+}
+
+/**
+ * 真偽値コマンドを推論する。曖昧な場合は null を返す。
+ */
+function resolveBooleanValue(command, element) {
+  if (command?.action === 'toggle') {
+    return !element.checked;
+  }
+
+  const rawValue = command?.value;
+  if (typeof rawValue === 'boolean') {
+    return rawValue;
+  }
+
+  const normalized = String(rawValue ?? '').trim().toLowerCase();
+  if (!normalized && lastVoiceTranscription) {
+    return inferBooleanFromText(lastVoiceTranscription);
+  }
+
+  if (!normalized) {
+    return null;
+  }
+
+  if (['on', 'enable', 'enabled', 'true', '1', 'オン', '有効', 'つけて', '点けて', '開始'].some((word) => normalized.includes(word))) {
+    return true;
+  }
+  if (['off', 'disable', 'disabled', 'false', '0', 'オフ', '無効', '止めて', '消して', '切って'].some((word) => normalized.includes(word))) {
+    return false;
+  }
+  return null;
+}
+
+/**
+ * 数値コマンドを正規化して範囲内に収める。
+ */
+function resolveNumberValue(command, entry) {
+  let numeric = null;
+  if (command && command.value !== undefined && command.value !== null) {
+    numeric = Number(command.value);
+  }
+
+  if ((numeric === null || Number.isNaN(numeric)) && typeof lastVoiceTranscription === 'string') {
+    const match = lastVoiceTranscription.match(/([0-9]+(?:\.[0-9]+)?)/);
+    if (match) {
+      numeric = Number(match[1]);
+    }
+  }
+
+  if (numeric === null || Number.isNaN(numeric)) {
+    return null;
+  }
+
+  const clamped = Math.min(entry.max, Math.max(entry.min, numeric));
+  const stepped = Math.round(clamped / entry.step) * entry.step;
+  return entry.step % 1 === 0 ? String(stepped) : stepped.toFixed(1);
+}
+
+/**
+ * セレクトボックスで指定された話者を推測する。
+ */
+function resolveSelectValue(command, selectEl) {
+  const raw = command?.value || '';
+  if (!raw) {
+    return null;
+  }
+  const normalized = String(raw).trim();
+  const options = Array.from(selectEl.options);
+  const directMatch = options.find((option) => option.value === normalized);
+  if (directMatch) {
+    return directMatch.value;
+  }
+
+  const partialMatch = options.find((option) => option.textContent && option.textContent.includes(normalized));
+  return partialMatch ? partialMatch.value : null;
+}
+
+/**
+ * スライダなどの補助表示を最新値に更新する。
+ */
+function updateLinkedDisplays(key, value) {
+  switch (key) {
+    case 'phoneThreshold':
+      if (phoneThresholdValue) {
+        phoneThresholdValue.textContent = `${value}秒`;
+      }
+      break;
+    case 'phoneConfidence':
+      if (phoneConfidenceValue) {
+        phoneConfidenceValue.textContent = String(value);
+      }
+      break;
+    case 'absenceThreshold':
+      if (absenceThresholdValue) {
+        absenceThresholdValue.textContent = `${value}秒`;
+      }
+      break;
+    case 'absenceConfidence':
+      if (absenceConfidenceValue) {
+        absenceConfidenceValue.textContent = String(value);
+      }
+      break;
+    default:
+      break;
+  }
+}
+
+/**
+ * LLM なしで処理できる簡易コマンドを正規表現で抽出する。
+ */
+function extractFallbackCommands(text) {
+  if (!text) {
+    return [];
+  }
+
+  const commands = [];
+  Object.values(SETTINGS_VOICE_MAP).forEach((entry) => {
+    const hit = entry.synonyms?.find((synonym) => text.includes(synonym));
+    if (!hit) {
+      return;
+    }
+
+    if (entry.type === 'boolean') {
+      const boolValue = inferBooleanFromText(text);
+      if (boolValue !== null) {
+        commands.push({ key: entry.key, action: 'set', value: boolValue });
+      }
+      return;
+    }
+
+    if (entry.type === 'number') {
+      const match = text.match(/([0-9]+(?:\.[0-9]+)?)/);
+      if (match) {
+        commands.push({ key: entry.key, action: 'set', value: Number(match[1]) });
+      }
+      return;
+    }
+
+    if (entry.type === 'select') {
+      const options = getSpeakerOptions();
+      const matched = options.find((option) => text.includes(option.label));
+      if (matched) {
+        commands.push({ key: entry.key, action: 'set', value: matched.id });
+      }
+    }
+  });
+
+  return commands;
+}
+
+/**
+ * 日本語のオン/オフ表現から真偽値を推定する。
+ */
+function inferBooleanFromText(text) {
+  if (!text) {
+    return null;
+  }
+  const hasOn = ['オン', '有効', '付けて', 'つけて', '開始', 'enable'].some((word) => text.includes(word));
+  const hasOff = ['オフ', '無効', '止めて', '消して', '切って', 'disable'].some((word) => text.includes(word));
+  if (hasOn && !hasOff) {
+    return true;
+  }
+  if (hasOff && !hasOn) {
+    return false;
+  }
+  return null;
 }

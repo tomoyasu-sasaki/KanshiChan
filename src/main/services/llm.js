@@ -1,8 +1,7 @@
 /**
- * LLM (Large Language Model) サービス。
- * - node-llama-cpp を使用して GGUF モデルからテキスト整形を実行。
- * - JSON Schema を強制して構造化されたスケジュール情報を抽出。
- * - モデルロードは初回呼び出し時に遅延実行し、以降はインスタンスを再利用。
+ * LLM サービス（メインプロセス）。
+ * - node-llama-cpp を介してローカル GGUF モデルを扱い、スケジュール抽出とチャット応答を担う。
+ * - 毎回コンテキストを作り直し、推論間でトークンがリークしないようにしている。
  * - 依存: node-llama-cpp, models/swallow-8b-v0.5-q4.gguf
  */
 
@@ -13,6 +12,7 @@ const {
   buildScheduleExtractionUserPrompt,
   SCHEDULE_EXTRACTION_JSON_SCHEMA,
   buildScheduleTtsPrompt,
+  buildChatPrompt,
 } = require('../../constants/llm-prompts');
 
 /**
@@ -288,6 +288,82 @@ async function generateTtsMessageForSchedule(schedule) {
     await tempContext.dispose();
   }
 }
+/**
+ * カジュアルな音声チャット応答を生成する。
+ * - 会話履歴は最大6ターンを渡し、過去ログが長くなりすぎるのを防ぐ。
+ * - LlamaChatSession は使い捨てで作成し、プロンプト間の状態共有を避ける。
+ * @param {string} userText
+ * @param {{history?:Array<{role:string, content:string}>}} options
+ * @returns {Promise<{reply:string, segments:string[]}>}
+ */
+async function generateChatReply(userText, options = {}) {
+  if (!userText || typeof userText !== 'string') {
+    throw new Error('チャット入力が空です');
+  }
+
+  const trimmed = userText.trim();
+  const { model } = await loadLLMModel();
+  if (!model) {
+    throw new Error('LLM モデルが初期化されていません');
+  }
+
+  const { LlamaChatSession } = await loadNodeLlamaCpp();
+  const tempContext = await model.createContext({ contextSize: 2048 });
+  try {
+    const session = new LlamaChatSession({
+      contextSequence: tempContext.getSequence(),
+    });
+
+    const history = Array.isArray(options.history) ? options.history : [];
+    const prompt = buildChatPrompt(history, trimmed);
+    const response = await session.prompt(prompt, {
+      maxTokens: 256,
+      temperature: 0.7,
+      topP: 0.9,
+      stopStrings: ['ユーザー:', 'アシスタント:'],
+    });
+
+    const reply = cleanChatReply(response);
+    return {
+      reply,
+      segments: splitReplyIntoSegments(reply),
+    };
+  } finally {
+    await tempContext.dispose();
+  }
+}
+
+/**
+ * Llama の出力から会話タグやノイズを除去する。
+ * @param {string} text
+ * @returns {string}
+ */
+function cleanChatReply(text) {
+  if (!text) {
+    return 'ごめんね、ちょっと言葉が出てこなかったよ。';
+  }
+  return text
+    .replace(/アシスタント[:：]/g, '')
+    .replace(/ユーザー[:：]/g, '')
+    .replace(/```/g, '')
+    .trim();
+}
+
+/**
+ * 応答文を文単位に分割し、ストリーミング表示用に整える。
+ * @param {string} text
+ * @returns {string[]}
+ */
+function splitReplyIntoSegments(text) {
+  if (!text) {
+    return [];
+  }
+  return text
+    .split(/(?<=[。！？!?])/u)
+    .map((segment) => segment.trim())
+    .filter((segment) => segment.length > 0);
+}
+
 
 /**
  * LLM モデルインスタンスをリセットする（テスト用）。
@@ -302,5 +378,6 @@ module.exports = {
   loadLLMModel,
   extractScheduleFromText,
   generateTtsMessageForSchedule,
+  generateChatReply,
   resetLLMInstance,
 };
