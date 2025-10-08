@@ -419,6 +419,7 @@ function createSlackReporter({ configStore }, dependencies = {}) {
 
     const header = options.title || ':bar_chart: 監視ちゃんサマリー';
     const lines = [
+      `<@U08ECCRRHGB>`,
       `${header} (${rangeText})`,
       `• 総イベント数: ${summary.totalCount || 0}`,
       `• アラート件数: ${alertCount}`,

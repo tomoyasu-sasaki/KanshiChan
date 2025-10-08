@@ -28,7 +28,7 @@ export const MONITOR_TIMING_CONSTANTS = Object.freeze({
   phoneInterpolationWindowMs: 2000,
   personInterpolationWindowMs: 500,
   phoneClearStableMs: 2000,
-  absenceClearStableMs: 5000,
+  absenceClearStableMs: 2000,
   phoneAlertCooldownMs: 120000,
   absenceAlertCooldownMs: 300000
 });

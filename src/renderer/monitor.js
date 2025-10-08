@@ -51,6 +51,7 @@ let absenceAlertTriggered = false;
 // クリア判定と再通知クールダウン
 let phoneClearCandidateSince = 0;       // スマホ未検知が続いてからの経過測定
 let absenceClearCandidateSince = 0;     // 人物検知（復帰）が続いてからの経過測定
+let absenceRecoveryDetectedAt = 0;      // 復帰を初めて検知したタイムスタンプ
 let lastPhoneAlertAt = 0;               // 直近のスマホアラート時刻
 let lastAbsenceAlertAt = 0;             // 直近の不在アラート時刻
 
@@ -313,10 +314,16 @@ function handlePhoneDetection(detected) {
 
 // 不在検知処理
 function handleAbsenceDetection(personDetected) {
+  const nowTs = Date.now();
+
   if (!personDetected) {
+    // 復帰監視用の状態は破棄（離席継続中）
+    absenceClearCandidateSince = 0;
+    absenceRecoveryDetectedAt = 0;
+
     // 初回検知時は開始時刻を記録
     if (absenceDetectionStartTime === 0) {
-      absenceDetectionStartTime = Date.now();
+      absenceDetectionStartTime = nowTs;
       recordDetectionLogEntry({
         type: 'absence_detection_start',
         detectedAt: absenceDetectionStartTime,
@@ -324,7 +331,7 @@ function handleAbsenceDetection(personDetected) {
     }
 
     // 経過時間を計算（秒）
-    const elapsedMs = Date.now() - absenceDetectionStartTime;
+    const elapsedMs = nowTs - absenceDetectionStartTime;
     absenceDetectionTime = Math.floor(elapsedMs / 1000);
 
     updateTimers();
@@ -335,38 +342,52 @@ function handleAbsenceDetection(personDetected) {
       !absenceAlertTriggered &&
       absenceDetectionTime >= settings.absenceThreshold
     ) {
-      const nowTs = Date.now();
       if (nowTs - lastAbsenceAlertAt >= ABSENCE_ALERT_COOLDOWN_MS) {
         lastAbsenceAlertAt = nowTs;
         triggerAbsenceAlert();
       }
     }
 
-    // 復帰クリア候補は破棄（未検知継続中）
+    return;
+  }
+
+  // 人物検知（復帰）
+  if (absenceDetectionStartTime === 0) {
+    // 離席セッションが存在しない場合は状態だけ整理
+    absenceDetectionTime = 0;
     absenceClearCandidateSince = 0;
-  } else {
-    // 人物検知（復帰）が安定して一定時間続いたら完全リセット
-    const nowTs = Date.now();
-    if (absenceDetectionTime > 0 || absenceAlertTriggered) {
-      if (absenceClearCandidateSince === 0) absenceClearCandidateSince = nowTs;
-      if (nowTs - absenceClearCandidateSince >= ABSENCE_CLEAR_STABLE_MS) {
-        absenceDetectionTime = 0;
-        if (absenceDetectionStartTime !== 0) {
-          const durationSeconds = Math.floor((nowTs - absenceDetectionStartTime) / 1000);
-          recordDetectionLogEntry({
-            type: 'absence_detection_end',
-            detectedAt: nowTs,
-            durationSeconds: durationSeconds > 0 ? durationSeconds : null,
-          });
-        }
-        absenceDetectionStartTime = 0;
-        absenceAlertTriggered = false;
-        absenceClearCandidateSince = 0;
-        updateTimers();
-      }
-    } else {
-      absenceClearCandidateSince = 0;
-    }
+    absenceRecoveryDetectedAt = 0;
+    return;
+  }
+
+  if (absenceClearCandidateSince === 0) {
+    absenceClearCandidateSince = nowTs;
+    absenceRecoveryDetectedAt = nowTs;
+  } else if (absenceRecoveryDetectedAt === 0 || nowTs < absenceRecoveryDetectedAt) {
+    // 最初に復帰を検知したタイムスタンプを維持
+    absenceRecoveryDetectedAt = nowTs;
+  }
+
+  if (nowTs - absenceClearCandidateSince >= ABSENCE_CLEAR_STABLE_MS) {
+    const resolvedAt = absenceRecoveryDetectedAt || nowTs;
+    const durationSecondsRaw = Math.floor((resolvedAt - absenceDetectionStartTime) / 1000);
+    const durationSeconds = durationSecondsRaw > 0 ? durationSecondsRaw : null;
+
+    recordDetectionLogEntry({
+      type: 'absence_detection_end',
+      detectedAt: resolvedAt,
+      durationSeconds,
+    });
+
+    // セッションリセット
+    absenceDetectionTime = 0;
+    absenceDetectionStartTime = 0;
+    absenceAlertTriggered = false;
+    absenceClearCandidateSince = 0;
+    absenceRecoveryDetectedAt = 0;
+    lastAbsenceAlertAt = 0; // 新しい離席を即時に評価できるようクールダウンを初期化
+
+    updateTimers();
   }
 }
 

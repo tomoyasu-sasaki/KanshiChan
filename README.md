@@ -103,7 +103,7 @@ mkdir -p /path/to/kanchichan/bin
 cp build/bin/whisper-cli /path/to/kanchichan/bin/
 
 # whisper-cli へのパスを環境変数で指定（PATH に追加済みなら不要）
-export WHISPER_CLI_PATH=/path/to/kanchichan/bin/whisper-cli
+echo 'export WHISPER_CLI_PATH="$HOME/Projects/Public/kanchichan/bin/whisper-cli"' >> ~/.zshrc
 ```
 
 #### 4. マイク権限の許可
