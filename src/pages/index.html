@@ -24,6 +24,10 @@
           <span class="icon">👤</span>
           <span id="absenceTimer">0:00</span>
         </div>
+        <div class="status-badge override" id="overrideStatusBadge" hidden>
+          <span class="icon">🚶‍♂️</span>
+          <span id="overrideStatusText">PASS</span>
+        </div>
       </div>
 
       <!-- 監視状態インジケーター -->
@@ -211,6 +215,60 @@
       </div>
       
       <div class="drawer-body">
+        <section class="absence-override-section">
+          <h3>🚶‍♂️ 一時的な不在許可</h3>
+          <p class="description">
+            昼休憩や買い出しなど監視範囲外に出るタイミングで不在検知を一時的に PASS できます。
+            許可中は不在アラートや集計がカウントされません。
+          </p>
+          <div class="absence-override-status" id="absenceOverrideStatus">
+            <div class="status-line">
+              <span class="status-label">現在の状態</span>
+              <span class="status-value" id="absenceOverrideStatusText">未許可</span>
+            </div>
+            <div class="status-line" id="absenceOverrideCountdownRow" hidden>
+              <span class="status-label">残り時間</span>
+              <span class="status-countdown" id="absenceOverrideCountdown">--</span>
+            </div>
+          </div>
+
+          <div class="absence-override-actions">
+            <div class="preset-group">
+              <button type="button" class="btn-secondary override-preset" data-minutes="60" data-reason="昼休憩" data-preset-id="lunch">昼休憩 (60分)</button>
+              <button type="button" class="btn-secondary override-preset" data-minutes="15" data-reason="トイレ休憩" data-preset-id="restroom">トイレ (15分)</button>
+              <button type="button" class="btn-secondary override-preset" data-minutes="30" data-reason="買い出し" data-preset-id="shopping">買い出し (30分)</button>
+              <button type="button" class="btn-secondary override-preset" data-minutes="20" data-reason="散歩" data-preset-id="walk">散歩 (20分)</button>
+              <button type="button" class="btn-secondary override-preset" data-minutes="45" data-reason="お風呂" data-preset-id="bath">お風呂 (45分)</button>
+            </div>
+
+            <div class="custom-group">
+              <div class="form-row">
+                <label for="absenceOverrideReason">理由</label>
+                <input type="text" id="absenceOverrideReason" placeholder="例: スーパー" maxlength="40">
+              </div>
+              <div class="form-row">
+                <label for="absenceOverrideMinutes">滞在時間 (分)</label>
+                <div class="custom-duration">
+                  <input type="number" id="absenceOverrideMinutes" min="5" max="240" step="5" value="30">
+                  <button type="button" id="absenceOverrideStartBtn" class="btn-primary">許可を開始</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+        <div class="absence-override-footer">
+          <button type="button" id="absenceOverrideClearBtn" class="btn-secondary">許可を終了</button>
+          <span class="help-text" id="absenceOverrideMessage"></span>
+        </div>
+
+        <details class="absence-override-history" id="absenceOverrideHistoryPanel">
+          <summary>最近の許可履歴</summary>
+          <ul class="absence-override-history-list" id="absenceOverrideHistoryList">
+            <li class="empty">履歴がありません</li>
+          </ul>
+        </details>
+      </section>
+
         <section class="settings-voice-section">
           <h3>🎙️ 音声コマンド</h3>
           <p class="settings-voice-helper">音声で設定を変更できます。「通知をオフにして」「スマホアラートを70秒に」などと話しかけてください。</p>
@@ -519,6 +577,7 @@
               <option value="all" selected>すべて</option>
               <option value="phone">スマホ検知</option>
               <option value="absence">不在検知</option>
+              <option value="override">許可操作</option>
               <option value="alerts">アラートのみ</option>
               <option value="typing">タイピング</option>
             </select>

@@ -16,6 +16,7 @@ export const state = {
   typingStats: null,
   typingStatus: null,
   systemEvents: [],
+  absenceOverrideSummary: null,
   autoRefreshHandle: null,
   slackBusy: false,
   slackSummaryResetHandle: null,

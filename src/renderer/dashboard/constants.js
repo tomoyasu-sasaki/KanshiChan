@@ -12,12 +12,16 @@ export const DATASET_GROUPS = {
   all: [
     { key: 'phone', label: 'スマホ関連', types: ['phone_detection_start', 'phone_detection_end', 'phone_alert'] },
     { key: 'absence', label: '不在関連', types: ['absence_detection_start', 'absence_detection_end', 'absence_alert'] },
+    { key: 'override', label: '許可操作', types: ['absence_override_active', 'absence_override_inactive', 'absence_override_extended', 'absence_override_suppressed'] },
   ],
   phone: [
     { key: 'phone', label: 'スマホ関連', types: ['phone_detection_start', 'phone_detection_end', 'phone_alert'] },
   ],
   absence: [
     { key: 'absence', label: '不在関連', types: ['absence_detection_start', 'absence_detection_end', 'absence_alert'] },
+  ],
+  override: [
+    { key: 'override', label: '許可操作', types: ['absence_override_active', 'absence_override_inactive', 'absence_override_extended', 'absence_override_suppressed'] },
   ],
   alerts: [
     { key: 'alerts', label: 'アラート', types: ['phone_alert', 'absence_alert'] },

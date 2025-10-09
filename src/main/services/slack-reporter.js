@@ -8,6 +8,7 @@ const {
   getDetectionStats,
   getAppUsageStats,
   getSystemEvents,
+  getAbsenceOverrideSummary,
 } = require('./statistics');
 
 const DEFAULT_SETTINGS = {
@@ -266,7 +267,7 @@ function normalizeScheduleTimes(times) {
   return unique.size > 0 ? Array.from(unique).sort() : DEFAULT_SETTINGS.scheduleTimes;
 }
 
-function createSlackReporter({ configStore }, dependencies = {}) {
+function createSlackReporter({ configStore, absenceOverrideManager }, dependencies = {}) {
   let settings = {
     ...DEFAULT_SETTINGS,
     ...(configStore.get('slackReporter', {})),
@@ -366,6 +367,7 @@ function createSlackReporter({ configStore }, dependencies = {}) {
   const detectionStatsFn = dependencies.getDetectionStats || getDetectionStats;
   const appUsageStatsFn = dependencies.getAppUsageStats || getAppUsageStats;
   const systemEventsFn = dependencies.getSystemEvents || getSystemEvents;
+  const absenceOverrideSummaryFn = dependencies.getAbsenceOverrideSummary || getAbsenceOverrideSummary;
 
   async function buildReport(options = {}) {
     const now = options.now instanceof Date ? options.now : new Date();
@@ -395,6 +397,10 @@ function createSlackReporter({ configStore }, dependencies = {}) {
       end: endTimestamp,
       limit: 50,
     });
+    const absenceOverrideSummary = await absenceOverrideSummaryFn({
+      start: startTimestamp,
+      end: endTimestamp,
+    });
 
     const summary = detectionStats.summary || {};
     const byType = summary.byType || {};
@@ -403,6 +409,7 @@ function createSlackReporter({ configStore }, dependencies = {}) {
     const phoneDuration = byType.phone_detection_end?.totalDurationSeconds || 0;
     const absenceDuration = byType.absence_detection_end?.totalDurationSeconds || 0;
     const alertCount = (byType.phone_alert?.count || 0) + (byType.absence_alert?.count || 0);
+    const permittedAbsenceSeconds = absenceOverrideSummary.totalSeconds || 0;
 
     const mostActiveBucket = buckets.reduce((acc, bucket) => {
       if (!acc || bucket.totalCount > acc.totalCount) {
@@ -426,6 +433,13 @@ function createSlackReporter({ configStore }, dependencies = {}) {
       `• スマホ検知時間: ${formatDuration(phoneDuration)} (${byType.phone_detection_end?.count || 0} 件)`,
       `• 不在検知時間: ${formatDuration(absenceDuration)} (${byType.absence_detection_end?.count || 0} 件)`,
     ];
+
+    if (permittedAbsenceSeconds > 0) {
+      lines.push(
+        `• 許可済み不在: ${formatDuration(permittedAbsenceSeconds)} ` +
+          `(手動 ${formatDuration(absenceOverrideSummary.manualSeconds || 0)}, 自動 ${formatDuration(absenceOverrideSummary.autoSeconds || 0)})`
+      );
+    }
 
     if (mostActiveBucket) {
       lines.push(`• 最多発生タイミング: ${mostActiveBucket.bucket} (${mostActiveBucket.totalCount} 件)`);
@@ -471,6 +485,25 @@ function createSlackReporter({ configStore }, dependencies = {}) {
         });
       } else {
         lines.push('• 直近の予定: なし');
+      }
+    }
+
+    if (absenceOverrideManager) {
+      try {
+        const overrideState = await absenceOverrideManager.getState();
+        if (overrideState.active && overrideState.current) {
+          const remainingText = (() => {
+            if (Number.isFinite(overrideState.remainingMs)) {
+              return formatDuration(Math.floor((overrideState.remainingMs || 0) / 1000));
+            }
+            return '時間指定なし';
+          })();
+          lines.push(
+            `• 現在許可中: ${overrideState.current.reason || '不在'} (開始 ${new Date(overrideState.current.startedAt).toLocaleString()}, 残り ${remainingText})`
+          );
+        }
+      } catch (error) {
+        console.error('[SlackReporter] 不在許可状態取得エラー:', error);
       }
     }
 

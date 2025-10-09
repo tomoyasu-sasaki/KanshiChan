@@ -17,6 +17,57 @@ import {
 } from './utils.js';
 
 /**
+ * 不在許可ログのメタ情報を表示用に整形する。
+ * @param {Object} meta
+ * @returns {{reason:string, expiresAtText:string, endedLabel:string}}
+ */
+function describeOverrideMeta(meta = {}) {
+  const reason = meta.reason || '一時的な不在';
+  const expiresAtText = Number.isFinite(meta.expiresAt) ? formatDateTime(meta.expiresAt) : '時間指定なし';
+  const manualEnd = meta.manualEnd;
+  const endedLabel = manualEnd === false ? '自動終了' : manualEnd === true ? '手動終了' : '';
+  return { reason, expiresAtText, endedLabel };
+}
+
+/**
+ * ログの meta を用途に応じた一文へ整形する。未対応タイプは JSON 文字列を返す。
+ * @param {Object} item
+ * @returns {string}
+ */
+function formatLogDetail(item) {
+  if (!item) {
+    return '';
+  }
+  const meta = item.meta || {};
+
+  switch (item.type) {
+    case 'absence_override_active': {
+      const { reason, expiresAtText } = describeOverrideMeta(meta);
+      return `${reason} を許可 (終了予定: ${expiresAtText})`;
+    }
+    case 'absence_override_inactive': {
+      const { reason, endedLabel } = describeOverrideMeta(meta);
+      return endedLabel ? `${reason} の許可を終了 (${endedLabel})` : `${reason} の許可を終了`;
+    }
+    case 'absence_override_extended': {
+      const { reason, expiresAtText } = describeOverrideMeta(meta);
+      return `${reason} を延長 (終了予定: ${expiresAtText})`;
+    }
+    case 'absence_override_suppressed': {
+      const { reason } = describeOverrideMeta(meta);
+      const durationText = item.durationSeconds ? formatDuration(item.durationSeconds) : 'N/A';
+      return `${reason} 許可中に不在セッションを終了 (経過 ${durationText})`;
+    }
+    default:
+      return item.meta ? JSON.stringify(item.meta) : '';
+  }
+}
+
+function formatPlainLogDetail(item) {
+  return formatLogDetail(item);
+}
+
+/**
  * 最新ログテーブルを現在の期間フィルタに合わせて再描画する。
  */
 export function renderLogTable() {
@@ -44,7 +95,7 @@ export function renderLogTable() {
     .map((item) => {
       const time = formatDateTime(item.detectedAt);
       const duration = item.durationSeconds ? formatDuration(item.durationSeconds) : '-';
-      const detail = item.meta ? escapeHtml(JSON.stringify(item.meta)) : '';
+      const detail = escapeHtml(formatLogDetail(item));
       return `
         <tr>
           <td>${time}</td>
@@ -136,12 +187,12 @@ export function exportLogsCsv() {
     return;
   }
 
-  const headers = ['detected_at', 'type', 'duration_seconds', 'meta'];
+  const headers = ['detected_at', 'type', 'duration_seconds', 'detail'];
   const rows = filteredLogs.map((item) => [
     formatDateTime(item.detectedAt),
     item.type,
     item.durationSeconds ?? '',
-    item.meta ? JSON.stringify(item.meta) : '',
+    formatPlainLogDetail(item),
   ]);
 
   const csv = [headers.join(','), ...rows.map((row) => row.map(csvEscape).join(','))].join('\n');

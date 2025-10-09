@@ -180,8 +180,50 @@ function initializeDatabase(app) {
                                                 return;
                                               }
 
-                                              dbInstance = db;
-                                              resolve(dbInstance);
+                                              db.run(
+                                                `CREATE TABLE IF NOT EXISTS absence_override_events (
+                                                  id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                                  started_at INTEGER NOT NULL,
+                                                  ended_at INTEGER,
+                                                  expires_at INTEGER,
+                                                  reason TEXT,
+                                                  preset_id TEXT,
+                                                  duration_minutes INTEGER,
+                                                  manual_end INTEGER,
+                                                  note TEXT,
+                                                  created_by TEXT,
+                                                  created_at INTEGER NOT NULL
+                                                )`,
+                                                (overrideTableErr) => {
+                                                  if (overrideTableErr) {
+                                                    reject(overrideTableErr);
+                                                    return;
+                                                  }
+
+                                                  db.run(
+                                                    'CREATE INDEX IF NOT EXISTS idx_absence_override_started_at ON absence_override_events(started_at)',
+                                                    (overrideStartedIdxErr) => {
+                                                      if (overrideStartedIdxErr) {
+                                                        reject(overrideStartedIdxErr);
+                                                        return;
+                                                      }
+
+                                                      db.run(
+                                                        'CREATE INDEX IF NOT EXISTS idx_absence_override_ended_at ON absence_override_events(ended_at)',
+                                                        (overrideEndedIdxErr) => {
+                                                          if (overrideEndedIdxErr) {
+                                                            reject(overrideEndedIdxErr);
+                                                            return;
+                                                          }
+
+                                                          dbInstance = db;
+                                                          resolve(dbInstance);
+                                                        }
+                                                      );
+                                                    }
+                                                  );
+                                                }
+                                              );
                                             }
                                           );
                                         }

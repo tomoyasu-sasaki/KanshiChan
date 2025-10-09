@@ -40,5 +40,21 @@ contextBridge.exposeInMainWorld('electronAPI', {
   typingMonitorSetPaused: (paused) => ipcRenderer.invoke('typing-monitor-set-paused', paused),
   typingActivityStats: (options) => ipcRenderer.invoke('typing-activity-stats', options),
   systemEventsRecent: (options) => ipcRenderer.invoke('system-events-recent', options),
-  syncSchedules: (schedules) => ipcRenderer.invoke('schedule-sync', schedules)
+  syncSchedules: (schedules) => ipcRenderer.invoke('schedule-sync', schedules),
+  absenceOverrideGetState: () => ipcRenderer.invoke('absence_override_get_state'),
+  absenceOverrideActivate: (payload) => ipcRenderer.invoke('absence_override_activate', payload),
+  absenceOverrideExtend: (payload) => ipcRenderer.invoke('absence_override_extend', payload),
+  absenceOverrideClear: (payload) => ipcRenderer.invoke('absence_override_clear', payload),
+  absenceOverrideHistory: () => ipcRenderer.invoke('absence_override_history'),
+  absenceOverrideSummary: (options) => ipcRenderer.invoke('absence_override_summary', options),
+  absenceOverrideEvents: (options) => ipcRenderer.invoke('absence_override_events', options),
+  onAbsenceOverrideStateChanged: (handler) => {
+    if (typeof handler !== 'function') {
+      return () => {};
+    }
+    const channel = 'absence_override_state_changed';
+    const wrapped = (_event, state) => handler(state);
+    ipcRenderer.on(channel, wrapped);
+    return () => ipcRenderer.removeListener(channel, wrapped);
+  }
 });

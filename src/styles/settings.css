@@ -201,6 +201,171 @@
   gap: var(--space-3);
 }
 
+.absence-override-section {
+  margin-bottom: var(--space-6);
+  padding: var(--space-5);
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(72, 138, 153, 0.2);
+  background: rgba(72, 138, 153, 0.08);
+  color: var(--text-primary);
+}
+
+.absence-override-section h3 {
+  margin-top: 0;
+  font-size: var(--text-lg);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.absence-override-section .description {
+  margin: var(--space-3) 0 var(--space-4);
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.absence-override-status {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border-radius: var(--radius-sm);
+  background: rgba(255, 255, 255, 0.4);
+  border: 1px solid rgba(72, 138, 153, 0.25);
+  margin-bottom: var(--space-4);
+}
+
+.absence-override-status .status-line {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--text-base);
+}
+
+.absence-override-status .status-label {
+  color: var(--text-secondary);
+}
+
+.absence-override-status .status-value {
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+}
+
+.absence-override-status .status-countdown {
+  font-weight: var(--font-semibold);
+  color: var(--success);
+}
+
+.absence-override-actions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.absence-override-actions .preset-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.absence-override-actions .override-preset {
+  flex: 1 1 180px;
+  min-width: 160px;
+}
+
+.absence-override-actions .custom-group {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.absence-override-actions .form-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.absence-override-actions .form-row label {
+  font-weight: var(--font-medium);
+  color: var(--text-secondary);
+}
+
+.absence-override-actions input[type="text"],
+.absence-override-actions input[type="number"] {
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-light);
+  background: #fff;
+  font-size: var(--text-base);
+}
+
+.absence-override-actions .custom-duration {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.absence-override-footer {
+  margin-top: var(--space-4);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: center;
+}
+
+.absence-override-footer .help-text {
+  color: var(--text-tertiary);
+  font-size: var(--text-sm);
+}
+
+.absence-override-footer .help-text.info {
+  color: var(--info);
+}
+
+.absence-override-footer .help-text.success {
+  color: var(--success);
+}
+
+.absence-override-footer .help-text.error {
+  color: var(--error);
+}
+
+.absence-override-history {
+  margin-top: var(--space-4);
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  background: rgba(255, 255, 255, 0.6);
+}
+
+.absence-override-history summary {
+  cursor: pointer;
+  font-weight: var(--font-semibold);
+  color: var(--text-secondary);
+}
+
+.absence-override-history-list {
+  margin-top: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  padding-left: var(--space-3);
+}
+
+.absence-override-history-list li {
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.absence-override-history-list .history-reason {
+  font-weight: var(--font-medium);
+  color: var(--text-primary);
+}
+
+.absence-override-history-list .history-period {
+  color: var(--text-tertiary);
+  font-size: var(--text-sm);
+}
+
 .settings-voice-result .result-card {
   background: #ffffff;
   border-radius: var(--radius-sm);

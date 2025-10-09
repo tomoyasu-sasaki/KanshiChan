@@ -140,6 +140,12 @@
   animation: pulse 2s infinite;
 }
 
+.status-badge.override {
+  background: rgba(81, 207, 102, 0.85);
+  border-color: rgba(81, 207, 102, 1);
+  color: rgba(16, 53, 27, 0.95);
+}
+
 .status-badge.alert {
   background: rgba(244, 67, 54, 0.9);
   border-color: rgba(244, 67, 54, 1);

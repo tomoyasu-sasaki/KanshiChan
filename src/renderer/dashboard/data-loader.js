@@ -73,7 +73,8 @@ export async function loadDashboardData() {
   state.lastRange = { start, end };
 
   try {
-    const [statsRes, recentRes, appUsageRes] = await Promise.all([
+    // overrideSummaryRes は absence_override_events の集計で、検知ログとは異なる SQL を叩くため個別に取得する。
+    const [statsRes, recentRes, appUsageRes, overrideSummaryRes] = await Promise.all([
       window.electronAPI?.detectionLogStats?.({
         start,
         end,
@@ -81,6 +82,7 @@ export async function loadDashboardData() {
       }) ?? Promise.resolve({ success: false }),
       window.electronAPI?.detectionLogRecent?.({ limit: 100 }) ?? Promise.resolve({ success: false }),
       window.electronAPI?.appUsageStats?.({ start, end, limit: 10 }) ?? Promise.resolve({ success: false }),
+      window.electronAPI?.absenceOverrideSummary?.({ start, end }) ?? Promise.resolve({ success: false }),
     ]);
 
     if (statsRes?.success) {
@@ -99,6 +101,12 @@ export async function loadDashboardData() {
       state.appUsage = [];
       state.appUsageTotalDuration = 0;
       state.chromeUsage = [];
+    }
+
+    if (overrideSummaryRes?.success) {
+      state.absenceOverrideSummary = overrideSummaryRes.summary || null;
+    } else {
+      state.absenceOverrideSummary = null;
     }
 
     renderKpis();

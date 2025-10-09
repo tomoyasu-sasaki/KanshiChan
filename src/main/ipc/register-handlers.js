@@ -3,6 +3,7 @@
  * - レンダラへ露出するメイン機能（通知、検知、VOICEVOX、音声入力）を一元的に定義する。
  * - 依存オブジェクトを DI することでテストや将来の差し替えを容易にする。
  */
+const { BrowserWindow } = require('electron');
 const { synthesizeWithVoiceVox } = require('../services/voicevox');
 const { getActiveWindowInfo } = require('../services/active-window');
 const { processVoiceInput, checkVoiceInputAvailability } = require('../services/voice-input');
@@ -15,6 +16,8 @@ const {
   getAppUsageStats,
   getTypingStats,
   getSystemEvents,
+  getAbsenceOverrideSummary,
+  getAbsenceOverrideEvents,
 } = require('../services/statistics');
 
 /**
@@ -32,7 +35,74 @@ function registerIpcHandlers({
   configStore,
   typingMonitor,
   systemEventMonitor,
+  absenceOverrideManager,
 }) {
+  if (!absenceOverrideManager) {
+    throw new Error('absenceOverrideManager is required to register IPC handlers');
+  }
+
+  /**
+   * メインプロセスでの状態変化をすべての BrowserWindow へブロードキャストする。
+   * - レンダラ側は state をキャッシュしているため、最小限の差分のみ送ればよい。
+   */
+  function broadcastAbsenceOverrideState(state = null) {
+    const promise = state ? Promise.resolve(state) : absenceOverrideManager.getState();
+    promise
+      .then((snapshot) => {
+        BrowserWindow.getAllWindows().forEach(window => {
+          if (!window?.webContents?.isDestroyed()) {
+            window.webContents.send('absence_override_state_changed', snapshot);
+          }
+        });
+      })
+      .catch((error) => {
+        console.error('[IPC] absence_override state broadcast error:', error);
+      });
+  }
+
+  absenceOverrideManager.on('change', broadcastAbsenceOverrideState);
+
+  /**
+   * 不在許可の操作イベントを system_events テーブルへ記録する。
+   * - Slack など他サービスが後段で利用するため、メタ情報を JSON として保存する。
+   */
+  function logAbsenceOverrideEvent(entry, status) {
+    if (!systemEventMonitor?.recordEvent || !entry) {
+      return;
+    }
+    const meta = {
+      status,
+      reason: entry.reason,
+      startedAt: entry.startedAt,
+      endedAt: entry.endedAt ?? null,
+      expiresAt: entry.expiresAt ?? null,
+      manualEnd: entry.manualEnd,
+      presetId: entry.presetId ?? null,
+      note: entry.note ?? null,
+      eventId: entry.eventId ?? null,
+    };
+    Promise.resolve(systemEventMonitor.recordEvent(`absence_override_${status}`, meta)).catch((error) => {
+      console.error('[IPC] absence_override system event log error:', error);
+    });
+  }
+
+  absenceOverrideManager.on('activate', (state) => {
+    logAbsenceOverrideEvent(state?.current || state?.raw, 'activated');
+  });
+
+  absenceOverrideManager.on('extend', (state) => {
+    logAbsenceOverrideEvent(state?.current || state?.raw, 'extended');
+  });
+
+  absenceOverrideManager.on('clear', (_state, context) => {
+    const entry = context?.archived;
+    logAbsenceOverrideEvent(entry, 'cleared');
+  });
+
+  absenceOverrideManager.on('expire', (_state, context) => {
+    const entry = context?.archived;
+    logAbsenceOverrideEvent(entry, 'expired');
+  });
   ipcMain.handle('save-schedule', async (_event, schedule) => {
     return { success: true, schedule };
   });
@@ -293,6 +363,76 @@ function registerIpcHandlers({
       return { success: true, data };
     } catch (error) {
       console.error('[IPC] システムイベント取得エラー:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('absence_override_get_state', async () => {
+    try {
+      const state = await absenceOverrideManager.getState();
+      return { success: true, state };
+    } catch (error) {
+      console.error('[IPC] absence_override_get_state エラー:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('absence_override_activate', async (_event, payload = {}) => {
+    try {
+      const state = await absenceOverrideManager.activateOverride(payload || {});
+      return { success: true, state };
+    } catch (error) {
+      console.error('[IPC] absence_override_activate エラー:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('absence_override_extend', async (_event, payload = {}) => {
+    try {
+      const state = await absenceOverrideManager.extendOverride(payload || {});
+      return { success: true, state };
+    } catch (error) {
+      console.error('[IPC] absence_override_extend エラー:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('absence_override_clear', async (_event, options = {}) => {
+    try {
+      const state = await absenceOverrideManager.clearOverride(options || {});
+      return { success: true, state };
+    } catch (error) {
+      console.error('[IPC] absence_override_clear エラー:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('absence_override_history', async () => {
+    try {
+      const history = absenceOverrideManager.getHistory();
+      return { success: true, history };
+    } catch (error) {
+      console.error('[IPC] absence_override_history エラー:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('absence_override_summary', async (_event, options = {}) => {
+    try {
+      const summary = await getAbsenceOverrideSummary(options || {});
+      return { success: true, summary };
+    } catch (error) {
+      console.error('[IPC] absence_override_summary エラー:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('absence_override_events', async (_event, options = {}) => {
+    try {
+      const events = await getAbsenceOverrideEvents(options || {});
+      return { success: true, events };
+    } catch (error) {
+      console.error('[IPC] absence_override_events エラー:', error);
       return { success: false, error: error.message };
     }
   });

@@ -14,6 +14,7 @@ const { createConfigStore } = require('./src/main/services/config-store');
 const { createSlackReporter } = require('./src/main/services/slack-reporter');
 const { createTypingMonitor } = require('./src/main/services/typing-monitor');
 const { createSystemEventMonitor } = require('./src/main/services/system-events');
+const { createAbsenceOverrideManager } = require('./src/main/services/absence-override');
 
 let mainWindow = null;
 let yoloDetector = null;
@@ -22,6 +23,7 @@ let configStore = null;
 let slackReporter = null;
 let typingMonitor = null;
 let systemEventMonitor = null;
+let absenceOverrideManager = null;
 
 const appConstantsPromise = import('./src/constants/app.js');
 
@@ -68,7 +70,8 @@ app.whenReady().then(async () => {
   }
 
   configStore = createConfigStore(app);
-  slackReporter = createSlackReporter({ configStore });
+  absenceOverrideManager = createAbsenceOverrideManager({ configStore });
+  slackReporter = createSlackReporter({ configStore, absenceOverrideManager });
   typingMonitor = createTypingMonitor({ configStore });
   systemEventMonitor = createSystemEventMonitor({ powerMonitor });
 
@@ -115,6 +118,7 @@ app.whenReady().then(async () => {
     configStore,
     typingMonitor,
     systemEventMonitor,
+    absenceOverrideManager,
   });
 
   app.on('activate', () => {
@@ -148,6 +152,13 @@ app.on('before-quit', () => {
     systemEventMonitor.dispose().catch((error) => {
       console.warn('SystemEventMonitor dispose でエラー:', error);
     });
+  }
+  if (absenceOverrideManager) {
+    try {
+      absenceOverrideManager.dispose();
+    } catch (error) {
+      console.warn('AbsenceOverrideManager dispose でエラー:', error);
+    }
   }
   closeDatabase().catch((error) => {
     console.warn('データベースクローズ処理でエラーが発生しました:', error);

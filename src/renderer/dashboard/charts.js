@@ -26,6 +26,12 @@ export function renderKpis() {
   const phoneDuration = byType.phone_detection_end?.totalDurationSeconds || 0;
   const absenceDuration = byType.absence_detection_end?.totalDurationSeconds || 0;
   const alertCount = (byType.phone_alert?.count || 0) + (byType.absence_alert?.count || 0);
+  // 許可済み不在は absence_override_events から別集計しており、統計の欠損と混同しないよう分離表示する。
+  const overrideSummary = state.absenceOverrideSummary;
+  const permittedDuration = overrideSummary?.totalSeconds || 0;
+  const manualPermitted = overrideSummary?.manualSeconds || 0;
+  const autoPermitted = overrideSummary?.autoSeconds || 0;
+  const activePermits = overrideSummary?.activeCount || 0;
 
   const mostActiveBucket = (state.stats.buckets || []).reduce(
     (acc, bucket) => {
@@ -55,6 +61,20 @@ export function renderKpis() {
       value: formatDuration(absenceDuration),
       subtext: `${byType.absence_detection_end?.count || 0} 件のセッション`,
     },
+    overrideSummary
+      ? {
+          label: '許可済み不在',
+          value: formatDuration(permittedDuration),
+          subtext: `手動 ${formatDuration(manualPermitted)} / 自動 ${formatDuration(autoPermitted)}${activePermits > 0 ? ` · ${activePermits} 件進行中` : ''}`,
+        }
+      : null,
+    overrideSummary
+      ? {
+          label: '未許可の不在',
+          value: formatDuration(Math.max(absenceDuration - permittedDuration, 0)),
+          subtext: '不在検知時間と許可済み不在の差分',
+        }
+      : null,
     {
       label: 'アラート件数',
       value: alertCount,
@@ -131,7 +151,7 @@ export function renderChart() {
       return group.types.reduce((sum, type) => sum + (counts[type] || 0), 0);
     });
 
-    const colors = ['#4dabf7', '#94d82d', '#fcc419'];
+    const colors = ['#4dabf7', '#94d82d', '#fcc419', '#ffa8a8'];
 
     return {
       label: group.label,

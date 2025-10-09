@@ -9,6 +9,14 @@ import { getSpeakerOptions } from '../constants/voicevox-speakers.js';
 import { YOLO_CLASSES, YOLO_CATEGORIES, getClassesByCategory } from '../constants/yolo-classes.js';
 import { SETTINGS_VOICE_MAP, findSettingsKeyBySynonym } from '../constants/settingsVoiceMap.js';
 import { AudioInputControl } from './components/audio-input-control.js';
+import {
+  ensureAbsenceOverrideBridge,
+  subscribeAbsenceOverride,
+  activateAbsenceOverride,
+  clearAbsenceOverride,
+  getAbsenceOverrideState,
+  refreshAbsenceOverrideState,
+} from './services/absence-override.js';
 
 const DEFAULT_SLACK_SCHEDULE = ['13:00', '18:00'];
 
@@ -62,6 +70,10 @@ let typingSettingsBusy = false;
 let settingsVoiceResultContainer = null;
 let lastVoiceTranscription = '';
 let voiceCommandBusy = false;
+let absenceOverrideStatusText, absenceOverrideCountdownRow, absenceOverrideCountdown;
+let absenceOverrideReasonInput, absenceOverrideMinutesInput, absenceOverrideStartBtn, absenceOverrideClearBtn;
+let absenceOverrideMessage, absenceOverridePresetButtons, absenceOverrideHistoryList, absenceOverrideHistoryPanel;
+let overrideCountdownTimer = null;
 
 // 初期化
 document.addEventListener('DOMContentLoaded', () => {
@@ -101,6 +113,17 @@ document.addEventListener('DOMContentLoaded', () => {
   typingMonitorSettingsStatus = document.getElementById('typingMonitorSettingsStatus');
   typingMonitorSettingsMessage = document.getElementById('typingMonitorSettingsMessage');
   settingsVoiceResultContainer = document.getElementById('settingsVoiceResult');
+  absenceOverrideStatusText = document.getElementById('absenceOverrideStatusText');
+  absenceOverrideCountdownRow = document.getElementById('absenceOverrideCountdownRow');
+  absenceOverrideCountdown = document.getElementById('absenceOverrideCountdown');
+  absenceOverrideReasonInput = document.getElementById('absenceOverrideReason');
+  absenceOverrideMinutesInput = document.getElementById('absenceOverrideMinutes');
+  absenceOverrideStartBtn = document.getElementById('absenceOverrideStartBtn');
+  absenceOverrideClearBtn = document.getElementById('absenceOverrideClearBtn');
+  absenceOverrideMessage = document.getElementById('absenceOverrideMessage');
+  absenceOverridePresetButtons = document.querySelectorAll('.override-preset');
+  absenceOverrideHistoryList = document.getElementById('absenceOverrideHistoryList');
+  absenceOverrideHistoryPanel = document.getElementById('absenceOverrideHistoryPanel');
 
   // 動的にUI要素を生成
   populateVoicevoxSpeakers();
@@ -113,6 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initializeSlackReporterSection();
   initializeTypingMonitorSection();
   setupVoiceCommandSection();
+  initializeAbsenceOverrideSection();
 });
 
 // VOICEVOX話者選択を動的に生成
@@ -1123,4 +1147,266 @@ function inferBooleanFromText(text) {
     return false;
   }
   return null;
+}
+
+/**
+ * 不在許可 UI を初期化し、イベントハンドラと初期状態を接続する。
+ * - electronAPI が未定義でもメッセージを表示して処理を継続する。
+ */
+function initializeAbsenceOverrideSection() {
+  ensureAbsenceOverrideBridge();
+  updateAbsenceOverrideStatus(getAbsenceOverrideState());
+  subscribeAbsenceOverride(updateAbsenceOverrideStatus);
+  refreshAbsenceOverrideState().catch((error) => {
+    console.error('[Settings] 不在許可状態の取得に失敗:', error);
+    setAbsenceOverrideMessage(error?.message || '不在許可の状態を取得できませんでした。', 'error');
+  });
+
+  if (absenceOverrideStartBtn) {
+    absenceOverrideStartBtn.addEventListener('click', () => {
+      const reasonValue = (absenceOverrideReasonInput?.value || '').trim();
+      const minutesValue = Number.parseInt(absenceOverrideMinutesInput?.value, 10);
+      handleAbsenceOverrideStart({ reason: reasonValue, minutes: minutesValue, presetId: null });
+    });
+  }
+
+  if (absenceOverridePresetButtons?.length) {
+    absenceOverridePresetButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        const minutes = Number.parseInt(button.dataset.minutes, 10);
+        const reason = (button.dataset.reason || '').trim();
+        const presetId = button.dataset.presetId || null;
+
+        if (absenceOverrideReasonInput) {
+          absenceOverrideReasonInput.value = reason;
+        }
+        if (absenceOverrideMinutesInput && Number.isFinite(minutes)) {
+          absenceOverrideMinutesInput.value = minutes;
+        }
+
+        handleAbsenceOverrideStart({ reason, minutes, presetId });
+      });
+    });
+  }
+
+  if (absenceOverrideClearBtn) {
+    absenceOverrideClearBtn.addEventListener('click', async () => {
+      if (absenceOverrideClearBtn.disabled) {
+        return;
+      }
+      setAbsenceOverrideBusy(true);
+      setAbsenceOverrideMessage('許可を終了しています…', 'info');
+      try {
+        let result;
+        try {
+          result = await clearAbsenceOverride({ manualEnd: true });
+        } catch (apiError) {
+          throw apiError;
+        }
+        if (result?.success === false) {
+          throw new Error(result.error || '不在許可の終了に失敗しました');
+        }
+        setAbsenceOverrideMessage('不在許可を終了しました。', 'success');
+      } catch (error) {
+        console.error('[Settings] 不在許可終了エラー', error);
+        setAbsenceOverrideMessage(error.message || '不在許可の終了に失敗しました。', 'error');
+      } finally {
+        setAbsenceOverrideBusy(false);
+      }
+    });
+  }
+}
+
+/**
+ * プリセット／カスタム入力から不在許可を開始する。
+ * - 入力値を即時バリデーションし、開始処理中はボタンをロックする。
+ * @param {{reason:string, minutes:number, presetId:string|null}} params
+ */
+function handleAbsenceOverrideStart({ reason, minutes, presetId }) {
+  const trimmedReason = reason && reason.trim() ? reason.trim() : '一時的な不在';
+  const durationMinutes = Number.isFinite(minutes) ? minutes : Number.parseInt(absenceOverrideMinutesInput?.value, 10);
+
+  if (!Number.isFinite(durationMinutes) || durationMinutes < 5) {
+    setAbsenceOverrideMessage('5分以上の時間を入力してください。', 'error');
+    absenceOverrideMinutesInput?.focus();
+    return;
+  }
+
+  setAbsenceOverrideBusy(true);
+  setAbsenceOverrideMessage('不在許可を開始しています…', 'info');
+
+  let promise;
+  try {
+    promise = activateAbsenceOverride({
+      reason: trimmedReason,
+      durationMinutes,
+      presetId: presetId || null,
+    });
+  } catch (error) {
+    console.error('[Settings] 不在許可開始エラー', error);
+    setAbsenceOverrideMessage(error.message || '不在許可の開始に失敗しました。', 'error');
+    setAbsenceOverrideBusy(false);
+    return;
+  }
+
+  promise
+    .then((result) => {
+      if (result?.success === false) {
+        throw new Error(result.error || '不在許可の開始に失敗しました');
+      }
+      setAbsenceOverrideMessage('不在許可を開始しました。', 'success');
+    })
+    .catch((error) => {
+      console.error('[Settings] 不在許可開始エラー', error);
+      setAbsenceOverrideMessage(error.message || '不在許可の開始に失敗しました。', 'error');
+    })
+    .finally(() => {
+      setAbsenceOverrideBusy(false);
+    });
+}
+
+/**
+ * 最新状態に応じて UI を更新し、履歴リストも再描画する。
+ * @param {Object} state
+ */
+function updateAbsenceOverrideStatus(state) {
+  const currentState = state || getAbsenceOverrideState();
+  stopOverrideCountdown();
+
+  if (!absenceOverrideStatusText) {
+    return;
+  }
+
+  if (currentState.active && currentState.current) {
+    const current = currentState.current;
+    absenceOverrideStatusText.textContent = `${current.reason || '一時的な不在'} を許可中`;
+    absenceOverrideClearBtn?.removeAttribute('disabled');
+
+    if (Number.isFinite(current.expiresAt)) {
+      absenceOverrideCountdownRow.hidden = false;
+      startOverrideCountdown(current.expiresAt);
+    } else {
+      absenceOverrideCountdownRow.hidden = true;
+    }
+  } else {
+    absenceOverrideStatusText.textContent = '未許可';
+    absenceOverrideCountdownRow.hidden = true;
+    absenceOverrideClearBtn?.setAttribute('disabled', 'disabled');
+  }
+
+  renderAbsenceOverrideHistory(currentState.history);
+}
+
+/**
+ * 終了予定時刻までの残り時間を 1 秒ごとに更新する。
+ * @param {number} expiresAt
+ */
+function startOverrideCountdown(expiresAt) {
+  if (!absenceOverrideCountdown) {
+    return;
+  }
+
+  const tick = () => {
+    const remaining = expiresAt - Date.now();
+    if (remaining <= 0) {
+      absenceOverrideCountdown.textContent = '0分';
+      stopOverrideCountdown();
+      return;
+    }
+    absenceOverrideCountdown.textContent = formatRemainingDuration(remaining);
+  };
+
+  tick();
+  overrideCountdownTimer = setInterval(tick, 1000);
+}
+
+/**
+ * カウントダウンを停止し、インターバル参照を片付ける。
+ */
+function stopOverrideCountdown() {
+  if (overrideCountdownTimer) {
+    clearInterval(overrideCountdownTimer);
+    overrideCountdownTimer = null;
+  }
+}
+
+/**
+ * エラーメッセージ領域を更新し、種類に応じて色分けする。
+ * @param {string} text
+ * @param {'info'|'success'|'error'} type
+ */
+function setAbsenceOverrideMessage(text, type = 'info') {
+  if (!absenceOverrideMessage) {
+    return;
+  }
+
+  absenceOverrideMessage.textContent = text || '';
+  absenceOverrideMessage.className = 'help-text';
+
+  if (!text) {
+    return;
+  }
+
+  absenceOverrideMessage.classList.add(type);
+}
+
+/**
+ * 許可開始・終了ボタンの Busy 状態をまとめて切り替える。
+ * @param {boolean} isBusy
+ */
+function setAbsenceOverrideBusy(isBusy) {
+  if (isBusy) {
+    absenceOverrideStartBtn?.setAttribute('disabled', 'disabled');
+    absenceOverrideClearBtn?.setAttribute('disabled', 'disabled');
+  } else {
+    absenceOverrideStartBtn?.removeAttribute('disabled');
+    if (getAbsenceOverrideState().active) {
+      absenceOverrideClearBtn?.removeAttribute('disabled');
+    }
+  }
+}
+
+function formatRemainingDuration(ms) {
+  if (!Number.isFinite(ms) || ms <= 0) {
+    return 'まもなく終了';
+  }
+  const totalSeconds = Math.floor(ms / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  if (hours > 0) {
+    return `${hours}時間${minutes}分`;
+  }
+  return `${minutes}分`;
+}
+
+/**
+ * 履歴リストを最新10件で再描画する。
+ * @param {Array} history
+ */
+function renderAbsenceOverrideHistory(history) {
+  if (!absenceOverrideHistoryList) {
+    return;
+  }
+
+  const entries = Array.isArray(history) ? [...history] : [];
+  if (entries.length === 0) {
+    absenceOverrideHistoryList.innerHTML = '<li class="empty">履歴がありません</li>';
+    return;
+  }
+
+  const latest = entries.slice(-10).reverse();
+  absenceOverrideHistoryList.innerHTML = latest
+    .map((entry) => {
+      const startText = Number.isFinite(entry.startedAt) ? formatSlackTimestamp(entry.startedAt) : '不明な開始';
+      const endText = Number.isFinite(entry.endedAt) ? formatSlackTimestamp(entry.endedAt) : '継続中';
+      const reason = entry.reason || '一時的な不在';
+      const manualLabel = entry.manualEnd === false ? '自動終了' : entry.manualEnd === true ? '手動終了' : '';
+      return `
+        <li>
+          <div class="history-reason">${escapeHtml(reason)}</div>
+          <div class="history-period">${startText} → ${endText}${manualLabel ? ` (${manualLabel})` : ''}</div>
+        </li>
+      `;
+    })
+    .join('');
 }

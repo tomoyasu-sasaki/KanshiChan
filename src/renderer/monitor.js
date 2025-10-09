@@ -4,6 +4,12 @@
  * - 設定は constants/monitor から取り込み、monitor.js 内でのみ状態を保持する。
  */
 import { DEFAULT_MONITOR_SETTINGS, MONITOR_TIMING_CONSTANTS, MONITOR_UI_CONSTANTS } from '../constants/monitor.js';
+import {
+  ensureAbsenceOverrideBridge,
+  subscribeAbsenceOverride,
+  getAbsenceOverrideState,
+  refreshAbsenceOverrideState,
+} from './services/absence-override.js';
 
 /**
  * 監視システム - 物体検知と状態管理
@@ -26,6 +32,8 @@ import { DEFAULT_MONITOR_SETTINGS, MONITOR_TIMING_CONSTANTS, MONITOR_UI_CONSTANT
 const videoElement = document.getElementById('videoElement');
 const canvasElement = document.getElementById('canvasElement');
 const logContainer = document.getElementById('logContainer');
+const overrideStatusBadge = document.getElementById('overrideStatusBadge');
+const overrideStatusText = document.getElementById('overrideStatusText');
 
 // Canvas描画コンテキスト
 let ctx = null;
@@ -47,6 +55,40 @@ let phoneDetectionStartTime = 0;
 let absenceDetectionStartTime = 0;
 let phoneAlertTriggered = false;
 let absenceAlertTriggered = false;
+
+/**
+ * 不在許可の状態を監視するためのブリッジを初期化する。
+ * - 起動直後はメインプロセスのステートと同期が取れていないため、明示的に再取得を行う。
+ */
+ensureAbsenceOverrideBridge();
+let absenceOverrideState = getAbsenceOverrideState();
+let previousAbsenceOverrideEntry = absenceOverrideState.current;
+updateOverrideBadge(absenceOverrideState);
+refreshAbsenceOverrideState().catch((error) => {
+  console.error('[Monitor] 不在許可状態の取得に失敗:', error);
+});
+
+setInterval(() => {
+  refreshAbsenceOverrideState().catch(() => {});
+  // IPC ブロードキャストが途中で欠落した場合でも 1 分以内に整合を回復させる。
+}, 60 * 1000);
+
+subscribeAbsenceOverride((nextState) => {
+  const wasActive = Boolean(absenceOverrideState?.active);
+  const wasEntry = absenceOverrideState?.current;
+  absenceOverrideState = nextState;
+
+  if (!wasActive && nextState.active) {
+    onAbsenceOverrideActivated(nextState);
+  } else if (wasActive && !nextState.active) {
+    onAbsenceOverrideCleared(wasEntry, nextState);
+  } else if (nextState.active) {
+    onAbsenceOverrideUpdated(nextState);
+  }
+
+  previousAbsenceOverrideEntry = nextState.current || wasEntry || previousAbsenceOverrideEntry;
+  updateOverrideBadge(nextState);
+});
 
 // クリア判定と再通知クールダウン
 let phoneClearCandidateSince = 0;       // スマホ未検知が続いてからの経過測定
@@ -314,6 +356,11 @@ function handlePhoneDetection(detected) {
 
 // 不在検知処理
 function handleAbsenceDetection(personDetected) {
+  if (absenceOverrideState?.active) {
+    resetAbsenceTracking();
+    return;
+  }
+
   const nowTs = Date.now();
 
   if (!personDetected) {
@@ -391,6 +438,168 @@ function handleAbsenceDetection(personDetected) {
   }
 }
 
+/**
+ * 不在検知用の内部タイマーをリセットする。
+ */
+function resetAbsenceTracking() {
+  absenceDetectionTime = 0;
+  absenceDetectionStartTime = 0;
+  absenceAlertTriggered = false;
+  absenceClearCandidateSince = 0;
+  absenceRecoveryDetectedAt = 0;
+  lastAbsenceAlertAt = 0;
+  updateTimers();
+}
+
+/**
+ * 監視画面の PASS バッジ表示を現在の許可状態に合わせて更新する。
+ * @param {Object} state
+ */
+function updateOverrideBadge(state) {
+  if (!overrideStatusBadge || !overrideStatusText) {
+    return;
+  }
+
+  if (state?.active && state.current) {
+    const label = state.current.reason || '一時的な不在';
+    let suffix = '';
+    const remainingMs = Number.isFinite(state.remainingMs)
+      ? state.remainingMs
+      : Number.isFinite(state.current.expiresAt)
+        ? state.current.expiresAt - Date.now()
+        : null;
+    if (Number.isFinite(remainingMs) && remainingMs > 0) {
+      suffix = ` (${formatRemainingDuration(remainingMs)})`;
+    }
+    overrideStatusText.textContent = `${label}${suffix}`;
+    overrideStatusBadge.hidden = false;
+    overrideStatusBadge.style.display = 'flex';
+  } else {
+    overrideStatusBadge.hidden = true;
+    overrideStatusBadge.style.display = 'none';
+    overrideStatusText.textContent = 'PASS';
+  }
+}
+
+function buildAbsenceOverrideMeta(entry) {
+  if (!entry) {
+    return { absenceOverride: true };
+  }
+  return {
+    absenceOverride: true,
+    reason: entry.reason || null,
+    startedAt: entry.startedAt || null,
+    endedAt: entry.endedAt || null,
+    expiresAt: entry.expiresAt || null,
+    manualEnd: entry.manualEnd ?? null,
+    presetId: entry.presetId || null,
+    note: entry.note || null,
+    eventId: entry.eventId || null,
+  };
+}
+
+function getLatestAbsenceOverrideHistoryEntry(state) {
+  const history = state?.history;
+  if (!Array.isArray(history) || history.length === 0) {
+    return null;
+  }
+  return history[history.length - 1];
+}
+
+function formatRemainingDuration(ms) {
+  if (!Number.isFinite(ms) || ms <= 0) {
+    return 'まもなく終了';
+  }
+  const totalSeconds = Math.floor(ms / 1000);
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  if (hours > 0) {
+    return `${hours}時間${minutes}分`;
+  }
+  return `${minutes}分`; 
+}
+
+/**
+ * 不在許可が新規に開始された際の後処理。
+ * - 継続中の不在セッションがあれば抑制ログを記録し、PASS バッジに切り替える。
+ */
+function onAbsenceOverrideActivated(nextState) {
+  const now = Date.now();
+  if (absenceDetectionStartTime !== 0) {
+    const durationSeconds = Math.max(Math.floor((now - absenceDetectionStartTime) / 1000), 0);
+    recordDetectionLogEntry({
+      type: 'absence_override_suppressed',
+      detectedAt: now,
+      durationSeconds: durationSeconds || null,
+      meta: buildAbsenceOverrideMeta(nextState.current),
+    });
+  }
+
+  resetAbsenceTracking();
+
+  const reason = nextState.current?.reason || '一時的な不在許可';
+  addLog(`✅ 不在検知を一時的にPASS: ${reason}`, 'info');
+
+  recordDetectionLogEntry({
+    type: 'absence_override_active',
+    detectedAt: now,
+    durationSeconds: null,
+    meta: buildAbsenceOverrideMeta(nextState.current),
+  });
+}
+
+/**
+ * 不在許可が終了した際の後処理。履歴をもとにログへ残す。
+ */
+function onAbsenceOverrideCleared(previousEntry, nextState) {
+  const now = Date.now();
+  resetAbsenceTracking();
+
+  const latestHistory = getLatestAbsenceOverrideHistoryEntry(nextState) || previousEntry;
+  addLog('ℹ️ 不在許可が解除されました', 'info');
+
+  recordDetectionLogEntry({
+    type: 'absence_override_inactive',
+    detectedAt: now,
+    durationSeconds: null,
+    meta: buildAbsenceOverrideMeta(latestHistory),
+  });
+}
+
+/**
+ * 許可が継続中に延長された場合の処理。
+ * - 延長時のみログを追加し、バッジへ残り時間を反映する。
+ */
+function onAbsenceOverrideUpdated(nextState) {
+  if (!nextState.active || !nextState.current) {
+    return;
+  }
+  const previous = previousAbsenceOverrideEntry;
+  const current = nextState.current;
+  if (!previous) {
+    previousAbsenceOverrideEntry = current;
+    return;
+  }
+
+  const prevExpires = Number.isFinite(previous.expiresAt) ? previous.expiresAt : null;
+  const currentExpires = Number.isFinite(current.expiresAt) ? current.expiresAt : null;
+
+  if (prevExpires !== currentExpires) {
+    const now = Date.now();
+    const remaining = Number.isFinite(nextState.remainingMs) ? nextState.remainingMs : (currentExpires ? currentExpires - now : null);
+    const remainingLabel = remaining != null ? formatRemainingDuration(remaining) : '時間指定なし';
+    addLog(`⏱️ 不在許可が延長されました (残り ${remainingLabel})`, 'info');
+    recordDetectionLogEntry({
+      type: 'absence_override_extended',
+      detectedAt: now,
+      durationSeconds: null,
+      meta: buildAbsenceOverrideMeta(current),
+    });
+  }
+
+  previousAbsenceOverrideEntry = current;
+}
+
 // タイマーUI更新
 function updateTimers() {
   if (typeof window.updateTimerDisplay === 'function') {
@@ -443,6 +652,9 @@ async function triggerPhoneAlert() {
 
 // 不在検知アラート
 async function triggerAbsenceAlert() {
+  if (absenceOverrideState?.active) {
+    return;
+  }
   absenceAlertTriggered = true;
   addLog('⚠️ 不在が検知されました！', 'alert');
   recordDetectionLogEntry({

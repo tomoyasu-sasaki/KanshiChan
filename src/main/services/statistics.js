@@ -216,6 +216,120 @@ async function getTypingStats(options = {}) {
   };
 }
 
+function normalizeManualFlag(value) {
+  if (value === null || value === undefined) {
+    return null;
+  }
+  return value === 1;
+}
+
+function calculateOverlapSeconds(windowStart, windowEnd, rangeStart, rangeEnd) {
+  const start = Math.max(windowStart, rangeStart);
+  const end = Math.min(windowEnd, rangeEnd);
+  if (!Number.isFinite(start) || !Number.isFinite(end)) {
+    return 0;
+  }
+  if (end <= start) {
+    return 0;
+  }
+  return Math.floor((end - start) / 1000);
+}
+
+/**
+ * absence_override_events テーブルを期間で抽出する。
+ * - 監視ダッシュボードでは直近 200 件以内に制限し、期間外は含めない。
+ * @param {{start?:number,end?:number,limit?:number}} options
+ */
+async function getAbsenceOverrideEvents(options = {}) {
+  const now = Date.now();
+  const defaultStart = now - 7 * 24 * 60 * 60 * 1000;
+  const start = Number.isFinite(options.start) ? options.start : defaultStart;
+  const end = Number.isFinite(options.end) ? options.end : now;
+  const limit = Number.isInteger(options.limit) ? Math.max(Math.min(options.limit, 200), 1) : 200;
+
+  const rows = await all(
+    `SELECT id,
+            started_at,
+            ended_at,
+            expires_at,
+            reason,
+            preset_id,
+            duration_minutes,
+            manual_end,
+            note,
+            created_by,
+            created_at
+       FROM absence_override_events
+       WHERE started_at <= ?
+         AND COALESCE(ended_at, expires_at, ?) >= ?
+       ORDER BY started_at DESC
+       LIMIT ?`,
+    [end, end, start, limit]
+  );
+
+  return rows.map((row) => ({
+    id: row.id,
+    startedAt: row.started_at,
+    endedAt: row.ended_at,
+    expiresAt: row.expires_at,
+    reason: row.reason,
+    presetId: row.preset_id,
+    durationMinutes: row.duration_minutes,
+    manualEnd: normalizeManualFlag(row.manual_end),
+    note: row.note,
+    createdBy: row.created_by,
+    createdAt: row.created_at,
+  }));
+}
+
+/**
+ * 不在許可と不許可の重なり時間を算出する。
+ * - オーバーラップする秒数のみ加算し、未終了の許可は activeCount でレポートする。
+ * @param {{start?:number,end?:number,limit?:number}} options
+ */
+async function getAbsenceOverrideSummary(options = {}) {
+  const now = Date.now();
+  const defaultStart = now - 7 * 24 * 60 * 60 * 1000;
+  const start = Number.isFinite(options.start) ? options.start : defaultStart;
+  const end = Number.isFinite(options.end) ? options.end : now;
+
+  const events = await getAbsenceOverrideEvents({ start, end, limit: options.limit });
+
+  let totalSeconds = 0;
+  let manualSeconds = 0;
+  let autoSeconds = 0;
+  let activeCount = 0;
+
+  events.forEach((event) => {
+    const eventEnd = Number.isFinite(event.endedAt)
+      ? event.endedAt
+      : Number.isFinite(event.expiresAt)
+        ? event.expiresAt
+        : end;
+    const overlap = calculateOverlapSeconds(event.startedAt, eventEnd, start, end);
+    if (overlap > 0) {
+      totalSeconds += overlap;
+      if (event.manualEnd === false) {
+        autoSeconds += overlap;
+      } else if (event.manualEnd === true) {
+        manualSeconds += overlap;
+      }
+    }
+    if (!Number.isFinite(event.endedAt)) {
+      activeCount += 1;
+    }
+  });
+
+  return {
+    range: { start, end },
+    events,
+    totalSeconds,
+    manualSeconds,
+    autoSeconds,
+    activeCount,
+  };
+}
+
 async function getSystemEvents(options = {}) {
   const now = Date.now();
   const defaultStart = now - 24 * 60 * 60 * 1000;
@@ -257,4 +371,6 @@ module.exports = {
   getAppUsageStats,
   getTypingStats,
   getSystemEvents,
+  getAbsenceOverrideEvents,
+  getAbsenceOverrideSummary,
 };
