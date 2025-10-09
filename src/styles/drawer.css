@@ -358,3 +358,86 @@
     padding: var(--space-3);
   }
 }
+
+/* ==============================================
+   ダイアログ表示スタイル
+   ============================================== */
+.dialog {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  width: min(640px, calc(100vw - 48px));
+  height: auto;
+  max-height: 90vh;
+  transform: translate(-50%, -45%) scale(0.95);
+  opacity: 0;
+  background: var(--bg-dark-1);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.45);
+  transition: transform var(--transition-smooth), opacity var(--transition-smooth);
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.dialog.open {
+  transform: translate(-50%, -50%) scale(1);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.dialog-content {
+  height: auto;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(135deg, var(--bg-dark-1) 0%, var(--bg-dark-2) 100%);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.dialog-header {
+  background: var(--primary-gradient);
+  color: white;
+  padding: var(--space-5);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+  box-shadow: var(--shadow-sm);
+}
+
+.dialog-header h2 {
+  margin: 0;
+  font-size: var(--text-lg);
+  font-weight: var(--font-bold);
+  color: white;
+  background: none;
+  -webkit-text-fill-color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.dialog-body {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: var(--space-6);
+}
+
+.dialog-body h3 {
+  color: var(--text-primary);
+  font-size: var(--text-lg);
+  font-weight: var(--font-bold);
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-3);
+  border-bottom: 2px solid var(--border-light);
+}
+
+@media (max-width: 720px) {
+  .dialog {
+    width: calc(100vw - 32px);
+    max-height: 92vh;
+  }
+}

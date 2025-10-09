@@ -20,6 +20,7 @@ import { DEFAULT_MONITOR_SETTINGS } from '../constants/monitor.js';
  */
 
 let currentDrawer = null;
+let currentDialog = null;
 let autoStarted = false;
 
 // 初期化
@@ -47,7 +48,7 @@ function initializeUI() {
   const exitBtn = document.getElementById('exitBtn');
 
   // イベントリスナー設定
-  scheduleBtn.addEventListener('click', () => toggleDrawer('scheduleDrawer'));
+  scheduleBtn.addEventListener('click', () => toggleDialog('scheduleDialog'));
   settingsBtn.addEventListener('click', () => toggleDrawer('settingsDrawer'));
   logsBtn.addEventListener('click', () => toggleDrawer('logsDrawer'));
   chatBtn.addEventListener('click', () => toggleDrawer('chatDrawer'));
@@ -57,7 +58,12 @@ function initializeUI() {
   document.querySelectorAll('.close-btn').forEach(btn => {
     btn.addEventListener('click', (e) => {
       const drawerId = e.target.getAttribute('data-drawer');
-      closeDrawer(drawerId);
+      const dialogId = e.target.getAttribute('data-dialog');
+      if (drawerId) {
+        closeDrawer(drawerId);
+      } else if (dialogId) {
+        closeDialog(dialogId);
+      }
     });
   });
 
@@ -66,6 +72,9 @@ function initializeUI() {
   overlay.addEventListener('click', () => {
     if (currentDrawer) {
       closeDrawer(currentDrawer);
+    }
+    if (currentDialog) {
+      closeDialog(currentDialog);
     }
   });
 }
@@ -109,6 +118,45 @@ function closeDrawer(drawerId) {
   }
   overlay.classList.remove('show');
   currentDrawer = null;
+}
+
+// ダイアログ開閉
+function toggleDialog(dialogId) {
+  const dialog = document.getElementById(dialogId);
+  const overlay = document.querySelector('.drawer-overlay');
+
+  if (currentDrawer) {
+    // ドロワーが開いている場合は閉じる
+    closeDrawer(currentDrawer);
+  }
+
+  if (currentDialog && currentDialog !== dialogId) {
+    // 別のダイアログが開いている場合は閉じる
+    closeDialog(currentDialog);
+  }
+
+  if (dialog.classList.contains('open')) {
+    closeDialog(dialogId);
+  } else {
+    dialog.classList.add('open');
+    overlay.classList.add('show');
+    currentDialog = dialogId;
+  }
+}
+
+function closeDialog(dialogId) {
+  const dialog = document.getElementById(dialogId);
+  const overlay = document.querySelector('.drawer-overlay');
+
+  if (dialog) {
+    dialog.classList.remove('open');
+  }
+
+  // ドロワーもダイアログも開いていない場合のみオーバーレイを閉じる
+  if (!currentDrawer) {
+    overlay.classList.remove('show');
+  }
+  currentDialog = null;
 }
 
 /**
