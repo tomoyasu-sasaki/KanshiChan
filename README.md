@@ -267,3 +267,14 @@ kanshichan/
 #### スケジュールが通知されない
 - ブラウザ/Electronの通知権限を確認してください
 - スケジュール登録後、`schedules-updated` イベントが発火しているかコンソールログで確認
+
+## License & Third-Party Notices
+
+| コンポーネント | ライセンス / 利用規約 | 備考 |
+| :-- | :-- | :-- |
+| VOICEVOX エンジン | [VOICEVOX Engine License (LGPLv3)](https://github.com/VOICEVOX/voicevox_engine/blob/master/LICENSE)、[キャラクター利用規約](https://voicevox.hiroshiba.jp/terms) | 読み上げ機能に利用。キャラクター固有の規約遵守が必要です。 |
+| Whisper (whisper.cpp) | [MIT License](https://github.com/openai/whisper/blob/main/LICENSE) | 音声文字起こしに利用。 |
+| ONNX Runtime / YOLOv11 モデル | [ONNX Runtime License](https://github.com/microsoft/onnxruntime/blob/main/LICENSE) | 物体検知で使用。 |
+| その他 npm 依存パッケージ | `package.json` / `package-lock.json` を参照 | それぞれのライセンスに従います。 |
+
+本プロジェクトは [MIT License](./LICENSE) のもとで配布されています。
