@@ -3,7 +3,7 @@
  * メインプロセス側での BrowserWindow 構築や Electron CLI フラグ指定に利用。
  */
 
-export const APP_TITLE = '📹 Kanchichan';
+export const APP_TITLE = '📹 Kanshichan';
 
 // BrowserWindow の基本構成。パス関連は呼び出し側で解決する。
 export const MAIN_WINDOW_CONFIG = Object.freeze({

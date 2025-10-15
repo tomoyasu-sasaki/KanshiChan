@@ -52,7 +52,7 @@ Renderer: 各ドロワー (schedule / settings / chat)
 
 ## 履歴と永続化
 - 音声入力履歴 (`audioInputStore`) はメモリ保持。開発者向けには `audio-input-manager` から購読可能（デフォルト UI では利用していません）。
-- チャット履歴は `localStorage['kanchichan.chat.history']` に保存し、再起動後も復元。
+- チャット履歴は `localStorage['kanshichan.chat.history']` に保存し、再起動後も復元。
 - 設定音声操作は適用後に `handleSaveSettings()` を呼び出し、既存の保存フローを再利用。
 
 ## エラーハンドリング

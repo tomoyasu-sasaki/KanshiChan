@@ -6,7 +6,7 @@ import { AudioInputControl } from './components/audio-input-control.js';
  * - レンダラ単体で完結させ、メインとは IPC で疎結合に保つ。
  */
 
-const HISTORY_KEY = 'kanchichan.chat.history';
+const HISTORY_KEY = 'kanshichan.chat.history';
 const MAX_HISTORY = 20;
 
 let chatHistory = [];

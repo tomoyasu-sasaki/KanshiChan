@@ -47,7 +47,7 @@ export const AUDIO_PROMPT_PROFILES = Object.freeze({
       mode: 'conversational',
       schemaName: null,
       systemPrompt:
-        'あなたは Kanchichan のフレンドリーな会話パートナーです。' +
+        'あなたは Kanshichan のフレンドリーな会話パートナーです。' +
         '敬語ではなくカジュアルな日本語で、短く親しみやすい返答を返してください。',
     },
     tts: {

@@ -1,7 +1,7 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-Kanchichan is an Electron desktop app. `main.js` boots the main process, registers IPC, and loads YOLO assets in `models/`. Supporting code sits under `src/main/` for IPC and services and `src/renderer/` for monitoring, schedule, and settings UIs. Shared constants live in `src/constants/`; styles and assets in `src/styles/` and `assets/`; docs in `docs/`. Place CLI helpers such as `whisper-cli` in `bin/`.
+Kanshichan is an Electron desktop app. `main.js` boots the main process, registers IPC, and loads YOLO assets in `models/`. Supporting code sits under `src/main/` for IPC and services and `src/renderer/` for monitoring, schedule, and settings UIs. Shared constants live in `src/constants/`; styles and assets in `src/styles/` and `assets/`; docs in `docs/`. Place CLI helpers such as `whisper-cli` in `bin/`.
 
 ## Build, Test, and Development Commands
 - `npm install`: install Electron plus native deps (`canvas`, `onnxruntime-node`, etc.).

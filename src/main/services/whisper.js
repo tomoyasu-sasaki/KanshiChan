@@ -80,7 +80,7 @@ async function resolveWhisperCliPath(cliCandidate = DEFAULT_WHISPER_CLI_PATH) {
 async function ensureTempWorkspace() {
   if (!tempWorkspacePromise) {
     tempWorkspacePromise = (async () => {
-      const workspace = path.join(os.tmpdir(), 'kanchichan-whisper');
+      const workspace = path.join(os.tmpdir(), 'kanshichan-whisper');
       await fsp.mkdir(workspace, { recursive: true });
       return workspace;
     })();

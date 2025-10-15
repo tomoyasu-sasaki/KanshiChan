@@ -1,4 +1,4 @@
-# Kanchichan
+# Kanshichan
 
 Web カメラ映像のリアルタイム監視と日次スケジュール管理を組み合わせた Electron デスクトップアプリです。YOLOv11 (ONNX Runtime) で人物 / スマホを検知し、時間経過によってアラートや VOICEVOX 読み上げを発火します。
 
@@ -101,11 +101,11 @@ cmake -B build -DCMAKE_BUILD_TYPE=Release -DWHISPER_BUILD_EXAMPLES=ON
 cmake --build build --config Release --target whisper-cli -j 4
 
 # 例: プロジェクト直下の bin/ に配置
-mkdir -p /path/to/kanchichan/bin
-cp build/bin/whisper-cli /path/to/kanchichan/bin/
+mkdir -p /path/to/kanshichan/bin
+cp build/bin/whisper-cli /path/to/kanshichan/bin/
 
 # whisper-cli へのパスを環境変数で指定（PATH に追加済みなら不要）
-echo 'export WHISPER_CLI_PATH="$HOME/Projects/Public/kanchichan/bin/whisper-cli"' >> ~/.zshrc
+echo 'export WHISPER_CLI_PATH="$HOME/Projects/Public/kanshichan/bin/whisper-cli"' >> ~/.zshrc
 ```
 
 #### 4. マイク権限の許可
@@ -114,7 +114,7 @@ echo 'export WHISPER_CLI_PATH="$HOME/Projects/Public/kanchichan/bin/whisper-cli"
 
 ## ディレクトリ構成
 ```
-kanchichan/
+kanshichan/
 ├─ main.js                        # 電源管理 / IPC / YOLO 初期化を司るメインプロセスエントリ
 ├─ models/                        # YOLO ONNX モデル配置ディレクトリ
 ├─ src/
@@ -223,8 +223,8 @@ kanchichan/
 - 送信結果は `slack_report_logs` テーブルに保存され、ダッシュボードの Slack 履歴リストから確認できます。
 
 ### データベース (SQLite)
-- 検知ログと前面アプリ滞在時間は SQLite データベース `kanchichan.db` に保存されます
-- ファイルの場所（macOS の例）: `~/Library/Application Support/kanchichan/kanchichan.db`
+- 検知ログと前面アプリ滞在時間は SQLite データベース `kanshichan.db` に保存されます
+- ファイルの場所（macOS の例）: `~/Library/Application Support/kanshichan/kanshichan.db`
 - バックアップしたい場合はアプリ終了後に上記ファイルをコピーしてください
 - データをリセットしたい場合はファイルを削除すると再作成されます（既存データは失われます）
 

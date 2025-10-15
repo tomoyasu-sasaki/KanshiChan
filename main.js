@@ -1,5 +1,5 @@
 /**
- * Kanchichan メインプロセスエントリ。
+ * Kanshichan メインプロセスエントリ。
  * - BrowserWindow 構築や IPC 経由のサービス登録を委譲する。
  * - ONNX Runtime (onnxruntime-node) を介した YOLOv11 推論を事前初期化する。
  * - 電力節約モードの抑止など Electron 特有の OS 依存処理をまとめる。

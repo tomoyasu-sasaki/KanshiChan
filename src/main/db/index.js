@@ -1,6 +1,6 @@
 /**
  * SQLite データベース初期化・アクセスユーティリティ。
- * - Electron の userData 配下に `kanchichan.db` を生成し、スキーマを維持する。
+ * - Electron の userData 配下に `kanshichan.db` を生成し、スキーマを維持する。
  * - 検知ログと前面アプリ滞在ログを扱うため、テーブル作成と簡易 query ヘルパーを提供する。
  * - 呼び出し元は必ず `initializeDatabase(app)` を通じて接続を確立すること。
  */
@@ -11,6 +11,56 @@ const sqlite3 = require('sqlite3').verbose();
 
 let dbInstance = null;
 let dbPath = null;
+
+function migrateLegacyDatabaseIfNeeded(app, targetPath) {
+  if (fs.existsSync(targetPath)) {
+    return;
+  }
+
+  const userDataDir = app.getPath('userData');
+  const legacyDir = path.join(path.dirname(userDataDir), 'kanchichan');
+  const candidates = new Set([
+    path.join(userDataDir, 'kanchichan.db'),
+    path.join(legacyDir, 'kanchichan.db'),
+    path.join(legacyDir, 'kanshichan.db'),
+  ]);
+
+  for (const candidate of candidates) {
+    if (!candidate || !fs.existsSync(candidate)) {
+      continue;
+    }
+    try {
+      const targetDir = path.dirname(targetPath);
+      if (!fs.existsSync(targetDir)) {
+        fs.mkdirSync(targetDir, { recursive: true });
+      }
+      let migrated = false;
+      try {
+        fs.renameSync(candidate, targetPath);
+        migrated = true;
+      } catch (renameErr) {
+        if (renameErr?.code === 'EXDEV') {
+          fs.copyFileSync(candidate, targetPath);
+          migrated = true;
+          try {
+            fs.unlinkSync(candidate);
+          } catch (unlinkErr) {
+            console.warn('[DB] legacy database cleanup skipped:', unlinkErr);
+          }
+        } else {
+          throw renameErr;
+        }
+      }
+      if (!migrated) {
+        continue;
+      }
+      console.info(`[DB] migrated legacy database from ${candidate} to ${targetPath}`);
+      return;
+    } catch (migrationErr) {
+      console.warn('[DB] legacy database migration failed:', migrationErr);
+    }
+  }
+}
 
 /**
  * アプリのユーザーデータディレクトリに DB ファイルを作成する。
@@ -23,7 +73,7 @@ function resolveDatabasePath(app) {
   }
 
   const userDataDir = app.getPath('userData');
-  dbPath = path.join(userDataDir, 'kanchichan.db');
+  dbPath = path.join(userDataDir, 'kanshichan.db');
   return dbPath;
 }
 
@@ -36,10 +86,11 @@ function resolveDatabasePath(app) {
  */
 function initializeDatabase(app) {
   if (dbInstance) {
-    return Promise.resolve(dbInstance);
+  return Promise.resolve(dbInstance);
   }
 
   const targetPath = resolveDatabasePath(app);
+  migrateLegacyDatabaseIfNeeded(app, targetPath);
 
   // ユーザーデータディレクトリが無い場合は作成
   const dir = path.dirname(targetPath);

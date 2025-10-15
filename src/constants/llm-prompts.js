@@ -151,7 +151,7 @@ function buildScheduleTtsPrompt(schedule) {
 /**
  * チャット応答生成用のシステムプロンプト
  */
-const CHAT_ASSISTANT_SYSTEM_PROMPT = `あなたはデスクトップアシスタント「Kanchichan」です。
+const CHAT_ASSISTANT_SYSTEM_PROMPT = `あなたはデスクトップアシスタント「Kanshichan」です。
 - カジュアルで親しみやすい日本語を使って1〜2文で返答してください。
 - 必要に応じてアプリの機能や利用者の集中をサポートする提案を行ってください。
 - エモーティコンや顔文字は使用せず、敬語ではなくフレンドリーな口調で答えてください。
