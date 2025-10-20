@@ -1,37 +1,60 @@
 <!DOCTYPE html>
 <html lang="ja">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="監視ちゃん - YOLOv11とWhisperによるAI監視とスケジュール管理を統合したElectronデスクトップアプリケーション。リアルタイム検知、音声入力、Slack連携機能を搭載。">
-  <meta name="keywords" content="監視ちゃん,Kanshichan,Electron,YOLOv11,Whisper,VOICEVOX,監視アプリ,スケジュール管理,AI,物体検知,音声認識">
-  <meta name="author" content="Kanshichan Project">
-
-  <!-- Open Graph Protocol -->
-  <meta property="og:title" content="監視ちゃん - AI監視＆スケジュール管理アプリ">
-  <meta property="og:description" content="YOLOv11とWhisperによるAI監視とスケジュール管理を統合したElectronデスクトップアプリケーション">
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://tmys-sasaki.github.io/kanshichan/">
-  <meta property="og:image" content="https://tmys-sasaki.github.io/kanshichan/assets/images/screenshots/home_monitor.jpg">
-
-  <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="監視ちゃん - AI監視＆スケジュール管理アプリ">
-  <meta name="twitter:description" content="YOLOv11とWhisperによるAI監視とスケジュール管理を統合したElectronアプリ">
-  <meta name="twitter:image" content="https://tmys-sasaki.github.io/kanshichan/assets/images/screenshots/home_monitor.jpg">
-
-  <title>監視ちゃん - AI監視＆スケジュール管理アプリ</title>
-
-  <!-- Favicon -->
-  <link rel="icon" type="image/png" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👁️</text></svg>">
-
-  <!-- Stylesheets -->
-  <link rel="stylesheet" href="assets/css/style.css">
-  <link rel="stylesheet" href="assets/css/responsive.css">
-
-  <!-- Anime.js -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
-</head>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>監視ちゃん - AI監視＆スケジュール管理アプリ</title>
+  
+    <!-- Canonical -->
+    <link rel="canonical" href="https://tomoyasu-sasaki.github.io/KanshiChan/">
+  
+    <!-- Description -->
+    <meta name="description" content="監視ちゃんは、YOLOv11とWhisperでAI監視・音声入力・スケジュール管理を統合したElectronデスクトップアプリ。リアルタイム検知やSlack連携に対応。">
+  
+    <!-- Open Graph -->
+    <meta property="og:title" content="監視ちゃん - AI監視＆スケジュール管理アプリ">
+    <meta property="og:description" content="YOLOv11とWhisperでAI監視・音声入力・スケジュール管理を統合。リアルタイム検知・Slack連携対応。">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://tomoyasu-sasaki.github.io/KanshiChan/">
+    <meta property="og:image" content="https://tomoyasu-sasaki.github.io/KanshiChan/assets/images/logo.jpeg">
+    <meta property="og:site_name" content="監視ちゃん">
+    <meta property="og:locale" content="ja_JP">
+  
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="監視ちゃん - AI監視＆スケジュール管理アプリ">
+    <meta name="twitter:description" content="YOLOv11とWhisperを活用したAI監視＆スケジュール管理アプリ。">
+    <meta name="twitter:image" content="https://tomoyasu-sasaki.github.io/KanshiChan/assets/images/logo.jpeg">
+    <meta name="twitter:image:alt" content="監視ちゃんのホーム画面とAI監視ダッシュボードのスクリーンショット">
+    <!-- <meta name="twitter:site" content="@your_account"> -->
+  
+    <!-- Favicon / Icons -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👁️</text></svg>">
+    <!-- <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png"> -->
+  
+    <!-- Styles -->
+    <link rel="stylesheet" href="assets/css/style.css">
+    <link rel="stylesheet" href="assets/css/responsive.css">
+  
+    <!-- Structured Data: SoftwareApplication -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "監視ちゃん",
+      "applicationCategory": "UtilityApplication",
+      "operatingSystem": "macOS, Windows",
+      "description": "YOLOv11とWhisperによるAI監視とスケジュール管理を統合したElectronアプリ。",
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "JPY" },
+      "url": "https://tomoyasu-sasaki.github.io/KanshiChan/",
+      "image": "https://tomoyasu-sasaki.github.io/KanshiChan/assets/images/logo.jpeg"
+    }
+    </script>
+  
+    <!-- JS（描画後に実行） -->
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+  </head>
+  
 <body>
 
   <!-- ナビゲーション -->
@@ -50,7 +73,7 @@
         <li><a href="#gallery">ギャラリー</a></li>
         <li><a href="#setup">セットアップ</a></li>
         <li><a href="#tech">技術スタック</a></li>
-        <li><a href="https://github.com/tmys-sasaki/kanshichan" target="_blank" class="btn btn-primary">GitHub</a></li>
+        <li><a href="https://github.com/tomoyasu-sasaki/KanshiChan" target="_blank" class="btn btn-primary">GitHub</a></li>
       </ul>
     </div>
   </nav>
@@ -63,7 +86,7 @@
         <p class="hero-subtitle">YOLOv11とWhisperによる<br>AI監視＆スケジュール管理アプリ</p>
 
         <div class="hero-buttons">
-          <a href="https://github.com/tmys-sasaki/kanshichan" target="_blank" class="btn btn-primary">
+          <a href="https://github.com/tomoyasu-sasaki/KanshiChan" target="_blank" class="btn btn-primary">
             GitHubで見る
           </a>
           <a href="#setup" class="btn btn-secondary">
@@ -71,7 +94,7 @@
           </a>
         </div>
 
-        <img src="assets/images/screenshots/home_monitor.jpg" alt="監視ちゃん メイン画面" class="hero-image" loading="lazy">
+        <img src="assets/images/screenshots/home_monitor.jpeg" alt="監視ちゃん メイン画面" class="hero-image" loading="lazy">
       </div>
     </div>
   </section>
@@ -96,7 +119,7 @@
             </div>
           </div>
           <div class="feature-media">
-            <img src="assets/images/screenshots/home_monitor.jpg" alt="リアルタイム監視画面" class="feature-image" loading="lazy">
+            <img src="assets/images/screenshots/home_monitor.jpeg" alt="リアルタイム監視画面" class="feature-image" loading="lazy">
           </div>
         </div>
 
@@ -110,7 +133,7 @@
             </div>
           </div>
           <div class="feature-media">
-            <img src="assets/images/screenshots/audio-input-01.jpg" alt="音声入力画面" class="feature-image" loading="lazy">
+            <img src="assets/images/screenshots/audio-input-01.jpeg" alt="音声入力画面" class="feature-image" loading="lazy">
           </div>
         </div>
 
@@ -124,7 +147,7 @@
             </div>
           </div>
           <div class="feature-media">
-            <img src="assets/images/screenshots/settings-01.jpg" alt="不在許可設定画面" class="feature-image" loading="lazy">
+            <img src="assets/images/screenshots/settings-01.jpeg" alt="不在許可設定画面" class="feature-image" loading="lazy">
           </div>
         </div>
 
@@ -152,7 +175,7 @@
             </div>
           </div>
           <div class="feature-media">
-            <img src="assets/images/screenshots/settings-04.jpg" alt="タイピング監視設定" class="feature-image" loading="lazy">
+            <img src="assets/images/screenshots/settings-04.jpeg" alt="タイピング監視設定" class="feature-image" loading="lazy">
           </div>
         </div>
 
@@ -180,7 +203,7 @@
             </div>
           </div>
           <div class="feature-media">
-            <img src="assets/images/screenshots/audio-input-04.jpg" alt="音声チャット画面" class="feature-image" loading="lazy">
+            <img src="assets/images/screenshots/audio-input-04.jpeg" alt="音声チャット画面" class="feature-image" loading="lazy">
           </div>
         </div>
 
@@ -211,39 +234,39 @@
 
         <!-- 監視画面 -->
         <div class="gallery-item fade-in" data-category="monitor">
-          <img src="assets/images/screenshots/home_monitor.jpg" alt="メイン監視画面" loading="lazy">
+          <img src="assets/images/screenshots/home_monitor.jpeg" alt="メイン監視画面" loading="lazy">
           <div class="gallery-item-caption">メイン監視画面</div>
         </div>
 
         <!-- スケジュール -->
         <div class="gallery-item fade-in" data-category="schedule">
-          <img src="assets/images/screenshots/schedule-01.jpg" alt="スケジュール一覧" loading="lazy">
+          <img src="assets/images/screenshots/schedule-01.jpeg" alt="スケジュール一覧" loading="lazy">
           <div class="gallery-item-caption">スケジュール一覧</div>
         </div>
 
         <div class="gallery-item fade-in" data-category="schedule">
-          <img src="assets/images/screenshots/schedule-02.jpg" alt="スケジュール登録" loading="lazy">
+          <img src="assets/images/screenshots/schedule-02.jpeg" alt="スケジュール登録" loading="lazy">
           <div class="gallery-item-caption">スケジュール登録</div>
         </div>
 
         <!-- 設定 -->
         <div class="gallery-item fade-in" data-category="settings">
-          <img src="assets/images/screenshots/settings-01.jpg" alt="基本設定" loading="lazy">
+          <img src="assets/images/screenshots/settings-01.jpeg" alt="基本設定" loading="lazy">
           <div class="gallery-item-caption">基本設定</div>
         </div>
 
         <div class="gallery-item fade-in" data-category="settings">
-          <img src="assets/images/screenshots/settings-02.jpg" alt="VOICEVOX設定" loading="lazy">
+          <img src="assets/images/screenshots/settings-02.jpeg" alt="VOICEVOX設定" loading="lazy">
           <div class="gallery-item-caption">VOICEVOX設定</div>
         </div>
 
         <div class="gallery-item fade-in" data-category="settings">
-          <img src="assets/images/screenshots/settings-03.jpg" alt="Slack設定" loading="lazy">
+          <img src="assets/images/screenshots/settings-03.jpeg" alt="Slack設定" loading="lazy">
           <div class="gallery-item-caption">Slack設定</div>
         </div>
 
         <div class="gallery-item fade-in" data-category="settings">
-          <img src="assets/images/screenshots/settings-04.jpg" alt="タイピング監視設定" loading="lazy">
+          <img src="assets/images/screenshots/settings-04.jpeg" alt="タイピング監視設定" loading="lazy">
           <div class="gallery-item-caption">タイピング監視設定</div>
         </div>
 
@@ -270,28 +293,28 @@
 
         <!-- 音声入力 -->
         <div class="gallery-item fade-in" data-category="audio">
-          <img src="assets/images/screenshots/audio-input-01.jpg" alt="音声入力UI" loading="lazy">
+          <img src="assets/images/screenshots/audio-input-01.jpeg" alt="音声入力UI" loading="lazy">
           <div class="gallery-item-caption">音声入力UI</div>
         </div>
 
         <div class="gallery-item fade-in" data-category="audio">
-          <img src="assets/images/screenshots/audio-input-02.jpg" alt="音声録音中" loading="lazy">
+          <img src="assets/images/screenshots/audio-input-02.jpeg" alt="音声録音中" loading="lazy">
           <div class="gallery-item-caption">音声録音中</div>
         </div>
 
         <div class="gallery-item fade-in" data-category="audio">
-          <img src="assets/images/screenshots/audio-input-03.jpg" alt="スケジュール抽出" loading="lazy">
+          <img src="assets/images/screenshots/audio-input-03.jpeg" alt="スケジュール抽出" loading="lazy">
           <div class="gallery-item-caption">スケジュール抽出</div>
         </div>
 
         <div class="gallery-item fade-in" data-category="audio">
-          <img src="assets/images/screenshots/audio-input-04.jpg" alt="抽出結果" loading="lazy">
+          <img src="assets/images/screenshots/audio-input-04.jpeg" alt="抽出結果" loading="lazy">
           <div class="gallery-item-caption">抽出結果</div>
         </div>
 
         <!-- ログ -->
         <div class="gallery-item fade-in" data-category="monitor">
-          <img src="assets/images/screenshots/logs.jpg" alt="ログビュー" loading="lazy">
+          <img src="assets/images/screenshots/logs.jpeg" alt="ログビュー" loading="lazy">
           <div class="gallery-item-caption">ログビュー</div>
         </div>
 
@@ -333,7 +356,7 @@
         <div class="setup-step fade-in">
           <h3><span class="step-number">2</span> 基本セットアップ</h3>
           <p>リポジトリをクローンして依存関係をインストールします:</p>
-          <code>git clone https://github.com/tmys-sasaki/kanshichan.git
+          <code>git clone https://github.com/tomoyasu-sasaki/KanshiChan.git
 cd kanshichan
 npm install</code>
           <p>YOLOモデルを <code>models/yolo11n.onnx</code> として配置してください。</p>
@@ -526,16 +549,16 @@ npx electron-rebuild -f -w uiohook-napi</code>
         <div class="footer-section">
           <h3>リンク</h3>
           <ul class="footer-links">
-            <li><a href="https://github.com/tmys-sasaki/kanshichan" target="_blank">GitHub リポジトリ</a></li>
-            <li><a href="https://github.com/tmys-sasaki/kanshichan/issues" target="_blank">Issue 報告</a></li>
-            <li><a href="https://github.com/tmys-sasaki/kanshichan/blob/develop/README.md" target="_blank">ドキュメント</a></li>
+            <li><a href="https://github.com/tomoyasu-sasaki/KanshiChan" target="_blank">GitHub リポジトリ</a></li>
+            <li><a href="https://github.com/tomoyasu-sasaki/KanshiChan/issues" target="_blank">Issue 報告</a></li>
+            <li><a href="https://github.com/tomoyasu-sasaki/KanshiChan/blob/develop/README.md" target="_blank">ドキュメント</a></li>
           </ul>
         </div>
 
         <!-- ライセンス -->
         <div class="footer-section">
           <h3>ライセンス</h3>
-          <p>本プロジェクトは <a href="https://github.com/tmys-sasaki/kanshichan/blob/develop/LICENSE" target="_blank">MIT License</a> のもとで配布されています。</p>
+          <p>本プロジェクトは <a href="https://github.com/tomoyasu-sasaki/KanshiChan/blob/develop/LICENSE" target="_blank">MIT License</a> のもとで配布されています。</p>
           <p><strong>第三者ライセンス:</strong></p>
           <ul class="footer-links">
             <li><a href="https://voicevox.hiroshiba.jp/terms" target="_blank">VOICEVOX 利用規約</a></li>

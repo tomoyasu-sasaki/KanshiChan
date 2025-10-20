@@ -1,15 +1,14 @@
-# robots.txt for Kanshichan Website
+# robots.txt for KanshiChan Website
 
 User-agent: *
 Allow: /
 
 # Sitemap
-Sitemap: https://tmys-sasaki.github.io/kanshichan/sitemap.xml
+Sitemap: https://tomoyasu-sasaki.github.io/KanshiChan/sitemap.xml
 
 # Disallow assets directory from being indexed
 User-agent: *
 Disallow: /assets/
 
 # Allow important files
-Allow: /assets/images/screenshots/*.jpg
 Allow: /assets/images/screenshots/*.jpeg
