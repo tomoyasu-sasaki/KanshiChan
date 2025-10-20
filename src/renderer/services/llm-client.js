@@ -9,7 +9,7 @@ import { getAudioPromptProfile } from '../../constants/audioProfiles.js';
  * プロファイル ID に応じて LLM を実行し、UI が扱いやすい形式へ正規化する。
  * @param {string} profileId
  * @param {string} input ユーザー文字列
- * @param {{context?:object, legacyRawResult?:object}} options
+ * @param {{context?:object}} options
  * @returns {Promise<object>}
  */
 export async function runLlm(profileId, input, options = {}) {
@@ -23,11 +23,6 @@ export async function runLlm(profileId, input, options = {}) {
   if (window?.electronAPI?.audioInfer) {
     const response = await window.electronAPI.audioInfer(requestPayload);
     return normalizeLlmResponse(profile, response);
-  }
-
-  // レガシーフォールバック: スケジュールのみ対応
-  if (profileId === 'schedule' && options.legacyRawResult) {
-    return normalizeLlmResponse(profile, options.legacyRawResult);
   }
 
   throw new Error('LLM API が利用できません。アプリの更新が必要です。');

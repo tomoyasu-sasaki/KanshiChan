@@ -6,9 +6,7 @@
 const { BrowserWindow } = require('electron');
 const { synthesizeWithVoiceVox } = require('../services/voicevox');
 const { getActiveWindowInfo } = require('../services/active-window');
-const { processVoiceInput, checkVoiceInputAvailability } = require('../services/voice-input');
 const audioService = require('../services/audio');
-const { generateTtsMessageForSchedule } = require('../services/llm');
 const { run } = require('../db');
 const {
   getDetectionStats,
@@ -204,50 +202,6 @@ function registerIpcHandlers({
       return await audioService.checkAvailability();
     } catch (error) {
       console.error('[IPC] audio-check-availability エラー:', error);
-      return { success: false, error: error.message };
-    }
-  });
-
-  ipcMain.handle('voice-input-transcribe', async (_event, audioDataBase64) => {
-    try {
-      if (!audioDataBase64 || typeof audioDataBase64 !== 'string') {
-        return { success: false, error: '音声データが不正です' };
-      }
-
-      const result = await processVoiceInput(audioDataBase64);
-      return result;
-    } catch (error) {
-      console.error('[IPC] 音声入力エラー:', error);
-      console.error('[IPC] エラースタック:', error.stack);
-      const errorMessage = error?.message || error?.toString() || '不明なエラー';
-      return { success: false, error: errorMessage };
-    }
-  });
-
-  ipcMain.handle('voice-input-check-availability', async () => {
-    try {
-      const status = await checkVoiceInputAvailability();
-      return status;
-    } catch (error) {
-      console.error('[IPC] 音声入力モデルチェックエラー:', error);
-      return {
-        available: false,
-        models: { whisper: false, llm: false },
-        errors: [error.message],
-      };
-    }
-  });
-
-  ipcMain.handle('schedule-generate-tts', async (_event, schedule) => {
-    try {
-      if (!schedule || typeof schedule !== 'object') {
-        throw new Error('スケジュール情報が不正です');
-      }
-
-      const message = await generateTtsMessageForSchedule(schedule);
-      return { success: true, message };
-    } catch (error) {
-      console.error('[IPC] スケジュールTTS生成エラー:', error);
       return { success: false, error: error.message };
     }
   });

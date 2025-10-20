@@ -31,19 +31,6 @@ export async function transcribeAudio(audioDataBase64, options = {}) {
     };
   }
 
-  if (window?.electronAPI?.voiceInputTranscribe) {
-    console.warn('[stt-client] audioTranscribe が未定義のため voiceInputTranscribe を使用します');
-    const legacy = await window.electronAPI.voiceInputTranscribe(audioDataBase64);
-    if (!legacy || legacy.success === false) {
-      throw new Error(legacy?.error || '音声認識に失敗しました');
-    }
-    return {
-      success: true,
-      transcribedText: legacy.transcribedText,
-      raw: legacy,
-    };
-  }
-
   throw new Error('音声認識 API が利用できません');
 }
 
@@ -54,9 +41,6 @@ export async function transcribeAudio(audioDataBase64, options = {}) {
 export async function checkSttAvailability() {
   if (window?.electronAPI?.audioCheckAvailability) {
     return window.electronAPI.audioCheckAvailability();
-  }
-  if (window?.electronAPI?.voiceInputCheckAvailability) {
-    return window.electronAPI.voiceInputCheckAvailability();
   }
   return { available: false, models: {} };
 }

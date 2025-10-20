@@ -165,24 +165,6 @@ async function handleFormSubmit({ onSchedulesChanged }) {
     ttsMessage = buildRepeatAwareStartFallback(draftSchedule);
   }
 
-  if (window.electronAPI?.generateScheduleTts) {
-    try {
-      const result = await window.electronAPI.generateScheduleTts({
-        title,
-        date,
-        time,
-        description,
-        repeat,
-      });
-
-      if (result?.success && typeof result.message === 'string' && result.message.trim().length > 0) {
-        ttsMessage = result.message.trim();
-      }
-    } catch (error) {
-      console.warn('[Schedule] TTS メッセージ生成に失敗:', error);
-    }
-  }
-
   if (isEditing) {
     if (!existingSchedule) {
       console.warn('[Schedule] 編集対象のスケジュールが見つかりません:', scheduleState.editingScheduleId);

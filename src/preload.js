@@ -9,8 +9,6 @@
  * - sendNotification: デスクトップ通知送信
  * - detectObjects: YOLOv11物体検知（メインプロセスで実行）
  * - speakText: VOICEVOXでテキスト読み上げ（メインプロセス経由）
- * - voiceInputTranscribe: 音声データから文字起こし & スケジュール抽出
- * - voiceInputCheckAvailability: 音声入力機能の利用可否をチェック
  */
 const { contextBridge, ipcRenderer } = require('electron');
 
@@ -23,9 +21,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   audioTranscribe: (payload) => ipcRenderer.invoke('audio-transcribe', payload),
   audioInfer: (payload) => ipcRenderer.invoke('audio-infer', payload),
   audioCheckAvailability: () => ipcRenderer.invoke('audio-check-availability'),
-  voiceInputTranscribe: (audioDataBase64) => ipcRenderer.invoke('voice-input-transcribe', audioDataBase64),
-  voiceInputCheckAvailability: () => ipcRenderer.invoke('voice-input-check-availability'),
-  generateScheduleTts: (schedule) => ipcRenderer.invoke('schedule-generate-tts', schedule),
   recordDetectionLog: (payload) => ipcRenderer.invoke('detection-log-record', payload),
   detectionLogStats: (options) => ipcRenderer.invoke('detection-log-stats', options),
   detectionLogRecent: (options) => ipcRenderer.invoke('detection-log-recent', options),

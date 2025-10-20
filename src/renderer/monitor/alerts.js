@@ -2,6 +2,7 @@
  * アラート通知（スマホ/不在）の集約モジュール。
  * - サウンド・デスクトップ通知・VOICEVOX 読み上げを一箇所にまとめる。
  */
+import { queueVoicevoxSpeech } from '../services/tts-adapter.js';
 import { getMonitorState } from './context.js';
 import { addLog, recordDetectionLogEntry } from './logs.js';
 
@@ -32,18 +33,13 @@ export async function triggerPhoneAlert() {
     });
   }
 
-  if (window.electronAPI && typeof window.electronAPI.speakText === 'function') {
-    try {
-      const res = await window.electronAPI.speakText({
-        text: 'スマホが検知されています。作業に集中しましょう。',
-        engine: 'voicevox',
-        options: { speakerId: settings.voicevoxSpeaker, speedScale: 1.05 },
-      });
-      if (res?.success && res.dataUrl) {
-        const audio = new Audio(res.dataUrl);
-        audio.play().catch(() => {});
-      }
-    } catch {}
+  try {
+    await queueVoicevoxSpeech('スマホが検知されています。作業に集中しましょう。', {
+      speakerId: settings.voicevoxSpeaker,
+      speedScale: 1.05,
+    });
+  } catch (error) {
+    console.warn('[monitor-alerts] VOICEVOX 読み上げに失敗しました', error);
   }
 
   state.lastPhoneAlertAt = Date.now();
@@ -80,18 +76,13 @@ export async function triggerAbsenceAlert() {
     });
   }
 
-  if (window.electronAPI && typeof window.electronAPI.speakText === 'function') {
-    try {
-      const res = await window.electronAPI.speakText({
-        text: '離席が続いています。席に戻りましょう。',
-        engine: 'voicevox',
-        options: { speakerId: settings.voicevoxSpeaker, speedScale: 1.0 },
-      });
-      if (res?.success && res.dataUrl) {
-        const audio = new Audio(res.dataUrl);
-        audio.play().catch(() => {});
-      }
-    } catch {}
+  try {
+    await queueVoicevoxSpeech('離席が続いています。席に戻りましょう。', {
+      speakerId: settings.voicevoxSpeaker,
+      speedScale: 1.0,
+    });
+  } catch (error) {
+    console.warn('[monitor-alerts] VOICEVOX 読み上げに失敗しました', error);
   }
 
   state.lastAbsenceAlertAt = Date.now();

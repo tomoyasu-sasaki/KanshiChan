@@ -1,12 +1,5 @@
-/**
- * スケジュール機能の通知関連定数。
- * レンダラ (schedule.js) とメインの VOICEVOX サービスで共通利用する。
- */
-import { NOTIFICATION_VOICE_SPEAKER_ID } from './voicevox-config.js';
-
 export const SCHEDULE_NOTIFICATION_LEAD_MINUTES = 5;
 export const SCHEDULE_NOTIFICATION_COOLDOWN_MS = 60000;
-export const SCHEDULE_NOTIFICATION_SPEAKER_ID = NOTIFICATION_VOICE_SPEAKER_ID;
 
 export const SCHEDULE_MESSAGES = Object.freeze({
   addTitle: 'スケジュール追加',

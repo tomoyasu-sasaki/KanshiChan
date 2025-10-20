@@ -1,4 +1,5 @@
 import { audioInputManager } from '../services/audio-input-manager.js';
+import { getVoicevoxPreferences } from '../services/voicevox-preferences.js';
 
 /**
  * 共通音声入力コントロール。
@@ -100,9 +101,20 @@ export class AudioInputControl {
     this.toggleRecordingUI(true);
 
     try {
-      const metadata = typeof this.options.metadata === 'function'
+      const metadataSource = typeof this.options.metadata === 'function'
         ? this.options.metadata()
         : this.options.metadata || {};
+      const voicePrefs = getVoicevoxPreferences();
+      const baseTts = metadataSource.ttsOptions || {};
+      const metadata = {
+        ...metadataSource,
+        ttsOptions: {
+          speakerId: baseTts.speakerId ?? voicePrefs.speakerId,
+          speedScale: baseTts.speedScale ?? voicePrefs.speedScale,
+          pitchScale: baseTts.pitchScale ?? voicePrefs.pitchScale,
+          intonationScale: baseTts.intonationScale ?? voicePrefs.intonationScale,
+        },
+      };
 
       await audioInputManager.startSession({
         promptProfile: this.options.promptProfile,

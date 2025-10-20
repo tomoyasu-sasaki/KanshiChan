@@ -8,6 +8,7 @@ import { DEFAULT_VOICEVOX_SPEAKER_ID } from '../../constants/voicevox-config.js'
 import { getSpeakerOptions } from '../../constants/voicevox-speakers.js';
 import { YOLO_CATEGORIES, getClassesByCategory } from '../../constants/yolo-classes.js';
 import { cloneDefaultSettings, loadSettings, saveSettings } from './state.js';
+import { updateVoicevoxPreferencesFromSettings } from '../services/voicevox-preferences.js';
 
 const elements = {
   phoneThreshold: null,
@@ -198,6 +199,7 @@ function setupEventListeners() {
 export async function handleSaveSettings() {
   const settings = collectSettingsFromForm();
   saveSettings(settings);
+  updateVoicevoxPreferencesFromSettings(settings);
 
   if (typeof window.reloadMonitorSettings === 'function') {
     window.reloadMonitorSettings();
@@ -266,6 +268,7 @@ function handleResetSettings() {
   const defaults = cloneDefaultSettings();
   applySettings(defaults);
   saveSettings(defaults);
+  updateVoicevoxPreferencesFromSettings(defaults);
   showSaveMessage('設定をデフォルトに戻しました', 'info');
 }
 
@@ -365,6 +368,8 @@ export function applySettings(settings) {
   document.querySelectorAll('.detection-class-checkbox').forEach((checkbox) => {
     checkbox.checked = enabledClasses.includes(checkbox.value);
   });
+
+  updateVoicevoxPreferencesFromSettings(settings);
 }
 
 /**

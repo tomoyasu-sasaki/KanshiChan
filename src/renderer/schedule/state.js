@@ -6,7 +6,6 @@ export const scheduleState = {
   schedules: [],
   editingScheduleId: null,
   notificationCheckInterval: null,
-  ttsQueue: [],
   isTTSPlaying: false,
 };
 
@@ -47,9 +46,8 @@ export function clearNotificationInterval() {
 }
 
 /**
- * TTS の再生キューと再生中フラグを初期化する。
+ * TTS の再生状態を初期化する。
  */
 export function resetTtsQueue() {
-  scheduleState.ttsQueue = [];
   scheduleState.isTTSPlaying = false;
 }

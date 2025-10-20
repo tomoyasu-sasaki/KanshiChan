@@ -4,7 +4,6 @@
 import {
   SCHEDULE_NOTIFICATION_LEAD_MINUTES,
   SCHEDULE_NOTIFICATION_COOLDOWN_MS,
-  SCHEDULE_NOTIFICATION_SPEAKER_ID,
   SCHEDULE_MESSAGES,
 } from '../../constants/schedule.js';
 import { scheduleState, setNotificationInterval, clearNotificationInterval } from './state.js';
@@ -122,7 +121,6 @@ async function checkScheduleNotifications() {
       })();
 
       await queueTts(leadMessage, {
-        speakerId: SCHEDULE_NOTIFICATION_SPEAKER_ID,
         speedScale: 1.05,
       });
     }
@@ -145,7 +143,6 @@ async function checkScheduleNotifications() {
       })();
 
       await queueTts(startMessage, {
-        speakerId: SCHEDULE_NOTIFICATION_SPEAKER_ID,
         speedScale: 1.0,
       });
     }

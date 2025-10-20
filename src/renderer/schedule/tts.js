@@ -1,58 +1,22 @@
-/**
- * スケジュール通知で利用する TTS 再生キューを管理するモジュール。
- */
+import { queueVoicevoxSpeech, resolveVoicevoxOptions } from '../services/tts-adapter.js';
 import { scheduleState } from './state.js';
 
 /**
- * 読み上げ要求をキューに追加し、必要なら再生を開始する。
- * @param {string} text 読み上げ内容
- * @param {{speakerId?:number,speedScale?:number}} options VOICEVOX オプション
+ * スケジュール通知で利用する TTS をキューへ登録する。
+ * - `tts-adapter` の共通キューに委譲し、二重再生を防ぐ。
+ * @param {string} text
+ * @param {{speakerId?:number,speedScale?:number}} options
  */
 export async function queueTts(text, options = {}) {
-  scheduleState.ttsQueue.push({ text, options });
-  if (!scheduleState.isTTSPlaying) {
-    await processTtsQueue();
-  }
-}
-
-/**
- * キューから順番に TTS を生成・再生する内部処理。
- */
-async function processTtsQueue() {
-  if (scheduleState.ttsQueue.length === 0) {
-    scheduleState.isTTSPlaying = false;
-    return;
-  }
-
+  const voiceOptions = resolveVoicevoxOptions({
+    speakerId: options.speakerId,
+    speedScale: options.speedScale ?? 1.0,
+  });
   scheduleState.isTTSPlaying = true;
-  const { text, options } = scheduleState.ttsQueue.shift();
-
   try {
-    if (window.electronAPI && typeof window.electronAPI.speakText === 'function') {
-      const res = await window.electronAPI.speakText({
-        text,
-        engine: 'voicevox',
-        options: {
-          speakerId: options.speakerId,
-          speedScale: options.speedScale || 1.0,
-        },
-      });
-
-      if (res && res.success && res.dataUrl) {
-        const audio = new Audio(res.dataUrl);
-        audio.onended = () => {
-          processTtsQueue();
-        };
-        audio.onerror = () => {
-          processTtsQueue();
-        };
-        await audio.play();
-        return;
-      }
-    }
-  } catch (error) {
-    console.error('TTS再生エラー:', error);
+    const result = await queueVoicevoxSpeech(text, voiceOptions);
+    return result;
+  } finally {
+    scheduleState.isTTSPlaying = false;
   }
-
-  processTtsQueue();
 }

@@ -113,43 +113,6 @@ ${transcribedText}
 }
 
 /**
- * スケジュール読み上げ文生成用プロンプト
- * @param {{ title: string, date: string, time: string, description?: string }} schedule
- * @returns {string}
- */
-function buildScheduleTtsPrompt(schedule) {
-  const { title, date, time, description } = schedule;
-  const repeat = schedule.repeat && Array.isArray(schedule.repeat.days) ? schedule.repeat : null;
-  const weekdayLabels = ['日', '月', '火', '水', '木', '金', '土'];
-  const repeatLabel = repeat
-    ? `毎週 ${repeat.days
-        .slice()
-        .sort((a, b) => a - b)
-        .map((day) => weekdayLabels[day])
-        .join('・')}`
-    : '繰り返しなし';
-
-  return `あなたは個人の秘書のような日本語アシスタントです。以下の予定情報を参考に、1文で自然な案内文を作成してください。
-
-【出力要件】
-- 西暦は含めず日付と24時間表記の時刻を含める (例: 10月6日 14時30分)
-- 50〜100文字程度で、礼儀正しく前向きな表現にする
-- 場所や目的など重要な要素があれば簡潔に触れる
-- 絵文字や顔文字は使用しない
-- 出力は案内文のみ（引用符や説明は不要）
-
-【予定情報】
-- タイトル: ${title}
-- 日付: ${date}
-- 時刻: ${time}
-- 説明: ${description || '特記事項なし'}
-- 繰り返し: ${repeatLabel}
-
-案内文:`;
-}
-
-
-/**
  * チャット応答生成用のシステムプロンプト
  */
 const CHAT_ASSISTANT_SYSTEM_PROMPT = `あなたはデスクトップアシスタント「Kanshichan」です。
@@ -244,7 +207,6 @@ module.exports = {
   SCHEDULE_EXTRACTION_SYSTEM_PROMPT,
   buildScheduleExtractionUserPrompt,
   SCHEDULE_EXTRACTION_JSON_SCHEMA,
-  buildScheduleTtsPrompt,
   CHAT_ASSISTANT_SYSTEM_PROMPT,
   buildChatPrompt,
 };

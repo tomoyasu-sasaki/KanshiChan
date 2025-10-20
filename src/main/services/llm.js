@@ -11,7 +11,6 @@ const {
   SCHEDULE_EXTRACTION_SYSTEM_PROMPT,
   buildScheduleExtractionUserPrompt,
   SCHEDULE_EXTRACTION_JSON_SCHEMA,
-  buildScheduleTtsPrompt,
   buildChatPrompt,
 } = require('../../constants/llm-prompts');
 
@@ -231,64 +230,6 @@ async function extractScheduleFromText(transcribedText) {
 }
 
 /**
- * スケジュール情報から TTS 用案内文を生成する。
- * @param {{ title: string, date: string, time: string, description?: string }} schedule
- * @returns {Promise<string>}
- */
-async function generateTtsMessageForSchedule(schedule) {
-  if (!schedule || typeof schedule !== 'object') {
-    throw new Error('スケジュール情報が不正です');
-  }
-
-  const { title, date, time, description = '' } = schedule;
-
-  if (!title || !date || !time) {
-    throw new Error('title, date, time を指定してください');
-  }
-
-  const { model } = await loadLLMModel();
-
-  if (!model) {
-    throw new Error('LLM モデルが初期化されていません');
-  }
-
-  console.log('[LLM] TTSメッセージ生成開始:', title, date, time);
-
-  const { LlamaChatSession } = await loadNodeLlamaCpp();
-  const tempContext = await model.createContext({
-    contextSize: 2048,
-  });
-
-  try {
-    const session = new LlamaChatSession({
-      contextSequence: tempContext.getSequence(),
-    });
-
-    const prompt = buildScheduleTtsPrompt({ title, date, time, description });
-    const response = await session.prompt(prompt, {
-      maxTokens: 160,
-      temperature: 0.4,
-      topP: 0.9,
-      stopStrings: ['\n\n'],
-    });
-
-    const message = (response || '').trim().replace(/^['\"]|['\"]$/g, '');
-
-    if (!message) {
-      throw new Error('TTS メッセージを生成できませんでした');
-    }
-
-    console.log('[LLM] TTSメッセージ生成完了:', message);
-    return message;
-  } catch (error) {
-    console.error('[LLM] TTSメッセージ生成エラー:', error);
-    const message = error?.message || error?.toString() || '不明なエラー';
-    throw new Error(`TTS メッセージ生成に失敗しました: ${message}`);
-  } finally {
-    await tempContext.dispose();
-  }
-}
-/**
  * カジュアルな音声チャット応答を生成する。
  * - 会話履歴は最大6ターンを渡し、過去ログが長くなりすぎるのを防ぐ。
  * - LlamaChatSession は使い捨てで作成し、プロンプト間の状態共有を避ける。
@@ -377,7 +318,6 @@ function resetLLMInstance() {
 module.exports = {
   loadLLMModel,
   extractScheduleFromText,
-  generateTtsMessageForSchedule,
   generateChatReply,
   resetLLMInstance,
 };

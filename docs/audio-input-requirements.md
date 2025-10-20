@@ -2,20 +2,21 @@
 
 ## 1. 現状の音声入力フロー
 ```
-レンダラ(scheduler) ── MediaRecorder ──▶ base64 WebM
+レンダラ (audio-input-manager) ── MediaRecorder ──▶ base64 WebM
     │                                   │
-    └─▶ `window.electronAPI.voiceInputTranscribe`
+    ├─▶ `window.electronAPI.audioTranscribe`
+    ├─▶ `window.electronAPI.audioInfer`
+    └─▶ `window.electronAPI.ttsSpeak`
             │
             ▼
-メイン `processVoiceInput` ──▶ Whisper CLI (bin/whisper-cli)
+メイン `services/audio.js` ──▶ Whisper CLI (bin/whisper-cli)
             │
-            └─▶ 自然言語→スケジュール抽出 (OpenAI functions)
-                    │
-                    └─▶ スケジュール配列をレンダラへ返却
+            ├─▶ スケジュール/設定/チャット用 LLM 推論
+            └─▶ VOICEVOX HTTP API で音声合成
 ```
-- UI: `src/renderer/voice-input.js` が単一ドロワーの制御を担当。
-- 音声再生: 登録確認時のみ VOICEVOX (`src/main/services/voicevox.js`).
-- IPC: `voice-input-transcribe` チャネルのみ。
+- UI: `src/renderer/components/audio-input-control.js` を各ドロワーが再利用。
+- 音声再生: VOICEVOX (`src/main/services/voicevox.js`)。
+- IPC: `audio-transcribe` / `audio-infer` / `tts-speak`。
 
 ## 2. 設定ドロワーで音声操作したい項目
 | 設定キー | UI要素 | 想定音声コマンド | 備考 |

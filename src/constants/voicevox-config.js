@@ -7,9 +7,5 @@
 export const DEFAULT_VOICEVOX_HOST = '127.0.0.1';
 export const DEFAULT_VOICEVOX_PORT = 50021;
 
-// レンダラ側 UI でも使用する既定の話者 ID（ずんだもん ノーマル）
-export const DEFAULT_VOICEVOX_SPEAKER_ID = 59;
-
-// スケジュール通知などで利用する追加話者（四国めたん ノーマル）
-// スケジュール通知などで利用する追加話者 ID。
-export const NOTIFICATION_VOICE_SPEAKER_ID = 59;
+// レンダラ側 UI でも使用する既定の話者 ID（猫使ビィ 落ち着きver.）
+export const DEFAULT_VOICEVOX_SPEAKER_ID = 2;

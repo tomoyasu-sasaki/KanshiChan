@@ -1,31 +1,28 @@
 /**
  * 音声入力マネージャ（レンダラ）。
- * - MediaRecorder で録音し、メインプロセスの STT/LLM/TTS パイプラインを逐次呼び出す。
- * - 1 セッションずつ直列実行し、履歴ストアへ結果を通知する役割を持つ。
+ * - 録音・STT・LLM・TTS の責務を分割モジュールへ委譲し、ここではセッション制御のみを担当する。
  */
-
 import { audioInputStore } from '../stores/audio-input-store.js';
 import { getAudioPromptProfile } from '../../constants/audioProfiles.js';
-import { transcribeAudio } from './stt-client.js';
-import { runLlm } from './llm-client.js';
-import { synthesizeAndPlay } from './tts-adapter.js';
+import { AudioRecorder } from './audio-input/recorder.js';
+import { runAudioPipeline } from './audio-input/pipeline.js';
+import { enqueuePlayback, clearPlaybackQueue } from './audio-input/playback.js';
+import { resolveVoicevoxOptions } from './tts-adapter.js';
 
 let sessionIdCounter = 0;
 
 class AudioInputManager {
   constructor() {
     this.activeSession = null;
-    this.mediaRecorder = null;
-    this.mediaStream = null;
-    this.audioChunks = [];
+    this.recorder = null;
   }
 
   get isRecording() {
-    return Boolean(this.mediaRecorder && this.mediaRecorder.state === 'recording');
+    return Boolean(this.recorder?.isRecording);
   }
 
   /**
-   * 音声セッションを開始し、録音のライフサイクルを管理する。
+   * 音声セッションを開始し、録音のライフサイクルを制御する。
    * - 既存セッションがあればキャンセルしてリソースを解放する。
    * @param {{promptProfile:string, contextId?:string, metadata?:object, callbacks?:object}} options
    * @returns {Promise<object>} セッションメタデータ
@@ -37,12 +34,6 @@ class AudioInputManager {
       await this.cancelSession('new-session');
     }
 
-    await this.ensureMicrophonePermission();
-
-    const stream = await navigator.mediaDevices.getUserMedia({
-      audio: true,
-    });
-
     const session = {
       id: ++sessionIdCounter,
       profileId: profile.id,
@@ -53,56 +44,50 @@ class AudioInputManager {
       metadata: options.metadata || {},
     };
 
-    this.mediaStream = stream;
-    this.mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
-    this.audioChunks = [];
-    this.activeSession = session;
+    this.recorder = new AudioRecorder({
+      onStop: (base64, error) => {
+        if (error) {
+          console.error('[audio-input-manager] 録音停止エラー', error);
+          this.failSession(error);
+          return;
+        }
+        this.handleRecordingComplete(profile, base64).catch((pipelineError) => {
+          console.error('[audio-input-manager] パイプラインエラー', pipelineError);
+          this.failSession(pipelineError);
+        });
+      },
+    });
 
+    this.activeSession = session;
     audioInputStore.setActiveSession({ ...session });
     this.emitStatus('recording');
 
-    this.mediaRecorder.addEventListener('dataavailable', (event) => {
-      if (event.data && event.data.size > 0) {
-        this.audioChunks.push(event.data);
-      }
-    });
-
-    this.mediaRecorder.addEventListener('stop', () => {
-      this.handleRecordingComplete(profile).catch((error) => {
-        console.error('[audio-input-manager] 処理エラー', error);
-        this.failSession(error);
-      });
-    });
-
-    this.mediaRecorder.start();
+    await this.recorder.start();
     return session;
   }
 
   /**
-   * 録音を停止する。MediaRecorder の状態が inactive なら無視する。
+   * 録音を停止する。
    */
   async stopRecording() {
-    if (!this.mediaRecorder) {
+    if (!this.recorder) {
       return;
     }
-    if (this.mediaRecorder.state !== 'inactive') {
-      this.mediaRecorder.stop();
-    }
+    await this.recorder.stop();
   }
 
   /**
-   * 進行中のセッションを強制終了し、履歴にキャンセルとして記録する。
-   * @param {string} reason キャンセル理由
+   * 進行中のセッションをキャンセルする。
+   * @param {string} reason
    */
   async cancelSession(reason = 'cancelled') {
     if (!this.activeSession) {
       return;
     }
 
-    if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
-      this.mediaRecorder.stop();
-    }
-    this.disposeStream();
+    await this.stopRecording();
+    this.cleanupRecorder();
+    clearPlaybackQueue();
 
     audioInputStore.setActiveSession(null);
     audioInputStore.appendHistory({
@@ -117,42 +102,22 @@ class AudioInputManager {
   }
 
   /**
-   * 録音完了後に STT→LLM→TTS を順番に実行する。
-   * - 録音データは dispose 前にコピーして空参照を防いでいる。
-   * @param {object} profile 音声プロファイル
+   * 録音完了後に STT → LLM → TTS を順番に実行する。
+   * @param {object} profile
+   * @param {string} audioBase64
    */
-  async handleRecordingComplete(profile) {
+  async handleRecordingComplete(profile, audioBase64) {
     const session = this.activeSession;
     if (!session) {
       return;
     }
 
-    const recordedChunks = this.audioChunks.slice();
-    this.disposeStream();
     this.emitStatus('transcribing');
 
-    if (recordedChunks.length === 0) {
-      throw new Error('録音データを取得できませんでした。マイクが有効か確認してください。');
-    }
-
-    const blob = new Blob(recordedChunks, { type: 'audio/webm' });
-    const arrayBuffer = await blob.arrayBuffer();
-    const audioDataBase64 = arrayBufferToBase64(arrayBuffer);
-
     try {
-      const transcription = await transcribeAudio(audioDataBase64, {
-        language: session.metadata.language || 'ja',
-      });
+      const { transcription, llmResult } = await runAudioPipeline(profile.id, audioBase64, session.metadata);
       this.emitTranscription(transcription.transcribedText);
       this.emitStatus('thinking');
-
-      const llmResult = await runLlm(profile.id, transcription.transcribedText, {
-        context: {
-          metadata: session.metadata,
-          history: session.metadata?.history || [],
-        },
-        legacyRawResult: transcription.raw,
-      });
 
       if (Array.isArray(llmResult?.segments)) {
         llmResult.segments.forEach((segment) => {
@@ -161,14 +126,13 @@ class AudioInputManager {
       }
 
       this.emitLlmResult(llmResult);
-      this.emitStatus('speaking');
-
       let ttsResult = null;
-      if (profile.tts && profile.tts.defaultMessageField) {
-        const text = pickTtsText(profile, llmResult);
-        if (text) {
-          ttsResult = await synthesizeAndPlay(text, session.metadata.ttsOptions || {});
-        }
+      const ttsText = pickTtsText(profile, llmResult);
+
+      if (ttsText) {
+        this.emitStatus('speaking');
+        const voiceOptions = resolveVoicevoxOptions(session.metadata.ttsOptions || {});
+        ttsResult = await enqueuePlayback(ttsText, voiceOptions);
       }
 
       const historyEntry = {
@@ -181,22 +145,28 @@ class AudioInputManager {
         result: llmResult,
         audio: ttsResult,
       };
+
       audioInputStore.appendHistory(historyEntry);
       this.emitStatus('completed');
+      audioInputStore.setActiveSession(null);
       this.activeSession = null;
     } catch (error) {
       this.failSession(error);
+    } finally {
+      this.cleanupRecorder();
     }
   }
 
   /**
-   * 異常終了時に履歴へ記録し、UI にエラーを伝える。
+   * 異常終了時の後処理。
    * @param {Error} error
    */
   failSession(error) {
     const session = this.activeSession;
-    this.disposeStream();
+    this.cleanupRecorder();
+    clearPlaybackQueue();
     this.activeSession = null;
+
     audioInputStore.setError(error?.message || String(error));
     audioInputStore.appendHistory({
       id: session ? session.id : Date.now(),
@@ -210,18 +180,11 @@ class AudioInputManager {
     this.emitError(error);
   }
 
-  /**
-   * MediaStream と MediaRecorder を開放する共通処理。
-   */
-  disposeStream() {
-    if (this.mediaStream) {
-      this.mediaStream.getTracks().forEach((track) => track.stop());
-      this.mediaStream = null;
+  cleanupRecorder() {
+    if (this.recorder) {
+      this.recorder.dispose();
+      this.recorder = null;
     }
-    if (this.mediaRecorder) {
-      this.mediaRecorder = null;
-    }
-    this.audioChunks = [];
   }
 
   emitStatus(status) {
@@ -246,46 +209,14 @@ class AudioInputManager {
     this.invokeCallback('onError', error);
   }
 
-  /**
-   * コールバックを安全に起動するヘルパ。
-   * @param {string} name コールバック名
-   * @param {*} payload イベントデータ
-   */
   invokeCallback(name, payload) {
     const callback = this.activeSession?.callbacks?.[name];
     if (typeof callback === 'function') {
       callback(payload);
     }
   }
-
-  /**
-   * マイク権限が拒否されていないかを事前確認する。
-   * - macOS の permissions API は例外を投げることがあるため try/catch で握りつぶす。
-   */
-  async ensureMicrophonePermission() {
-    if (!navigator?.mediaDevices?.getUserMedia) {
-      throw new Error('マイク入力がサポートされていません');
-    }
-
-    if (navigator.permissions && navigator.permissions.query) {
-      try {
-        const permission = await navigator.permissions.query({ name: 'microphone' });
-        if (permission.state === 'denied') {
-          throw new Error('マイクの利用が拒否されています。ブラウザ設定で許可してください。');
-        }
-      } catch (error) {
-        console.warn('[audio-input-manager] permissions API チェックに失敗', error);
-      }
-    }
-  }
 }
 
-/**
- * プロファイルごとに読み上げメッセージを抽出する。
- * @param {object} profile
- * @param {object} llmResult
- * @returns {string|null}
- */
 function pickTtsText(profile, llmResult) {
   if (!profile.tts || !profile.tts.defaultMessageField) {
     return null;
@@ -307,20 +238,6 @@ function pickTtsText(profile, llmResult) {
   }
 
   return null;
-}
-
-/**
- * MediaRecorder 出力を Base64 へ変換するユーティリティ。
- * @param {ArrayBuffer} arrayBuffer
- * @returns {string}
- */
-function arrayBufferToBase64(arrayBuffer) {
-  const bytes = new Uint8Array(arrayBuffer);
-  let binary = '';
-  bytes.forEach((byte) => {
-    binary += String.fromCharCode(byte);
-  });
-  return btoa(binary);
 }
 
 export const audioInputManager = new AudioInputManager();
