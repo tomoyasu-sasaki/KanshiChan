@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="監視ちゃん - YOLOv11とWhisperによるAI監視とスケジュール管理を統合したElectronデスクトップアプリケーション。リアルタイム検知、音声入力、Slack連携機能を搭載。">
+  <meta name="keywords" content="監視ちゃん,Kanshichan,Electron,YOLOv11,Whisper,VOICEVOX,監視アプリ,スケジュール管理,AI,物体検知,音声認識">
+  <meta name="author" content="Kanshichan Project">
+
+  <!-- Open Graph Protocol -->
+  <meta property="og:title" content="監視ちゃん - AI監視＆スケジュール管理アプリ">
+  <meta property="og:description" content="YOLOv11とWhisperによるAI監視とスケジュール管理を統合したElectronデスクトップアプリケーション">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://tmys-sasaki.github.io/kanshichan/">
+  <meta property="og:image" content="https://tmys-sasaki.github.io/kanshichan/assets/images/screenshots/home_monitor.jpg">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="監視ちゃん - AI監視＆スケジュール管理アプリ">
+  <meta name="twitter:description" content="YOLOv11とWhisperによるAI監視とスケジュール管理を統合したElectronアプリ">
+  <meta name="twitter:image" content="https://tmys-sasaki.github.io/kanshichan/assets/images/screenshots/home_monitor.jpg">
+
+  <title>監視ちゃん - AI監視＆スケジュール管理アプリ</title>
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>👁️</text></svg>">
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="assets/css/style.css">
+  <link rel="stylesheet" href="assets/css/responsive.css">
+
+  <!-- Anime.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/animejs/3.2.1/anime.min.js"></script>
+</head>
+<body>
+
+  <!-- ナビゲーション -->
+  <nav class="navbar">
+    <div class="container">
+      <a href="#home" class="navbar-brand">👁️ 監視ちゃん</a>
+
+      <button class="navbar-toggle" aria-label="メニュー">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <ul class="navbar-nav">
+        <li><a href="#features">機能</a></li>
+        <li><a href="#gallery">ギャラリー</a></li>
+        <li><a href="#setup">セットアップ</a></li>
+        <li><a href="#tech">技術スタック</a></li>
+        <li><a href="https://github.com/tmys-sasaki/kanshichan" target="_blank" class="btn btn-primary">GitHub</a></li>
+      </ul>
+    </div>
+  </nav>
+
+  <!-- ヒーローセクション -->
+  <section id="home" class="hero">
+    <div class="container">
+      <div class="hero-content">
+        <h1>監視ちゃん</h1>
+        <p class="hero-subtitle">YOLOv11とWhisperによる<br>AI監視＆スケジュール管理アプリ</p>
+
+        <div class="hero-buttons">
+          <a href="https://github.com/tmys-sasaki/kanshichan" target="_blank" class="btn btn-primary">
+            GitHubで見る
+          </a>
+          <a href="#setup" class="btn btn-secondary">
+            セットアップガイド
+          </a>
+        </div>
+
+        <img src="assets/images/screenshots/home_monitor.jpg" alt="監視ちゃん メイン画面" class="hero-image" loading="lazy">
+      </div>
+    </div>
+  </section>
+
+  <!-- 主な機能セクション -->
+  <section id="features">
+    <div class="container">
+      <div class="section-title">
+        <h2>主な機能</h2>
+        <p>リアルタイム監視からスケジュール管理まで、充実した機能を搭載</p>
+      </div>
+
+      <div class="features-timeline">
+
+        <!-- 機能1: リアルタイム監視 -->
+        <div class="feature-item">
+          <div class="feature-content">
+            <div class="feature-card">
+              <span class="feature-number">1</span>
+              <h3>🎥 リアルタイム監視</h3>
+              <p>YOLOv11を使用したWebカメラ映像のリアルタイム物体検知。人物とスマホを自動認識し、バウンディングボックスで可視化します。検知結果はSQLiteに記録され、後から統計分析が可能です。</p>
+            </div>
+          </div>
+          <div class="feature-media">
+            <img src="assets/images/screenshots/home_monitor.jpg" alt="リアルタイム監視画面" class="feature-image" loading="lazy">
+          </div>
+        </div>
+
+        <!-- 機能2: 音声入力スケジュール -->
+        <div class="feature-item">
+          <div class="feature-content">
+            <div class="feature-card">
+              <span class="feature-number">2</span>
+              <h3>🎤 音声入力スケジュール登録</h3>
+              <p>Whisper（STT）とLLMを組み合わせた音声入力機能。「今日の15時に会議」と話すだけで、日時・タイトル・説明を自動抽出してスケジュール登録できます。音声チャット機能も搭載。</p>
+            </div>
+          </div>
+          <div class="feature-media">
+            <img src="assets/images/screenshots/audio-input-01.jpg" alt="音声入力画面" class="feature-image" loading="lazy">
+          </div>
+        </div>
+
+        <!-- 機能3: 不在許可 -->
+        <div class="feature-item">
+          <div class="feature-content">
+            <div class="feature-card">
+              <span class="feature-number">3</span>
+              <h3>🚶 一時的な不在許可（PASS）</h3>
+              <p>昼休憩や買い出しなど、一時的に監視を止めたい時にプリセットまたはカスタム時間で不在検知を一時停止。許可中の不在は統計・アラート・Slackレポートから除外されます。</p>
+            </div>
+          </div>
+          <div class="feature-media">
+            <img src="assets/images/screenshots/settings-01.jpg" alt="不在許可設定画面" class="feature-image" loading="lazy">
+          </div>
+        </div>
+
+        <!-- 機能4: Slack連携 -->
+        <div class="feature-item">
+          <div class="feature-content">
+            <div class="feature-card">
+              <span class="feature-number">4</span>
+              <h3>📊 Slack定期レポート</h3>
+              <p>毎日指定時刻に検知統計・前面アプリ滞在時間・システムイベントをSlackに自動投稿。「当日累積」と「直近送信以降の差分」の2セクションを同梱し、業務実態を可視化します。</p>
+            </div>
+          </div>
+          <div class="feature-media">
+            <img src="assets/images/screenshots/slack.jpeg" alt="Slackレポート例" class="feature-image" loading="lazy">
+          </div>
+        </div>
+
+        <!-- 機能5: タイピング監視 -->
+        <div class="feature-item">
+          <div class="feature-content">
+            <div class="feature-card">
+              <span class="feature-number">5</span>
+              <h3>⌨️ タイピング監視</h3>
+              <p>グローバルキーフック（uiohook-napi）で1分単位の入力数・最長連続入力時間を記録。ダッシュボードとSlackレポートで生産性を可視化できます。</p>
+            </div>
+          </div>
+          <div class="feature-media">
+            <img src="assets/images/screenshots/settings-04.jpg" alt="タイピング監視設定" class="feature-image" loading="lazy">
+          </div>
+        </div>
+
+        <!-- 機能6: ダッシュボード -->
+        <div class="feature-item">
+          <div class="feature-content">
+            <div class="feature-card">
+              <span class="feature-number">6</span>
+              <h3>📈 検知ダッシュボード</h3>
+              <p>期間・集計単位・イベント種別でフィルタリング可能な統計ダッシュボード。検知ログ・アラート件数・前面アプリ滞在時間を時系列グラフで表示し、CSV エクスポートにも対応。</p>
+            </div>
+          </div>
+          <div class="feature-media">
+            <img src="assets/images/screenshots/dashboard-01.jpeg" alt="ダッシュボード画面" class="feature-image" loading="lazy">
+          </div>
+        </div>
+
+        <!-- 機能7: 音声チャット -->
+        <div class="feature-item">
+          <div class="feature-content">
+            <div class="feature-card">
+              <span class="feature-number">7</span>
+              <h3>💬 音声チャット</h3>
+              <p>STT→LLM→VOICEVOXのパイプラインで、キャラクター音声による対話が可能。会話履歴はローカルに保存され、ストリーミングで途中生成も表示します。</p>
+            </div>
+          </div>
+          <div class="feature-media">
+            <img src="assets/images/screenshots/audio-input-04.jpg" alt="音声チャット画面" class="feature-image" loading="lazy">
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ギャラリーセクション -->
+  <section id="gallery">
+    <div class="container">
+      <div class="section-title fade-in">
+        <h2>スクリーンショットギャラリー</h2>
+        <p>主要画面のビジュアル紹介</p>
+      </div>
+
+      <!-- カテゴリータブ -->
+      <div class="gallery-tabs fade-in">
+        <button class="gallery-tab active" data-category="all">すべて</button>
+        <button class="gallery-tab" data-category="monitor">監視</button>
+        <button class="gallery-tab" data-category="schedule">スケジュール</button>
+        <button class="gallery-tab" data-category="settings">設定</button>
+        <button class="gallery-tab" data-category="dashboard">ダッシュボード</button>
+        <button class="gallery-tab" data-category="audio">音声入力</button>
+      </div>
+
+      <!-- ギャラリーグリッド -->
+      <div class="gallery-grid">
+
+        <!-- 監視画面 -->
+        <div class="gallery-item fade-in" data-category="monitor">
+          <img src="assets/images/screenshots/home_monitor.jpg" alt="メイン監視画面" loading="lazy">
+          <div class="gallery-item-caption">メイン監視画面</div>
+        </div>
+
+        <!-- スケジュール -->
+        <div class="gallery-item fade-in" data-category="schedule">
+          <img src="assets/images/screenshots/schedule-01.jpg" alt="スケジュール一覧" loading="lazy">
+          <div class="gallery-item-caption">スケジュール一覧</div>
+        </div>
+
+        <div class="gallery-item fade-in" data-category="schedule">
+          <img src="assets/images/screenshots/schedule-02.jpg" alt="スケジュール登録" loading="lazy">
+          <div class="gallery-item-caption">スケジュール登録</div>
+        </div>
+
+        <!-- 設定 -->
+        <div class="gallery-item fade-in" data-category="settings">
+          <img src="assets/images/screenshots/settings-01.jpg" alt="基本設定" loading="lazy">
+          <div class="gallery-item-caption">基本設定</div>
+        </div>
+
+        <div class="gallery-item fade-in" data-category="settings">
+          <img src="assets/images/screenshots/settings-02.jpg" alt="VOICEVOX設定" loading="lazy">
+          <div class="gallery-item-caption">VOICEVOX設定</div>
+        </div>
+
+        <div class="gallery-item fade-in" data-category="settings">
+          <img src="assets/images/screenshots/settings-03.jpg" alt="Slack設定" loading="lazy">
+          <div class="gallery-item-caption">Slack設定</div>
+        </div>
+
+        <div class="gallery-item fade-in" data-category="settings">
+          <img src="assets/images/screenshots/settings-04.jpg" alt="タイピング監視設定" loading="lazy">
+          <div class="gallery-item-caption">タイピング監視設定</div>
+        </div>
+
+        <!-- ダッシュボード -->
+        <div class="gallery-item fade-in" data-category="dashboard">
+          <img src="assets/images/screenshots/dashboard-01.jpeg" alt="ダッシュボード概要" loading="lazy">
+          <div class="gallery-item-caption">ダッシュボード概要</div>
+        </div>
+
+        <div class="gallery-item fade-in" data-category="dashboard">
+          <img src="assets/images/screenshots/dashboard-02.jpeg" alt="検知ログ" loading="lazy">
+          <div class="gallery-item-caption">検知ログ</div>
+        </div>
+
+        <div class="gallery-item fade-in" data-category="dashboard">
+          <img src="assets/images/screenshots/dashboard-03.jpeg" alt="前面アプリ統計" loading="lazy">
+          <div class="gallery-item-caption">前面アプリ統計</div>
+        </div>
+
+        <div class="gallery-item fade-in" data-category="dashboard">
+          <img src="assets/images/screenshots/dashboard-04.jpeg" alt="Slackレポート履歴" loading="lazy">
+          <div class="gallery-item-caption">Slackレポート履歴</div>
+        </div>
+
+        <!-- 音声入力 -->
+        <div class="gallery-item fade-in" data-category="audio">
+          <img src="assets/images/screenshots/audio-input-01.jpg" alt="音声入力UI" loading="lazy">
+          <div class="gallery-item-caption">音声入力UI</div>
+        </div>
+
+        <div class="gallery-item fade-in" data-category="audio">
+          <img src="assets/images/screenshots/audio-input-02.jpg" alt="音声録音中" loading="lazy">
+          <div class="gallery-item-caption">音声録音中</div>
+        </div>
+
+        <div class="gallery-item fade-in" data-category="audio">
+          <img src="assets/images/screenshots/audio-input-03.jpg" alt="スケジュール抽出" loading="lazy">
+          <div class="gallery-item-caption">スケジュール抽出</div>
+        </div>
+
+        <div class="gallery-item fade-in" data-category="audio">
+          <img src="assets/images/screenshots/audio-input-04.jpg" alt="抽出結果" loading="lazy">
+          <div class="gallery-item-caption">抽出結果</div>
+        </div>
+
+        <!-- ログ -->
+        <div class="gallery-item fade-in" data-category="monitor">
+          <img src="assets/images/screenshots/logs.jpg" alt="ログビュー" loading="lazy">
+          <div class="gallery-item-caption">ログビュー</div>
+        </div>
+
+        <!-- Slack -->
+        <div class="gallery-item fade-in" data-category="dashboard">
+          <img src="assets/images/screenshots/slack.jpeg" alt="Slack連携" loading="lazy">
+          <div class="gallery-item-caption">Slack連携</div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- セットアップガイドセクション -->
+  <section id="setup">
+    <div class="container">
+      <div class="section-title fade-in">
+        <h2>セットアップガイド</h2>
+        <p>インストールから初期設定まで、ステップバイステップで解説</p>
+      </div>
+
+      <div class="setup-steps">
+
+        <!-- ステップ1: 必要環境 -->
+        <div class="setup-step fade-in">
+          <h3><span class="step-number">1</span> 必要環境の確認</h3>
+          <p>以下の環境が必要です:</p>
+          <ul>
+            <li><strong>Node.js</strong> 20 以上（node-llama-cpp の要件）</li>
+            <li><strong>macOS</strong> 13 以上を推奨（一部機能がmacOS依存）</li>
+            <li><strong>Xcode Command Line Tools / CMake / pkg-config</strong></li>
+            <li><strong>ffmpeg</strong>（音声形式変換に使用）</li>
+            <li><strong>VOICEVOX エンジン</strong>（オプション: 読み上げ機能）</li>
+            <li><strong>Slack Incoming Webhook URL</strong>（オプション: Slack連携）</li>
+          </ul>
+        </div>
+
+        <!-- ステップ2: 基本セットアップ -->
+        <div class="setup-step fade-in">
+          <h3><span class="step-number">2</span> 基本セットアップ</h3>
+          <p>リポジトリをクローンして依存関係をインストールします:</p>
+          <code>git clone https://github.com/tmys-sasaki/kanshichan.git
+cd kanshichan
+npm install</code>
+          <p>YOLOモデルを <code>models/yolo11n.onnx</code> として配置してください。</p>
+        </div>
+
+        <!-- ステップ3: 音声入力機能（オプション） -->
+        <div class="setup-step fade-in">
+          <h3><span class="step-number">3</span> 音声入力機能のセットアップ（オプション）</h3>
+
+          <h4>必要ツールのインストール:</h4>
+          <code># macOS の場合
+brew install cmake ffmpeg</code>
+
+          <h4>モデルファイルの配置:</h4>
+          <p>Whisper モデル (<code>ggml-base.bin</code>) と LLM モデル (<code>swallow-8b-v0.5-q4.gguf</code>) を <code>models/</code> ディレクトリに配置してください。</p>
+
+          <code># Whisper モデルのダウンロード
+cd models
+curl -L https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.bin -o ggml-base.bin</code>
+
+          <h4>whisper-cli のビルド:</h4>
+          <code>git clone https://github.com/ggerganov/whisper.cpp.git
+cd whisper.cpp
+cmake -B build -DCMAKE_BUILD_TYPE=Release -DWHISPER_BUILD_EXAMPLES=ON
+cmake --build build --config Release --target whisper-cli -j 4</code>
+
+          <div class="notice-box">
+            <strong>⚠️ 注意:</strong> whisper-cli へのパスを環境変数 <code>WHISPER_CLI_PATH</code> で指定するか、PATHに追加してください。
+          </div>
+        </div>
+
+        <!-- ステップ4: 起動 -->
+        <div class="setup-step fade-in">
+          <h3><span class="step-number">4</span> アプリケーションの起動</h3>
+          <code>npm start</code>
+          <p>起動時に macOS のカメラ許可ダイアログが表示されます。許可後、監視が自動開始されます。</p>
+        </div>
+
+        <!-- ステップ5: タイピング監視（オプション） -->
+        <div class="setup-step fade-in">
+          <h3><span class="step-number">5</span> タイピング監視の有効化（オプション）</h3>
+          <code>npm install uiohook-napi --build-from-source \
+  --runtime=electron --target=38.2.0 \
+  --disturl=https://electronjs.org/headers
+npx electron-rebuild -f -w uiohook-napi</code>
+          <p>macOS の「システム設定 > プライバシーとセキュリティ > アクセシビリティ」でアプリを追加し、チェックを入れてください。</p>
+        </div>
+
+      </div>
+
+      <!-- トラブルシューティング -->
+      <div class="accordion fade-in">
+        <h3 class="text-center mb-lg">よくある問題と解決方法</h3>
+
+        <div class="accordion-item">
+          <button class="accordion-header">
+            <span>音声入力が動作しない</span>
+            <span class="accordion-icon">▼</span>
+          </button>
+          <div class="accordion-content">
+            <div class="accordion-content-inner">
+              <p><strong>「モデルが見つかりません」エラー:</strong></p>
+              <p><code>models/ggml-base.bin</code> と <code>models/swallow-8b-v0.5-q4.gguf</code> が正しく配置されているか確認してください。</p>
+
+              <p><strong>「whisper-cli executable not found」エラー:</strong></p>
+              <p>whisper.cpp のビルドに失敗しているか、CLI へのパスが通っていない可能性があります。</p>
+
+              <p><strong>「音声ファイルの変換に失敗しました」エラー:</strong></p>
+              <p>ffmpeg がインストールされているか確認: <code>which ffmpeg</code></p>
+            </div>
+          </div>
+        </div>
+
+        <div class="accordion-item">
+          <button class="accordion-header">
+            <span>VOICEVOXが起動していない</span>
+            <span class="accordion-icon">▼</span>
+          </button>
+          <div class="accordion-content">
+            <div class="accordion-content-inner">
+              <p>読み上げリクエストはエラー扱いとなり、UI 側にはアラートが表示されません（ログのみに記録）。VOICEVOX エンジンを起動してから再度お試しください。</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="accordion-item">
+          <button class="accordion-header">
+            <span>スケジュールが通知されない</span>
+            <span class="accordion-icon">▼</span>
+          </button>
+          <div class="accordion-content">
+            <div class="accordion-content-inner">
+              <p>ブラウザ/Electron の通知権限を確認してください。macOS の「システム設定 > 通知」でアプリの通知が許可されているか確認してください。</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 技術スタックセクション -->
+  <section id="tech">
+    <div class="container">
+      <div class="section-title fade-in">
+        <h2>技術スタック</h2>
+        <p>最新のAI・機械学習技術を活用</p>
+      </div>
+
+      <div class="tech-stack-grid">
+
+        <div class="tech-item fade-in">
+          <div class="tech-icon">⚡</div>
+          <h4>Electron</h4>
+          <p>デスクトップアプリフレームワーク</p>
+        </div>
+
+        <div class="tech-item fade-in">
+          <div class="tech-icon">🎯</div>
+          <h4>YOLOv11</h4>
+          <p>リアルタイム物体検知</p>
+        </div>
+
+        <div class="tech-item fade-in">
+          <div class="tech-icon">🎤</div>
+          <h4>Whisper</h4>
+          <p>音声認識（STT）</p>
+        </div>
+
+        <div class="tech-item fade-in">
+          <div class="tech-icon">🤖</div>
+          <h4>LLM</h4>
+          <p>自然言語処理</p>
+        </div>
+
+        <div class="tech-item fade-in">
+          <div class="tech-icon">🔊</div>
+          <h4>VOICEVOX</h4>
+          <p>音声合成（TTS）</p>
+        </div>
+
+        <div class="tech-item fade-in">
+          <div class="tech-icon">📊</div>
+          <h4>SQLite</h4>
+          <p>ローカルデータベース</p>
+        </div>
+
+        <div class="tech-item fade-in">
+          <div class="tech-icon">💬</div>
+          <h4>Slack API</h4>
+          <p>レポート投稿</p>
+        </div>
+
+        <div class="tech-item fade-in">
+          <div class="tech-icon">📈</div>
+          <h4>Chart.js</h4>
+          <p>データ可視化</p>
+        </div>
+
+      </div>
+
+      <!-- アーキテクチャ概要 -->
+      <div class="setup-step fade-in mt-lg">
+        <h3>アーキテクチャ概要</h3>
+        <p>監視ちゃんは以下のレイヤーで構成されています:</p>
+        <ul>
+          <li><strong>メインプロセス:</strong> YOLO検知、IPC通信、システムイベント監視</li>
+          <li><strong>レンダラプロセス:</strong> UI制御、カメラストリーム、スケジュール管理</li>
+          <li><strong>音声処理:</strong> Whisper（STT）→ LLM（抽出）→ VOICEVOX（TTS）のパイプライン</li>
+          <li><strong>データ永続化:</strong> SQLite（検知ログ、前面アプリ、不在許可履歴）、localStorage（設定・スケジュール）</li>
+        </ul>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- フッター -->
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+
+        <!-- プロジェクト情報 -->
+        <div class="footer-section">
+          <h3>監視ちゃん</h3>
+          <p>AI監視とスケジュール管理を統合したElectronデスクトップアプリケーション。オープンソースで開発中です。</p>
+        </div>
+
+        <!-- リンク -->
+        <div class="footer-section">
+          <h3>リンク</h3>
+          <ul class="footer-links">
+            <li><a href="https://github.com/tmys-sasaki/kanshichan" target="_blank">GitHub リポジトリ</a></li>
+            <li><a href="https://github.com/tmys-sasaki/kanshichan/issues" target="_blank">Issue 報告</a></li>
+            <li><a href="https://github.com/tmys-sasaki/kanshichan/blob/develop/README.md" target="_blank">ドキュメント</a></li>
+          </ul>
+        </div>
+
+        <!-- ライセンス -->
+        <div class="footer-section">
+          <h3>ライセンス</h3>
+          <p>本プロジェクトは <a href="https://github.com/tmys-sasaki/kanshichan/blob/develop/LICENSE" target="_blank">MIT License</a> のもとで配布されています。</p>
+          <p><strong>第三者ライセンス:</strong></p>
+          <ul class="footer-links">
+            <li><a href="https://voicevox.hiroshiba.jp/terms" target="_blank">VOICEVOX 利用規約</a></li>
+            <li><a href="https://github.com/openai/whisper/blob/main/LICENSE" target="_blank">Whisper License (MIT)</a></li>
+            <li><a href="https://github.com/microsoft/onnxruntime/blob/main/LICENSE" target="_blank">ONNX Runtime License</a></li>
+          </ul>
+        </div>
+
+      </div>
+
+      <div class="footer-bottom">
+        <p>&copy; 2025 Kanshichan Project. All rights reserved.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- JavaScript -->
+  <script src="assets/js/main.js"></script>
+
+</body>
+</html>
