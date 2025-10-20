@@ -151,8 +151,15 @@ async function checkScheduleNotifications() {
     }
   }
 
+  const detail = {
+    scope: 'notifications',
+    reason: schedulesDirty ? 'state-changed' : 'tick',
+  };
+
   if (schedulesDirty) {
     saveSchedules();
-    window.dispatchEvent(new CustomEvent('schedule-renderer-updated', { detail: { scope: 'notifications' } }));
   }
+
+  // Dispatch even when schedules are unchanged so countdown labels stay current without reloads.
+  window.dispatchEvent(new CustomEvent('schedule-renderer-updated', { detail }));
 }
