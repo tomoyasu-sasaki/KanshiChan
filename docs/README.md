@@ -24,5 +24,3 @@ python3 -m http.server 8000
 ## デプロイ
 GitHub Pagesで自動デプロイされます。`develop` ブランチの `/docs` フォルダが公開されます。
 
-## 編集
-サイトの内容を編集する場合は `IMPLEMENTATION_PLAN.md` を参照してください。
