@@ -5,7 +5,7 @@
  */
 
 const { transcribeAudio, validateWhisperEnvironment } = require('./whisper');
-const { extractScheduleFromText, generateChatReply } = require('./llm');
+const { extractScheduleFromText, inferSettingsCommands, generateChatReply } = require('./llm');
 
 /**
  * 音声データを Whisper に渡して文字起こしする。
@@ -56,10 +56,32 @@ async function infer(profileId, text, context = {}) {
       };
     }
     case 'settings': {
+      let warnings = [];
+      try {
+        const { commands, warnings: llmWarnings } = await inferSettingsCommands(trimmed, {
+          availableSettings: Array.isArray(context.availableSettings) ? context.availableSettings : undefined,
+        });
+        if (commands.length > 0) {
+          return {
+            success: true,
+            commands,
+            warnings: llmWarnings || [],
+          };
+        }
+        warnings = [
+          ...(Array.isArray(llmWarnings) ? llmWarnings : []),
+          'LLM が操作を特定できなかったため単純解析に切り替えました',
+        ];
+      } catch (error) {
+        console.warn('[Audio] LLM 設定解析に失敗しました。フォールバックを使用します:', error);
+        warnings = [`LLM 解析に失敗したためフォールバックを使用しました: ${error.message}`];
+      }
+
       const commands = buildSettingsCommands(trimmed);
       return {
         success: true,
         commands,
+        warnings,
       };
     }
     case 'chat': {

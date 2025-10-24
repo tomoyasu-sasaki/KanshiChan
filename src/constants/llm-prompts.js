@@ -92,6 +92,57 @@ const SCHEDULE_EXTRACTION_SYSTEM_PROMPT = `あなたは音声入力から正確�
 
 それでは、以下のテキストからスケジュール情報を抽出してください。`;
 
+const SETTINGS_COMMAND_TARGETS = Object.freeze([
+  { key: 'phoneAlertEnabled', description: 'スマホ検知アラートをオン/オフする' },
+  { key: 'phoneThreshold', description: 'スマホ検知アラートが鳴るまでの秒数 (1〜600 秒)' },
+  { key: 'phoneConfidence', description: 'スマホ検知感度を 0.1〜0.9 で調整する' },
+  { key: 'absenceAlertEnabled', description: '不在検知アラートをオン/オフする' },
+  { key: 'absenceThreshold', description: '不在アラートが鳴るまでの秒数 (1〜600 秒)' },
+  { key: 'absenceConfidence', description: '不在検知感度を 0.1〜0.9 で調整する' },
+  { key: 'soundEnabled', description: 'アラート音をオン/オフする' },
+  { key: 'desktopNotification', description: 'デスクトップ通知をオン/オフする' },
+  { key: 'showDetections', description: '検知オーバーレイの表示を切り替える' },
+  { key: 'yoloEnabled', description: 'YOLO 検知そのものの有効/無効を切り替える' },
+  { key: 'voicevoxSpeaker', description: 'VOICEVOX 話者を番号で選択する' },
+]);
+
+const SETTINGS_COMMAND_SYSTEM_PROMPT = `あなたはデスクトップアプリの設定操作アシスタントです。
+
+【目的】
+ユーザーの日本語発話から設定変更意図を読み取り、構造化された JSON で返します。
+
+【出力仕様】
+- JSON オブジェクトに commands 配列を含める
+- 各要素は { "key": <設定キー>, "action": "set|toggle|increase|decrease", "value": 任意, "reason": 任意 } の形式
+- "toggle" は真偽値反転、"increase"/"decrease" は現在値からの相対変更を示す
+- value が不要な操作の場合は null や省略可能（例: toggle）
+- value が数値の場合は 0.1 刻みなど小数も許容する
+- 不明確な場合は commands に追加せず、代わりに reason に説明を残す
+
+【サポート対象の設定キー】
+${SETTINGS_COMMAND_TARGETS.map((target) => `- ${target.key}: ${target.description}`).join('\n')}
+
+【例】
+入力: 「スマホのアラートをオフにして、離席アラートは120秒に伸ばして」
+出力:
+{
+  "commands": [
+    {"key": "phoneAlertEnabled", "action": "set", "value": false, "reason": null},
+    {"key": "absenceThreshold", "action": "set", "value": 120, "reason": null}
+  ]
+}
+
+入力: 「検知の枠を表示して、アラート音はちょっと静かにして」
+出力:
+{
+  "commands": [
+    {"key": "showDetections", "action": "set", "value": true, "reason": null},
+    {"key": "soundEnabled", "action": "set", "value": true, "reason": "音量調整は未対応のため"}
+  ]
+}
+
+ユーザーの指示を正確に読み取り、可能な限り commands に反映してください。`;
+
 /**
  * ユーザープロンプトテンプレート
  * @param {string} transcribedText 文字起こしされたテキスト
@@ -127,6 +178,66 @@ ${transcribedText}
 上記のテキストからスケジュール情報を抽出してください。
 「今日」は ${todayISO} を指します。`;
 }
+
+/**
+ * 設定コマンド抽出用ユーザープロンプト。
+ * @param {string} transcribedText
+ * @param {{availableSettings?:Array<string>}} options
+ * @returns {string}
+ */
+function buildSettingsCommandUserPrompt(transcribedText, options = {}) {
+  const available = Array.isArray(options.availableSettings) && options.availableSettings.length > 0
+    ? options.availableSettings
+    : SETTINGS_COMMAND_TARGETS.map((target) => target.key);
+
+  return `【利用可能な設定キー】
+${available.join(', ')}
+
+【音声入力テキスト】
+${transcribedText}
+
+上記の指示を分析し、出力仕様に沿った JSON を生成してください。`;
+}
+
+const SETTINGS_COMMAND_JSON_SCHEMA = {
+  type: 'object',
+  properties: {
+    commands: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          key: {
+            type: 'string',
+            description: '設定キー (例: phoneAlertEnabled)',
+          },
+          action: {
+            type: 'string',
+            enum: ['set', 'toggle', 'increase', 'decrease'],
+          },
+          value: {
+            type: ['number', 'boolean', 'string', 'null'],
+            description: '設定値。toggle/increase/decrease では null 可',
+          },
+          reason: {
+            type: ['string', 'null'],
+            description: '補足や不確実性の説明',
+          },
+        },
+        required: ['key', 'action'],
+        additionalProperties: false,
+      },
+    },
+    warnings: {
+      type: 'array',
+      items: {
+        type: 'string',
+      },
+    },
+  },
+  required: ['commands'],
+  additionalProperties: false,
+};
 
 /**
  * チャット応答生成用のシステムプロンプト
@@ -223,6 +334,9 @@ module.exports = {
   SCHEDULE_EXTRACTION_SYSTEM_PROMPT,
   buildScheduleExtractionUserPrompt,
   SCHEDULE_EXTRACTION_JSON_SCHEMA,
+  SETTINGS_COMMAND_SYSTEM_PROMPT,
+  buildSettingsCommandUserPrompt,
+  SETTINGS_COMMAND_JSON_SCHEMA,
   CHAT_ASSISTANT_SYSTEM_PROMPT,
   buildChatPrompt,
 };

@@ -220,6 +220,27 @@
           <p class="settings-voice-helper">音声で設定を変更できます。「通知をオフにして」「スマホアラートを70秒に」などと話しかけてください。</p>
           <div id="settingsVoiceControl"></div>
           <div id="settingsVoiceResult" class="settings-voice-result"></div>
+          <div class="voice-dictionary-panel">
+            <h4>🗂️ カスタムフレーズ辞書</h4>
+            <p class="voice-dictionary-helper">よく使う言い回しを登録すると、音声コマンドの認識が向上します。</p>
+            <div class="voice-dictionary-form">
+              <label for="voiceDictionaryPhrase">音声フレーズ</label>
+              <input type="text" id="voiceDictionaryPhrase" placeholder="例: 画面オフモード" maxlength="40">
+              <label for="voiceDictionaryTarget">割り当てる設定</label>
+              <select id="voiceDictionaryTarget"></select>
+              <div class="voice-dictionary-actions">
+                <button type="button" id="voiceDictionaryAddBtn" class="btn-secondary">カスタムフレーズを追加</button>
+                <button type="button" id="voiceDictionaryExportBtn" class="btn-tertiary">エクスポート</button>
+                <button type="button" id="voiceDictionaryImportBtn" class="btn-tertiary">インポート</button>
+              </div>
+              <div id="voiceDictionaryMessage" class="voice-dictionary-message"></div>
+            </div>
+            <div class="voice-dictionary-unresolved">
+              <h5>最近の未解決フレーズ</h5>
+              <div id="voiceDictionaryUnresolved" class="voice-dictionary-unresolved-list"></div>
+            </div>
+            <ul id="voiceDictionaryList" class="voice-dictionary-list"></ul>
+          </div>
         </section>
 
         <!-- アコーディオンメニュー -->

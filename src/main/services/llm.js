@@ -11,6 +11,9 @@ const {
   SCHEDULE_EXTRACTION_SYSTEM_PROMPT,
   buildScheduleExtractionUserPrompt,
   SCHEDULE_EXTRACTION_JSON_SCHEMA,
+  SETTINGS_COMMAND_SYSTEM_PROMPT,
+  buildSettingsCommandUserPrompt,
+  SETTINGS_COMMAND_JSON_SCHEMA,
   buildChatPrompt,
 } = require('../../constants/llm-prompts');
 
@@ -229,6 +232,117 @@ async function extractScheduleFromText(transcribedText) {
   }
 }
 
+async function inferSettingsCommands(transcribedText, options = {}) {
+  if (!transcribedText || typeof transcribedText !== 'string') {
+    throw new Error('文字起こしテキストが不正です');
+  }
+
+  const trimmed = transcribedText.trim();
+  if (!trimmed) {
+    return { commands: [], warnings: ['入力が空のため、設定コマンドを生成できませんでした'] };
+  }
+
+  const { model } = await loadLLMModel();
+  if (!model) {
+    throw new Error('LLM モデルが初期化されていません');
+  }
+
+  const { LlamaChatSession } = await loadNodeLlamaCpp();
+  const tempContext = await model.createContext({
+    contextSize: 1536,
+  });
+
+  try {
+    const session = new LlamaChatSession({
+      contextSequence: tempContext.getSequence(),
+    });
+
+    const userPrompt = buildSettingsCommandUserPrompt(trimmed, options);
+    const fullPrompt = `${SETTINGS_COMMAND_SYSTEM_PROMPT}\n\n${userPrompt}`;
+
+    const response = await session.prompt(fullPrompt, {
+      maxTokens: 768,
+      temperature: 0.2,
+      topP: 0.9,
+      stopStrings: ['```'],
+    });
+
+    const jsonText = extractFirstJsonBlock(response);
+    if (!jsonText) {
+      throw new Error('LLM の出力から JSON を抽出できませんでした');
+    }
+
+    const parsed = JSON.parse(jsonText);
+    if (!parsed || typeof parsed !== 'object') {
+      throw new Error('LLM の出力がオブジェクトではありません');
+    }
+
+    const commands = Array.isArray(parsed.commands) ? parsed.commands : [];
+    const normalizedCommands = commands
+      .map((raw, index) => normalizeSettingsCommand(raw, index))
+      .filter(Boolean);
+
+    const warnings = Array.isArray(parsed.warnings)
+      ? parsed.warnings.filter((warning) => typeof warning === 'string' && warning.trim().length > 0)
+      : [];
+
+    return { commands: normalizedCommands, warnings };
+  } finally {
+    await tempContext.dispose();
+  }
+}
+
+function normalizeSettingsCommand(rawCommand, index) {
+  if (!rawCommand || typeof rawCommand !== 'object') {
+    console.warn('[LLM] settings command が不正です:', rawCommand);
+    return null;
+  }
+
+  const key = typeof rawCommand.key === 'string' ? rawCommand.key.trim() : '';
+  if (!key) {
+    console.warn(`[LLM] settings command key が空です (index=${index})`);
+    return null;
+  }
+
+  const actionRaw = typeof rawCommand.action === 'string' ? rawCommand.action.trim().toLowerCase() : '';
+  const allowedActions = new Set(['set', 'toggle', 'increase', 'decrease']);
+  if (!allowedActions.has(actionRaw)) {
+    console.warn(`[LLM] 未対応の action "${rawCommand.action}" (index=${index})`);
+    return null;
+  }
+
+  let value = rawCommand.value ?? null;
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (trimmed === '') {
+      value = null;
+    } else if (!Number.isNaN(Number(trimmed))) {
+      value = Number(trimmed);
+    }
+  }
+
+  if (typeof value === 'number' && !Number.isFinite(value)) {
+    value = null;
+  }
+
+  const reason = typeof rawCommand.reason === 'string' ? rawCommand.reason.trim() : null;
+
+  return {
+    key,
+    action: actionRaw,
+    value,
+    reason,
+  };
+}
+
+function extractFirstJsonBlock(text) {
+  if (!text) {
+    return null;
+  }
+  const match = text.match(/\{[\s\S]*\}/);
+  return match ? match[0] : null;
+}
+
 /**
  * カジュアルな音声チャット応答を生成する。
  * - 会話履歴は最大6ターンを渡し、過去ログが長くなりすぎるのを防ぐ。
@@ -318,6 +432,7 @@ function resetLLMInstance() {
 module.exports = {
   loadLLMModel,
   extractScheduleFromText,
+  inferSettingsCommands,
   generateChatReply,
   resetLLMInstance,
 };

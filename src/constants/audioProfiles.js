@@ -32,8 +32,10 @@ export const AUDIO_PROMPT_PROFILES = Object.freeze({
         'あなたはデスクトップアプリの設定操作アシスタントです。' +
         'ユーザーの日本語の指示から設定キーと変更内容を特定し、' +
         '以下の形式で JSON を返してください。\n' +
-        '{"commands": [{"key": "設定キー", "action": "set|toggle", "value": 任意}]}\n' +
-        '存在しない設定や不明確な指示の場合は `commands` を空配列にしてください。',
+        '{"commands": [{"key": "設定キー", "action": "set|toggle|increase|decrease", "value": 任意, "reason": "任意"}]}\n' +
+        '複数の設定が含まれる場合は順序通りに `commands` へ追加し、' +
+        '不明確な指示は `reason` に説明を入れた上で `action` を "set" にしないこと。' +
+        '存在しない設定や解析できない指示のみの場合は `commands` を空配列にしてください。',
     },
     tts: {
       defaultMessageField: null,
