@@ -11,6 +11,7 @@ import {
   refreshAbsenceOverrideState,
 } from '../services/absence-override.js';
 import { adjustAccordionHeight, escapeHtml, formatTimestamp } from './utils.js';
+import { queueVoicevoxSpeech } from '../services/tts-adapter.js';
 
 const dom = {
   statusText: null,
@@ -26,6 +27,9 @@ const dom = {
 };
 
 let overrideCountdownTimer = null;
+let lastActiveOverrideContext = null;
+let lastOverrideWasActive = false;
+let hasPendingAutoAnnouncement = false;
 
 /**
  * 不在許可 UI を初期化し、状態購読を開始する。
@@ -166,6 +170,9 @@ function updateAbsenceOverrideStatus(state) {
 
   if (currentState.active && currentState.current) {
     const current = currentState.current;
+    lastActiveOverrideContext = current;
+    lastOverrideWasActive = true;
+    hasPendingAutoAnnouncement = true;
     dom.statusText.textContent = `${current.reason || '一時的な不在'} を許可中`;
     dom.clearBtn?.removeAttribute('disabled');
 
@@ -178,6 +185,12 @@ function updateAbsenceOverrideStatus(state) {
       dom.countdownRow.hidden = true;
     }
   } else {
+    if (lastOverrideWasActive && hasPendingAutoAnnouncement) {
+      announceAbsenceOverrideEnd(lastActiveOverrideContext);
+      hasPendingAutoAnnouncement = false;
+    }
+    lastActiveOverrideContext = null;
+    lastOverrideWasActive = false;
     dom.statusText.textContent = '未許可';
     if (dom.countdownRow) {
       dom.countdownRow.hidden = true;
@@ -304,4 +317,17 @@ function renderAbsenceOverrideHistory(history) {
       `;
     })
     .join('');
+}
+
+function announceAbsenceOverrideEnd(context) {
+  const rawReason = typeof context?.reason === 'string' ? context.reason.trim() : '';
+  const message = rawReason
+    ? `${rawReason} の不在許可が終了しました。おかえりなさい。`
+    : '不在許可が終了しました。おかえりなさい。';
+
+  queueVoicevoxSpeech(message, {
+    speedScale: 1.0,
+  }).catch((error) => {
+    console.warn('[Settings] 不在許可終了の音声通知に失敗しました:', error);
+  });
 }
