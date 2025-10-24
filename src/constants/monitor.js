@@ -1,3 +1,4 @@
+import { DEFAULT_SCHEDULE_NOTIFICATION_SETTINGS } from './schedule.js';
 import { DEFAULT_VOICEVOX_SPEAKER_ID } from './voicevox-config.js';
 
 /**
@@ -18,7 +19,9 @@ export const DEFAULT_MONITOR_SETTINGS = Object.freeze({
   enabledClasses: DEFAULT_ENABLED_CLASSES,
   showDetections: true,
   yoloEnabled: true,
-  voicevoxSpeaker: DEFAULT_VOICEVOX_SPEAKER_ID
+  voicevoxSpeaker: DEFAULT_VOICEVOX_SPEAKER_ID,
+  schedulePreNotificationEnabled: DEFAULT_SCHEDULE_NOTIFICATION_SETTINGS.preNotificationEnabled,
+  schedulePreNotificationLeadMinutes: DEFAULT_SCHEDULE_NOTIFICATION_SETTINGS.leadMinutes
 });
 
 export const MONITOR_TIMING_CONSTANTS = Object.freeze({

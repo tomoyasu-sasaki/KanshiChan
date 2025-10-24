@@ -27,17 +27,18 @@ const SCHEDULE_EXTRACTION_SYSTEM_PROMPT = `あなたは音声入力から正確�
    - 説明がない場合は空文字列
 
 4. TTS メッセージの生成:
-   - スケジュール開始時に読み上げる自然な案内文を 30〜80 文字程度で作成
+   - スケジュール開始時に読み上げる自然な案内文を作成
    - 時刻は 24 時間表記で伝え、必要に応じてタイトルや説明の要点を含める
-   - 案内文は個人を対象と内容を丁寧に伝える
-   - 礼儀正しく、簡潔でポジティブな表現を心がける
+   - 簡潔でポジティブな表現を心がける
    - 絵文字や顔文字は使用しない
 
 5. 繰り返し設定:
-   - 「毎週月曜日」「平日に」「毎日」「隔週」などの表現を解析し、明確に繰り返しが読み取れる場合にのみ設定
-   - 繰り返しが無い場合は "repeat" に null を設定
-   - 繰り返しがある場合は "repeat.type" を "weekly"に固定し、"repeat.days" に 0(日)〜6(土) の配列で曜日を設定
-   - 「平日」は [1,2,3,4,5]、「週末」は [0,6]、「毎日」は [0,1,2,3,4,5,6]
+    - 「毎週月曜日」「平日に」「毎日」「隔週」などの表現を解析し、明確に繰り返しが読み取れる場合にのみ設定
+    - 繰り返しが無い場合は "repeat" に null を設定
+    - 繰り返しがある場合は "repeat.type" を "weekly"に固定し、"repeat.days" に 0(日)〜6(土) の配列で曜日を設定
+    - 「平日」は [1,2,3,4,5]
+    - 「週末」は [0,6]
+    - 「毎日」は [0,1,2,3,4,5,6]
 
 6. 複数スケジュールの対応:
    - 1回の入力で複数のスケジュールが含まれる場合、それぞれを配列の要素として抽出
@@ -72,8 +73,19 @@ const SCHEDULE_EXTRACTION_SYSTEM_PROMPT = `あなたは音声入力から正確�
       "date": "2025-10-06",
       "time": "10:00",
       "description": "会議室Aで新規プロジェクトについて話す",
-      "ttsMessage": "10時に田中さんとの打ち合わせが始まります。会議室Aで新規プロジェクトの確認です。",
+      "ttsMessage": "田中さんとの打ち合わせの時間です。会議室Aで新規プロジェクトの確認を行います。",
       "repeat": null
+    },
+    {
+      "title": "業務終了",
+      "date": "2025-10-06",
+      "time": "18:00",
+      "description": "平日の業務終了の時間",
+      "ttsMessage": "平日の業務終了の時間になりました。お疲れ様でした。。",
+      "repeat": {
+        "type": "weekly",
+        "days": [1,2,3,4,5]
+      }
     }
   ]
 }
@@ -94,7 +106,11 @@ function buildScheduleExtractionUserPrompt(transcribedText) {
     day: '2-digit',
     weekday: 'long'
   });
-  const todayISO = now.toISOString().split('T')[0]; // YYYY-MM-DD形式
+  const todayISO = [
+    now.getFullYear(),
+    String(now.getMonth() + 1).padStart(2, '0'),
+    String(now.getDate()).padStart(2, '0'),
+  ].join('-');
   const currentTime = now.toLocaleTimeString('ja-JP', {
     hour: '2-digit',
     minute: '2-digit',

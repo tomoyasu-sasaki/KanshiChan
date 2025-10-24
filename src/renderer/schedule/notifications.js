@@ -2,9 +2,10 @@
  * スケジュール通知のスケジューリングとトリガー処理を管理するモジュール。
  */
 import {
-  SCHEDULE_NOTIFICATION_LEAD_MINUTES,
+  DEFAULT_SCHEDULE_NOTIFICATION_SETTINGS,
   SCHEDULE_NOTIFICATION_COOLDOWN_MS,
   SCHEDULE_MESSAGES,
+  sanitizeScheduleLeadMinutes,
 } from '../../constants/schedule.js';
 import { scheduleState, setNotificationInterval, clearNotificationInterval } from './state.js';
 import {
@@ -18,6 +19,33 @@ import {
   saveSchedules,
 } from './model.js';
 import { queueTts } from './tts.js';
+import { loadSettings } from '../settings/state.js';
+
+let notificationSettingsErrorLogged = false;
+
+function getScheduleNotificationPreferences() {
+  try {
+    const settingsSource = typeof window.getSettings === 'function' ? window.getSettings() : loadSettings();
+    const enabled = settingsSource?.schedulePreNotificationEnabled;
+    const leadMinutes = settingsSource?.schedulePreNotificationLeadMinutes;
+    return {
+      preNotificationEnabled:
+        typeof enabled === 'boolean' ? enabled : DEFAULT_SCHEDULE_NOTIFICATION_SETTINGS.preNotificationEnabled,
+      leadMinutes: sanitizeScheduleLeadMinutes(
+        leadMinutes ?? DEFAULT_SCHEDULE_NOTIFICATION_SETTINGS.leadMinutes
+      ),
+    };
+  } catch (error) {
+    if (!notificationSettingsErrorLogged) {
+      console.warn('[Schedule] 通知設定の読み込みに失敗しました。既定値を使用します。', error);
+      notificationSettingsErrorLogged = true;
+    }
+    return {
+      preNotificationEnabled: DEFAULT_SCHEDULE_NOTIFICATION_SETTINGS.preNotificationEnabled,
+      leadMinutes: DEFAULT_SCHEDULE_NOTIFICATION_SETTINGS.leadMinutes,
+    };
+  }
+}
 
 /**
  * 通知チェックのタイマーを開始する。
@@ -49,6 +77,7 @@ export function stopNotificationCheck() {
  * スケジュールを走査し、条件を満たす通知を発火させる中核処理。
  */
 async function checkScheduleNotifications() {
+  const { preNotificationEnabled, leadMinutes } = getScheduleNotificationPreferences();
   const now = new Date();
   const seconds = now.getSeconds();
   const nowAligned = new Date(now);
@@ -103,21 +132,21 @@ async function checkScheduleNotifications() {
       continue;
     }
 
-    if (seconds === 0 && minutesLeft === SCHEDULE_NOTIFICATION_LEAD_MINUTES && !schedule.preNotified) {
+    if (preNotificationEnabled && seconds === 0 && minutesLeft === leadMinutes && !schedule.preNotified) {
       schedule.preNotified = true;
       schedule.notified = schedule.preNotified || schedule.startNotified;
       schedulesDirty = true;
 
       await window.electronAPI.sendNotification({
         title: SCHEDULE_MESSAGES.leadTitle(schedule.title),
-        body: SCHEDULE_MESSAGES.leadBody(schedule, formattedDate),
+        body: SCHEDULE_MESSAGES.leadBody(schedule, formattedDate, leadMinutes),
       });
 
       const leadMessage = (() => {
         if (typeof schedule.ttsLeadMessage === 'string' && schedule.ttsLeadMessage.trim().length > 0) {
           return schedule.ttsLeadMessage.trim();
         }
-        return buildRepeatAwareLeadFallback(schedule, occurrenceInfo);
+        return buildRepeatAwareLeadFallback(schedule, occurrenceInfo, leadMinutes);
       })();
 
       await queueTts(leadMessage, {

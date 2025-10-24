@@ -14,7 +14,7 @@ import {
   scheduleEditHint,
 } from './dom.js';
 import { SCHEDULE_MESSAGES } from '../../constants/schedule.js';
-import { scheduleState, setEditingSchedule } from './state.js';
+import { scheduleState, setEditingSchedule, getVoiceDraft, clearVoiceDraft } from './state.js';
 import {
   getTodayISODate,
   buildRepeatAwareStartFallback,
@@ -145,6 +145,7 @@ async function handleFormSubmit({ onSchedulesChanged }) {
   const description = descriptionInput?.value || '';
   const selectedRepeatDays = getSelectedRepeatDays();
   const repeat = selectedRepeatDays.length > 0 ? { type: 'weekly', days: selectedRepeatDays } : null;
+  const voiceDraft = getVoiceDraft();
 
   if (!title || !time) {
     alert('タイトルと時刻を入力してください');
@@ -160,7 +161,14 @@ async function handleFormSubmit({ onSchedulesChanged }) {
     description,
     repeat,
   };
-  let ttsMessage = typeof existingSchedule?.ttsMessage === 'string' ? existingSchedule.ttsMessage.trim() : '';
+  let ttsMessage = '';
+
+  if (isEditing) {
+    ttsMessage = typeof existingSchedule?.ttsMessage === 'string' ? existingSchedule.ttsMessage.trim() : '';
+  } else {
+    ttsMessage = extractVoiceDraftTtsMessage(voiceDraft, draftSchedule);
+  }
+
   if (!ttsMessage) {
     ttsMessage = buildRepeatAwareStartFallback(draftSchedule);
   }
@@ -179,6 +187,7 @@ async function handleFormSubmit({ onSchedulesChanged }) {
       repeat,
       ttsMessage,
     });
+    clearVoiceDraft();
     exitEditMode();
   } else {
     addSchedule({
@@ -189,6 +198,7 @@ async function handleFormSubmit({ onSchedulesChanged }) {
       repeat,
       ttsMessage,
     });
+    clearVoiceDraft();
     if (titleInput) {
       titleInput.value = '';
     }
@@ -211,4 +221,60 @@ async function handleFormSubmit({ onSchedulesChanged }) {
       console.warn('[Schedule] 追加通知の送信に失敗:', error);
     }
   }
+}
+
+function extractVoiceDraftTtsMessage(voiceDraft, draftSchedule) {
+  if (!voiceDraft) {
+    return '';
+  }
+
+  const draftTitle = normalizeText(draftSchedule.title);
+  const voiceTitle = normalizeText(voiceDraft.title);
+  if (voiceTitle && draftTitle && voiceTitle !== draftTitle) {
+    return '';
+  }
+
+  if (typeof voiceDraft.date === 'string' && voiceDraft.date && voiceDraft.date !== draftSchedule.date) {
+    return '';
+  }
+
+  if (typeof voiceDraft.time === 'string' && voiceDraft.time && voiceDraft.time !== draftSchedule.time) {
+    return '';
+  }
+
+  if (!repeatConfigsMatch(voiceDraft.repeat, draftSchedule.repeat)) {
+    return '';
+  }
+
+  const message = typeof voiceDraft.ttsMessage === 'string' ? voiceDraft.ttsMessage.trim() : '';
+  return message;
+}
+
+function normalizeText(value) {
+  return typeof value === 'string' ? value.trim() : '';
+}
+
+function repeatConfigsMatch(voiceRepeat, draftRepeat) {
+  const voiceDays = normalizeRepeatDays(voiceRepeat);
+  if (!voiceDays.length) {
+    return true;
+  }
+  const draftDays = normalizeRepeatDays(draftRepeat);
+  if (voiceDays.length !== draftDays.length) {
+    return false;
+  }
+  return voiceDays.every((day, index) => day === draftDays[index]);
+}
+
+function normalizeRepeatDays(config) {
+  if (!config || config.type !== 'weekly' || !Array.isArray(config.days)) {
+    return [];
+  }
+  return Array.from(
+    new Set(
+      config.days
+        .map((day) => Number(day))
+        .filter((day) => Number.isInteger(day) && day >= 0 && day <= 6)
+    )
+  ).sort((a, b) => a - b);
 }

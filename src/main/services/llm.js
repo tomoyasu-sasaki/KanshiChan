@@ -178,7 +178,7 @@ async function extractScheduleFromText(transcribedText) {
     const fullPrompt = `${SCHEDULE_EXTRACTION_SYSTEM_PROMPT}\n\n${userPrompt}`;
 
     const response = await session.prompt(fullPrompt, {
-      maxTokens: 512,
+      maxTokens: 1512,
       temperature: 0.3,
       topP: 0.9,
       stopStrings: ['\n\n', '```'],

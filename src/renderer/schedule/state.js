@@ -7,6 +7,7 @@ export const scheduleState = {
   editingScheduleId: null,
   notificationCheckInterval: null,
   isTTSPlaying: false,
+  voiceDraft: null,
 };
 
 /**
@@ -50,4 +51,27 @@ export function clearNotificationInterval() {
  */
 export function resetTtsQueue() {
   scheduleState.isTTSPlaying = false;
+}
+
+/**
+ * 音声抽出からフォームへ適用したドラフトを保存する。
+ * @param {object|null} draft
+ */
+export function setVoiceDraft(draft) {
+  scheduleState.voiceDraft = draft || null;
+}
+
+/**
+ * 現在保持している音声ドラフトを取得する。
+ * @returns {object|null}
+ */
+export function getVoiceDraft() {
+  return scheduleState.voiceDraft || null;
+}
+
+/**
+ * 音声ドラフトを破棄する。
+ */
+export function clearVoiceDraft() {
+  scheduleState.voiceDraft = null;
 }

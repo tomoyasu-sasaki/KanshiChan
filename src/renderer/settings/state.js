@@ -4,6 +4,7 @@
  * - 他モジュールへはシリアライズ済み設定の読み書きだけを公開する。
  */
 import { DEFAULT_MONITOR_SETTINGS } from '../../constants/monitor.js';
+import { sanitizeScheduleLeadMinutes } from '../../constants/schedule.js';
 import { DEFAULT_VOICEVOX_SPEAKER_ID } from '../../constants/voicevox-config.js';
 
 export const DEFAULT_SLACK_SCHEDULE = ['13:00', '18:00'];
@@ -37,11 +38,19 @@ export function loadSettings() {
     const enabledClasses = Array.isArray(parsed.enabledClasses)
       ? parsed.enabledClasses
       : [...DEFAULT_MONITOR_SETTINGS.enabledClasses];
+    const schedulePreNotificationEnabled = typeof parsed.schedulePreNotificationEnabled === 'boolean'
+      ? parsed.schedulePreNotificationEnabled
+      : defaults.schedulePreNotificationEnabled;
+    const schedulePreNotificationLeadMinutes = sanitizeScheduleLeadMinutes(
+      parsed.schedulePreNotificationLeadMinutes ?? defaults.schedulePreNotificationLeadMinutes
+    );
 
     return {
       ...defaults,
       ...parsed,
       enabledClasses,
+      schedulePreNotificationEnabled,
+      schedulePreNotificationLeadMinutes,
     };
   } catch (error) {
     console.warn('[Settings] Failed to parse stored monitor settings.', error);
