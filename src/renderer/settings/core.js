@@ -28,6 +28,7 @@ const elements = {
   schedulePreNotificationLeadMinutes: null,
   schedulePreNotificationLeadMinutesValue: null,
   showDetections: null,
+  previewEnabled: null,
   yoloEnabled: null,
   voicevoxSpeaker: null,
   saveSettingsBtn: null,
@@ -74,6 +75,7 @@ function bindElements() {
   elements.schedulePreNotificationLeadMinutes = document.getElementById('schedulePreNotificationLeadMinutes');
   elements.schedulePreNotificationLeadMinutesValue = document.getElementById('schedulePreNotificationLeadMinutesValue');
   elements.showDetections = document.getElementById('showDetections');
+  elements.previewEnabled = document.getElementById('previewEnabled');
   elements.yoloEnabled = document.getElementById('yoloEnabled');
   elements.voicevoxSpeaker = document.getElementById('voicevoxSpeaker');
 
@@ -257,6 +259,7 @@ function collectSettingsFromForm() {
     schedulePreNotificationEnabled,
     schedulePreNotificationLeadMinutes,
     showDetections,
+    previewEnabled,
     yoloEnabled,
     voicevoxSpeaker,
   } = elements;
@@ -283,6 +286,7 @@ function collectSettingsFromForm() {
     ),
     enabledClasses,
     showDetections: showDetections ? showDetections.checked : DEFAULT_MONITOR_SETTINGS.showDetections,
+    previewEnabled: previewEnabled ? previewEnabled.checked : DEFAULT_MONITOR_SETTINGS.previewEnabled,
     yoloEnabled: yoloEnabled ? yoloEnabled.checked : DEFAULT_MONITOR_SETTINGS.yoloEnabled,
     voicevoxSpeaker: voicevoxSpeaker ? parseInt(voicevoxSpeaker.value, 10) : DEFAULT_VOICEVOX_SPEAKER_ID,
   };
@@ -349,6 +353,7 @@ export function applySettings(settings) {
     schedulePreNotificationLeadMinutes,
     schedulePreNotificationLeadMinutesValue,
     showDetections,
+    previewEnabled,
     yoloEnabled,
     voicevoxSpeaker,
   } = elements;
@@ -407,6 +412,9 @@ export function applySettings(settings) {
   }
   if (showDetections) {
     showDetections.checked = settings.showDetections !== false;
+  }
+  if (previewEnabled) {
+    previewEnabled.checked = settings.previewEnabled !== false;
   }
   if (yoloEnabled) {
     yoloEnabled.checked = settings.yoloEnabled !== false;
@@ -473,15 +481,7 @@ export function updateLinkedDisplays(key, value) {
  */
 function setupAccordion() {
   const headers = document.querySelectorAll('.accordion-header');
-  headers.forEach((header, index) => {
-    if (index === 0) {
-      header.classList.add('active');
-      const content = header.nextElementSibling;
-      if (content) {
-        content.style.maxHeight = `${content.scrollHeight}px`;
-      }
-    }
-
+  headers.forEach((header) => {
     header.addEventListener('click', () => {
       const content = header.nextElementSibling;
       if (!content) {

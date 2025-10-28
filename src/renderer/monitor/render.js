@@ -2,7 +2,7 @@
  * レンダリング関連の制御 (キャンバス描画・PASSバッジ・タイマー同期)。
  * - 描画ループはここで完結させ、検知ロジックとは疎結合に保つ。
  */
-import { getMonitorState, MONITOR_TIMING_CONSTANTS } from './context.js';
+import { getMonitorState, MONITOR_TIMING_CONSTANTS, DEFAULT_MONITOR_SETTINGS } from './context.js';
 
 /**
  * 描画ループを開始する。
@@ -13,16 +13,30 @@ export function startRenderLoop() {
   if (state.renderHandle) {
     return;
   }
+
+  if (!state.isMonitoring) {
+    return;
+  }
+
+  if (isPreviewDisabled(state)) {
+    stopRenderLoop();
+    return;
+  }
   state.renderHandle = requestAnimationFrame(renderLoop);
 }
 
 function renderLoop() {
   const state = getMonitorState();
+  if (isPreviewDisabled(state)) {
+    stopRenderLoop();
+    return;
+  }
+
   const { videoElement, canvasElement } = state.elements;
   const { ctx, isMonitoring } = state;
 
   if (!isMonitoring) {
-    state.renderHandle = null;
+    stopRenderLoop();
     return;
   }
   if (!ctx || !videoElement || !canvasElement) {
@@ -42,6 +56,19 @@ function renderLoop() {
   }
 
   state.renderHandle = requestAnimationFrame(renderLoop);
+}
+
+function stopRenderLoop() {
+  const state = getMonitorState();
+  if (state.renderHandle) {
+    cancelAnimationFrame(state.renderHandle);
+    state.renderHandle = null;
+  }
+}
+
+function isPreviewDisabled(state) {
+  const settings = state.settings || DEFAULT_MONITOR_SETTINGS;
+  return settings.previewEnabled === false;
 }
 
 /**
@@ -131,4 +158,38 @@ export function formatRemainingDuration(ms) {
     return `${hours}時間${minutes}分`;
   }
   return `${minutes}分`;
+}
+
+/**
+ * UI 上のプレビュー可視状態を最新化する。
+ */
+export function syncPreviewVisibility(settings = null) {
+  const state = getMonitorState();
+  const effectiveSettings = settings || state.settings || DEFAULT_MONITOR_SETTINGS;
+  const previewEnabled = effectiveSettings.previewEnabled !== false;
+  state.previewEnabled = previewEnabled;
+
+  const { cameraContainer, monitorIndicator } = state.elements;
+  if (cameraContainer) {
+    cameraContainer.classList.toggle('preview-hidden', !previewEnabled);
+  }
+  if (monitorIndicator) {
+    monitorIndicator.classList.toggle('preview-off', !previewEnabled);
+    const label = monitorIndicator.querySelector('span');
+    if (label) {
+      label.textContent = previewEnabled ? '監視中' : '監視中 (プレビューOFF)';
+    }
+  }
+}
+
+/**
+ * 現在の設定に基づいて描画ループの開始/停止を調整する。
+ */
+export function ensureRenderLoopState() {
+  const state = getMonitorState();
+  if (isPreviewDisabled(state) || !state.isMonitoring) {
+    stopRenderLoop();
+    return;
+  }
+  startRenderLoop();
 }

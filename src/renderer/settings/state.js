@@ -19,6 +19,7 @@ export function cloneDefaultSettings() {
     ...DEFAULT_MONITOR_SETTINGS,
     enabledClasses: [...DEFAULT_MONITOR_SETTINGS.enabledClasses],
     voicevoxSpeaker: DEFAULT_MONITOR_SETTINGS.voicevoxSpeaker ?? DEFAULT_VOICEVOX_SPEAKER_ID,
+    previewEnabled: DEFAULT_MONITOR_SETTINGS.previewEnabled !== false,
   };
 }
 
@@ -44,6 +45,9 @@ export function loadSettings() {
     const schedulePreNotificationLeadMinutes = sanitizeScheduleLeadMinutes(
       parsed.schedulePreNotificationLeadMinutes ?? defaults.schedulePreNotificationLeadMinutes
     );
+    const previewEnabled = typeof parsed.previewEnabled === 'boolean'
+      ? parsed.previewEnabled
+      : defaults.previewEnabled;
 
     return {
       ...defaults,
@@ -51,6 +55,7 @@ export function loadSettings() {
       enabledClasses,
       schedulePreNotificationEnabled,
       schedulePreNotificationLeadMinutes,
+      previewEnabled,
     };
   } catch (error) {
     console.warn('[Settings] Failed to parse stored monitor settings.', error);

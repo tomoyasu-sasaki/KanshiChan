@@ -175,6 +175,7 @@ const SETTINGS_BOOLEAN_TARGETS = [
   { key: 'soundEnabled', keywords: ['音', 'サウンド'] },
   { key: 'desktopNotification', keywords: ['通知'] },
   { key: 'showDetections', keywords: ['オーバーレイ', '検知表示'] },
+  { key: 'previewEnabled', keywords: ['プレビュー', '画面表示'] },
   { key: 'yoloEnabled', keywords: ['yolo', '検知モデル'] },
 ];
 

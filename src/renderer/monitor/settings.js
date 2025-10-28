@@ -3,6 +3,7 @@
  * - localStorage/DEFAULT_MONITOR_SETTINGS を統合し、モジュール間で共有する。
  */
 import { getMonitorState, DEFAULT_MONITOR_SETTINGS } from './context.js';
+import { syncPreviewVisibility, ensureRenderLoopState } from './render.js';
 
 const STORAGE_KEY = 'monitorSettings';
 
@@ -11,7 +12,10 @@ const STORAGE_KEY = 'monitorSettings';
  * - ファイル分割後も既存の開始シーケンス (startMonitoringProcess) が変わらないようにする。
  */
 export function initializeSettings() {
-  getMonitorState().settings = readSettingsFromStorage();
+  const state = getMonitorState();
+  state.settings = readSettingsFromStorage();
+  syncPreviewVisibility(state.settings);
+  ensureRenderLoopState();
 }
 
 /**
@@ -21,6 +25,8 @@ export function initializeSettings() {
 export function reloadSettings() {
   const state = getMonitorState();
   state.settings = readSettingsFromStorage();
+  syncPreviewVisibility(state.settings);
+  ensureRenderLoopState();
   return state.settings;
 }
 
@@ -46,12 +52,16 @@ function readSettingsFromStorage() {
   }
   try {
     const parsed = JSON.parse(saved);
+    const previewEnabled = typeof parsed.previewEnabled === 'boolean'
+      ? parsed.previewEnabled
+      : DEFAULT_MONITOR_SETTINGS.previewEnabled;
     return {
       ...createDefaultSettings(),
       ...parsed,
       enabledClasses: Array.isArray(parsed.enabledClasses)
         ? parsed.enabledClasses
         : [...DEFAULT_MONITOR_SETTINGS.enabledClasses],
+      previewEnabled,
     };
   } catch (error) {
     console.warn('[Monitor] Failed to parse monitor settings.', error);

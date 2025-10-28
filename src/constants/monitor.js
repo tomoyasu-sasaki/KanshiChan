@@ -18,6 +18,7 @@ export const DEFAULT_MONITOR_SETTINGS = Object.freeze({
   desktopNotification: true,
   enabledClasses: DEFAULT_ENABLED_CLASSES,
   showDetections: true,
+  previewEnabled: true,
   yoloEnabled: true,
   voicevoxSpeaker: DEFAULT_VOICEVOX_SPEAKER_ID,
   schedulePreNotificationEnabled: DEFAULT_SCHEDULE_NOTIFICATION_SETTINGS.preNotificationEnabled,

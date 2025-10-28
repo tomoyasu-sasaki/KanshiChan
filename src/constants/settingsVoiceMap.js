@@ -141,6 +141,18 @@ export const SETTINGS_VOICE_MAP = Object.freeze({
       toggle: ['オーバーレイを切り替え'],
     },
   },
+  previewEnabled: {
+    key: 'previewEnabled',
+    label: '監視プレビュー',
+    type: 'boolean',
+    elementId: 'previewEnabled',
+    synonyms: ['プレビュー', '監視映像', '画面表示'],
+    intents: {
+      on: ['プレビューを表示', '監視画面を表示', '映像を表示'],
+      off: ['プレビューを隠して', '監視画面を非表示', '映像を消して'],
+      toggle: ['プレビューを切り替え', '監視画面を切り替え'],
+    },
+  },
   yoloEnabled: {
     key: 'yoloEnabled',
     label: 'YOLO検知',

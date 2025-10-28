@@ -102,6 +102,7 @@ const SETTINGS_COMMAND_TARGETS = Object.freeze([
   { key: 'soundEnabled', description: 'アラート音をオン/オフする' },
   { key: 'desktopNotification', description: 'デスクトップ通知をオン/オフする' },
   { key: 'showDetections', description: '検知オーバーレイの表示を切り替える' },
+  { key: 'previewEnabled', description: '監視プレビュー表示をオン/オフする' },
   { key: 'yoloEnabled', description: 'YOLO 検知そのものの有効/無効を切り替える' },
   { key: 'voicevoxSpeaker', description: 'VOICEVOX 話者を番号で選択する' },
 ]);

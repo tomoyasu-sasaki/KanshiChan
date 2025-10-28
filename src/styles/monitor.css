@@ -91,6 +91,12 @@
   height: 100%;
 }
 
+.camera-feed.preview-hidden {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
 .camera-feed #videoElement {
   display: none;
 }
@@ -170,6 +176,16 @@
 
 .monitor-indicator.stopped {
   background: rgba(158, 158, 158, 0.9);
+}
+
+.monitor-indicator.preview-off {
+  background: rgba(158, 158, 158, 0.9);
+  color: #e0e0e0;
+}
+
+.monitor-indicator.preview-off .recording-dot {
+  background: #e0e0e0;
+  animation: none;
 }
 
 .recording-dot {
