@@ -215,69 +215,98 @@
       </div>
       
       <div class="drawer-body">
-        <section class="absence-override-section">
-          <h3>🚶‍♂️ 一時的な不在許可</h3>
-          <p class="description">
-            昼休憩や買い出しなど監視範囲外に出るタイミングで不在検知を一時的に PASS できます。
-            許可中は不在アラートや集計がカウントされません。
-          </p>
-          <div class="absence-override-status" id="absenceOverrideStatus">
-            <div class="status-line">
-              <span class="status-label">現在の状態</span>
-              <span class="status-value" id="absenceOverrideStatusText">未許可</span>
-            </div>
-            <div class="status-line" id="absenceOverrideCountdownRow" hidden>
-              <span class="status-label">残り時間</span>
-              <span class="status-countdown" id="absenceOverrideCountdown">--</span>
-            </div>
-          </div>
-
-          <div class="absence-override-actions">
-            <div class="preset-group">
-              <button type="button" class="btn-secondary override-preset" data-minutes="60" data-reason="昼休憩" data-preset-id="lunch">昼休憩 (60分)</button>
-              <button type="button" class="btn-secondary override-preset" data-minutes="15" data-reason="トイレ休憩" data-preset-id="restroom">トイレ (15分)</button>
-              <button type="button" class="btn-secondary override-preset" data-minutes="30" data-reason="買い出し" data-preset-id="shopping">買い出し (30分)</button>
-              <button type="button" class="btn-secondary override-preset" data-minutes="20" data-reason="散歩" data-preset-id="walk">散歩 (20分)</button>
-              <button type="button" class="btn-secondary override-preset" data-minutes="45" data-reason="お風呂" data-preset-id="bath">お風呂 (45分)</button>
-            </div>
-
-            <div class="custom-group">
-              <div class="form-row">
-                <label for="absenceOverrideReason">理由</label>
-                <input type="text" id="absenceOverrideReason" placeholder="例: スーパー" maxlength="40">
-              </div>
-              <div class="form-row">
-                <label for="absenceOverrideMinutes">滞在時間 (分)</label>
-                <div class="custom-duration">
-                  <input type="number" id="absenceOverrideMinutes" min="5" max="240" step="5" value="30">
-                  <button type="button" id="absenceOverrideStartBtn" class="btn-primary">許可を開始</button>
-                </div>
-              </div>
-            </div>
-          </div>
-
-        <div class="absence-override-footer">
-          <button type="button" id="absenceOverrideClearBtn" class="btn-secondary">許可を終了</button>
-          <span class="help-text" id="absenceOverrideMessage"></span>
-        </div>
-
-        <details class="absence-override-history" id="absenceOverrideHistoryPanel">
-          <summary>最近の許可履歴</summary>
-          <ul class="absence-override-history-list" id="absenceOverrideHistoryList">
-            <li class="empty">履歴がありません</li>
-          </ul>
-        </details>
-      </section>
-
         <section class="settings-voice-section">
           <h3>🎙️ 音声コマンド</h3>
           <p class="settings-voice-helper">音声で設定を変更できます。「通知をオフにして」「スマホアラートを70秒に」などと話しかけてください。</p>
           <div id="settingsVoiceControl"></div>
           <div id="settingsVoiceResult" class="settings-voice-result"></div>
+          <div class="voice-dictionary-panel">
+            <h4>🗂️ カスタムフレーズ辞書</h4>
+            <p class="voice-dictionary-helper">よく使う言い回しを登録すると、音声コマンドの認識が向上します。</p>
+            <div class="voice-dictionary-form">
+              <label for="voiceDictionaryPhrase">音声フレーズ</label>
+              <input type="text" id="voiceDictionaryPhrase" placeholder="例: 画面オフモード" maxlength="40">
+              <label for="voiceDictionaryTarget">割り当てる設定</label>
+              <select id="voiceDictionaryTarget"></select>
+              <div class="voice-dictionary-actions">
+                <button type="button" id="voiceDictionaryAddBtn" class="btn-secondary">カスタムフレーズを追加</button>
+                <button type="button" id="voiceDictionaryExportBtn" class="btn-tertiary">エクスポート</button>
+                <button type="button" id="voiceDictionaryImportBtn" class="btn-tertiary">インポート</button>
+              </div>
+              <div id="voiceDictionaryMessage" class="voice-dictionary-message"></div>
+            </div>
+            <div class="voice-dictionary-unresolved">
+              <h5>最近の未解決フレーズ</h5>
+              <div id="voiceDictionaryUnresolved" class="voice-dictionary-unresolved-list"></div>
+            </div>
+            <ul id="voiceDictionaryList" class="voice-dictionary-list"></ul>
+          </div>
         </section>
 
         <!-- アコーディオンメニュー -->
         <div class="accordion">
+          <!-- 一時的な不在許可 -->
+          <div class="accordion-item">
+            <button class="accordion-header" type="button">
+              <span>🚶‍♂️ 一時的な不在許可</span>
+              <span class="accordion-icon">▼</span>
+            </button>
+            <div class="accordion-content">
+              <div class="form-group">
+                <p class="description">
+                  昼休憩や買い出しなど監視範囲外に出るタイミングで不在検知を一時的に PASS できます。
+                  許可中は不在アラートや集計がカウントされません。
+                </p>
+                <div class="absence-override-status" id="absenceOverrideStatus">
+                  <div class="status-line">
+                    <span class="status-label">現在の状態</span>
+                    <span class="status-value" id="absenceOverrideStatusText">未許可</span>
+                  </div>
+                  <div class="status-line" id="absenceOverrideCountdownRow" hidden>
+                    <span class="status-label">残り時間</span>
+                    <span class="status-countdown" id="absenceOverrideCountdown">--</span>
+                  </div>
+                </div>
+
+                <div class="absence-override-actions">
+                  <div class="preset-group">
+                    <button type="button" class="btn-secondary override-preset" data-minutes="60" data-reason="昼休憩" data-preset-id="lunch">昼休憩 (60分)</button>
+                    <button type="button" class="btn-secondary override-preset" data-minutes="15" data-reason="トイレ休憩" data-preset-id="restroom">トイレ (15分)</button>
+                    <button type="button" class="btn-secondary override-preset" data-minutes="30" data-reason="買い出し" data-preset-id="shopping">買い出し (30分)</button>
+                    <button type="button" class="btn-secondary override-preset" data-minutes="20" data-reason="散歩" data-preset-id="walk">散歩 (20分)</button>
+                    <button type="button" class="btn-secondary override-preset" data-minutes="45" data-reason="お風呂" data-preset-id="bath">お風呂 (45分)</button>
+                  </div>
+
+                  <div class="custom-group">
+                    <div class="form-row">
+                      <label for="absenceOverrideReason">理由</label>
+                      <input type="text" id="absenceOverrideReason" placeholder="例: スーパー" maxlength="40">
+                    </div>
+                    <div class="form-row">
+                      <label for="absenceOverrideMinutes">滞在時間 (分)</label>
+                      <div class="custom-duration">
+                        <input type="number" id="absenceOverrideMinutes" min="5" max="240" step="5" value="30">
+                        <button type="button" id="absenceOverrideStartBtn" class="btn-primary">許可を開始</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="absence-override-footer">
+                  <button type="button" id="absenceOverrideClearBtn" class="btn-secondary">許可を終了</button>
+                  <span class="help-text" id="absenceOverrideMessage"></span>
+                </div>
+
+                <details class="absence-override-history" id="absenceOverrideHistoryPanel">
+                  <summary>最近の許可履歴</summary>
+                  <ul class="absence-override-history-list" id="absenceOverrideHistoryList">
+                    <li class="empty">履歴がありません</li>
+                  </ul>
+                </details>
+              </div>
+            </div>
+          </div>
+
           <!-- 検知モデル設定 -->
           <div class="accordion-item">
             <button class="accordion-header" type="button">
@@ -425,6 +454,24 @@
                   デスクトップ通知を有効にする
                 </label>
               </div>
+
+              <div class="form-group">
+                <label>
+                  <input type="checkbox" id="schedulePreNotificationEnabled" checked>
+                  スケジュールの事前通知を有効にする
+                </label>
+              </div>
+
+              <div class="form-group">
+                <label for="schedulePreNotificationLeadMinutes">
+                  事前通知のタイミング (分)
+                  <span class="description">1〜120分前まで設定できます</span>
+                </label>
+                <div class="slider-container">
+                  <input type="range" id="schedulePreNotificationLeadMinutes" min="1" max="120" step="1" value="5">
+                  <span id="schedulePreNotificationLeadMinutesValue" class="slider-value">5分前</span>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -440,6 +487,13 @@
                   <input type="checkbox" id="showDetections" checked>
                   検出フレームを表示
                 </label>
+              </div>
+              <div class="form-group">
+                <label>
+                  <input type="checkbox" id="previewEnabled" checked>
+                  監視プレビューを表示
+                </label>
+                <p class="description">OFF にするとカメラ映像は非表示のまま検出だけ継続します</p>
               </div>
             </div>
           </div>
@@ -552,7 +606,7 @@
           <div class="filter-group">
             <label for="dashboardRange">期間</label>
             <select id="dashboardRange">
-              <option value="24h"selected>直近24時間</option>
+              <option value="24h" selected>直近24時間</option>
               <option value="7d">直近7日</option>
               <option value="30d">直近30日</option>
               <option value="custom">カスタム</option>

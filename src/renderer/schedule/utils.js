@@ -2,7 +2,10 @@
  * スケジュール機能で共有するユーティリティ群。
  * - 日時計算や繰り返し判定など副作用を持たない処理のみを配置する。
  */
-import { SCHEDULE_NOTIFICATION_LEAD_MINUTES } from '../../constants/schedule.js';
+import {
+  DEFAULT_SCHEDULE_NOTIFICATION_SETTINGS,
+  sanitizeScheduleLeadMinutes,
+} from '../../constants/schedule.js';
 import {
   WEEKDAY_LABELS,
   REPEAT_TYPE_ALIASES,
@@ -133,35 +136,40 @@ export function getScheduleTime(schedule) {
 }
 
 /**
- * 繰り返し情報を考慮した 5 分前通知の既定文面を生成する。
+ * 繰り返し情報を考慮した事前通知の既定文面を生成する。
  * @param {object} schedule 通知対象スケジュール
  * @param {{isRepeat:boolean}|null} occurrenceInfo 次回発生情報
  * @param {number} leadMinutes リードタイム（分）
  * @returns {string} 読み上げ用テキスト
  */
-export function buildRepeatAwareLeadFallback(schedule, occurrenceInfo = null, leadMinutes = SCHEDULE_NOTIFICATION_LEAD_MINUTES) {
+export function buildRepeatAwareLeadFallback(
+  schedule,
+  occurrenceInfo = null,
+  leadMinutes = DEFAULT_SCHEDULE_NOTIFICATION_SETTINGS.leadMinutes
+) {
   const title = getScheduleTitle(schedule);
   const timeText = getScheduleTime(schedule);
   const repeatLabel = formatRepeatLabel(schedule.repeat);
   const hasRepeat = hasWeeklyRepeat(schedule);
+  const minutes = sanitizeScheduleLeadMinutes(leadMinutes);
   const suffix = '準備をお願いします。';
 
   if (hasRepeat) {
     if (occurrenceInfo?.isRepeat && timeText) {
-      return `今日も${timeText}から ${title} が始まります。あと${leadMinutes}分です。${suffix}`;
+      return `今日も${timeText}から ${title} が始まります。あと${minutes}分です。${suffix}`;
     }
 
     if (timeText) {
-      return `${repeatLabel} の ${title} が${timeText}に始まります。あと${leadMinutes}分です。${suffix}`;
+      return `${repeatLabel} の ${title} が${timeText}に始まります。あと${minutes}分です。${suffix}`;
     }
-    return `${repeatLabel} の ${title} が始まります。あと${leadMinutes}分です。${suffix}`;
+    return `${repeatLabel} の ${title} が始まります。あと${minutes}分です。${suffix}`;
   }
 
   if (timeText) {
-    return `${title} が${timeText}に始まります。あと${leadMinutes}分です。${suffix}`;
+    return `${title} が${timeText}に始まります。あと${minutes}分です。${suffix}`;
   }
 
-  return `あと${leadMinutes}分で ${title} が始まります。${suffix}`;
+  return `あと${minutes}分で ${title} が始まります。${suffix}`;
 }
 
 /**

@@ -7,6 +7,7 @@ import { initializeSlackReporterSection } from './settings/slack.js';
 import { initializeTypingMonitorSection } from './settings/typing.js';
 import { initializeVoiceCommandSection } from './settings/voice-commands.js';
 import { initializeAbsenceOverrideSection } from './settings/absence-override.js';
+import { initializeVoiceDictionarySection } from './settings/voice-dictionary.js';
 
 document.addEventListener('DOMContentLoaded', () => {
   // 初期化順序を固定し、フォーム要素が揃った後に各セクションを起動する。
@@ -21,6 +22,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   initializeVoiceCommandSection();
+  initializeVoiceDictionarySection();
   initializeAbsenceOverrideSection();
 
   window.getSettings = () => loadSettings();

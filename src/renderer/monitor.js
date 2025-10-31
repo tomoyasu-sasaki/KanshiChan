@@ -17,6 +17,8 @@ initializeMonitorElements({
   logContainer: document.getElementById('logContainer'),
   overrideStatusBadge: document.getElementById('overrideStatusBadge'),
   overrideStatusText: document.getElementById('overrideStatusText'),
+  cameraContainer: document.querySelector('.camera-feed'),
+  monitorIndicator: document.getElementById('monitorIndicator'),
 });
 
 initializeSettings();

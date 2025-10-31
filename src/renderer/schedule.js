@@ -9,7 +9,7 @@ import {
   timeInput,
   descriptionInput,
 } from './schedule/dom.js';
-import { scheduleState } from './schedule/state.js';
+import { scheduleState, setVoiceDraft, clearVoiceDraft } from './schedule/state.js';
 import {
   initializeSchedules,
   getSchedules,
@@ -221,6 +221,7 @@ function handleVoiceResult(result, container) {
   if (!result || result.type !== 'schedule') {
     latestVoiceSchedules = [];
     container.innerHTML = buildVoiceMessage('予定を抽出できませんでした。もう一度お試しください。');
+    clearVoiceDraft();
     return;
   }
 
@@ -229,6 +230,7 @@ function handleVoiceResult(result, container) {
     .filter(Boolean);
 
   latestVoiceSchedules = normalized;
+  clearVoiceDraft();
   renderVoiceSchedules(container, normalized);
 }
 
@@ -320,7 +322,7 @@ function applyVoiceSchedule(index, buttonEl, cardEl) {
     resetRepeatControls();
   }
 
-  scheduleState.voiceDraft = schedule;
+  setVoiceDraft(schedule);
 
   if (cardEl) {
     cardEl.classList.add('applied');
@@ -423,3 +425,8 @@ function escapeHtml(value) {
 
 // 初期化
 initializeScheduleDrawer();
+
+window.reloadScheduleNotifications = function reloadScheduleNotifications() {
+  stopNotificationCheck();
+  startNotificationCheck();
+};

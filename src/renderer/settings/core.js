@@ -4,6 +4,7 @@
  * - 音声操作や外部セクションが呼び出す共通ロジックをここに集中的に置く。
  */
 import { DEFAULT_MONITOR_SETTINGS } from '../../constants/monitor.js';
+import { sanitizeScheduleLeadMinutes } from '../../constants/schedule.js';
 import { DEFAULT_VOICEVOX_SPEAKER_ID } from '../../constants/voicevox-config.js';
 import { getSpeakerOptions } from '../../constants/voicevox-speakers.js';
 import { YOLO_CATEGORIES, getClassesByCategory } from '../../constants/yolo-classes.js';
@@ -23,7 +24,11 @@ const elements = {
   absenceConfidenceValue: null,
   soundEnabled: null,
   desktopNotification: null,
+  schedulePreNotificationEnabled: null,
+  schedulePreNotificationLeadMinutes: null,
+  schedulePreNotificationLeadMinutesValue: null,
   showDetections: null,
+  previewEnabled: null,
   yoloEnabled: null,
   voicevoxSpeaker: null,
   saveSettingsBtn: null,
@@ -66,7 +71,11 @@ function bindElements() {
 
   elements.soundEnabled = document.getElementById('soundEnabled');
   elements.desktopNotification = document.getElementById('desktopNotification');
+  elements.schedulePreNotificationEnabled = document.getElementById('schedulePreNotificationEnabled');
+  elements.schedulePreNotificationLeadMinutes = document.getElementById('schedulePreNotificationLeadMinutes');
+  elements.schedulePreNotificationLeadMinutesValue = document.getElementById('schedulePreNotificationLeadMinutesValue');
   elements.showDetections = document.getElementById('showDetections');
+  elements.previewEnabled = document.getElementById('previewEnabled');
   elements.yoloEnabled = document.getElementById('yoloEnabled');
   elements.voicevoxSpeaker = document.getElementById('voicevoxSpeaker');
 
@@ -155,6 +164,9 @@ function setupEventListeners() {
     absenceThresholdValue,
     absenceConfidence,
     absenceConfidenceValue,
+    schedulePreNotificationEnabled,
+    schedulePreNotificationLeadMinutes,
+    schedulePreNotificationLeadMinutesValue,
     saveSettingsBtn,
     resetSettingsBtn,
   } = elements;
@@ -183,6 +195,18 @@ function setupEventListeners() {
     }
   });
 
+  schedulePreNotificationLeadMinutes?.addEventListener('input', (event) => {
+    if (schedulePreNotificationLeadMinutesValue) {
+      schedulePreNotificationLeadMinutesValue.textContent = `${event.target.value}分前`;
+    }
+  });
+
+  schedulePreNotificationEnabled?.addEventListener('change', (event) => {
+    if (schedulePreNotificationLeadMinutes) {
+      schedulePreNotificationLeadMinutes.disabled = !event.target.checked;
+    }
+  });
+
   saveSettingsBtn?.addEventListener('click', () => {
     handleSaveSettings().catch((error) => {
       console.error('[Settings] 設定保存エラー:', error);
@@ -203,6 +227,9 @@ export async function handleSaveSettings() {
 
   if (typeof window.reloadMonitorSettings === 'function') {
     window.reloadMonitorSettings();
+  }
+  if (typeof window.reloadScheduleNotifications === 'function') {
+    window.reloadScheduleNotifications();
   }
 
   showSaveMessage('設定を保存しました', 'success');
@@ -229,7 +256,10 @@ function collectSettingsFromForm() {
     absenceConfidence,
     soundEnabled,
     desktopNotification,
+    schedulePreNotificationEnabled,
+    schedulePreNotificationLeadMinutes,
     showDetections,
+    previewEnabled,
     yoloEnabled,
     voicevoxSpeaker,
   } = elements;
@@ -250,8 +280,13 @@ function collectSettingsFromForm() {
     absenceConfidence: parseFloat(absenceConfidence?.value ?? DEFAULT_MONITOR_SETTINGS.absenceConfidence),
     soundEnabled: soundEnabled?.checked ?? DEFAULT_MONITOR_SETTINGS.soundEnabled,
     desktopNotification: desktopNotification?.checked ?? DEFAULT_MONITOR_SETTINGS.desktopNotification,
+    schedulePreNotificationEnabled: schedulePreNotificationEnabled?.checked ?? DEFAULT_MONITOR_SETTINGS.schedulePreNotificationEnabled,
+    schedulePreNotificationLeadMinutes: sanitizeScheduleLeadMinutes(
+      schedulePreNotificationLeadMinutes?.value ?? DEFAULT_MONITOR_SETTINGS.schedulePreNotificationLeadMinutes
+    ),
     enabledClasses,
     showDetections: showDetections ? showDetections.checked : DEFAULT_MONITOR_SETTINGS.showDetections,
+    previewEnabled: previewEnabled ? previewEnabled.checked : DEFAULT_MONITOR_SETTINGS.previewEnabled,
     yoloEnabled: yoloEnabled ? yoloEnabled.checked : DEFAULT_MONITOR_SETTINGS.yoloEnabled,
     voicevoxSpeaker: voicevoxSpeaker ? parseInt(voicevoxSpeaker.value, 10) : DEFAULT_VOICEVOX_SPEAKER_ID,
   };
@@ -269,6 +304,9 @@ function handleResetSettings() {
   applySettings(defaults);
   saveSettings(defaults);
   updateVoicevoxPreferencesFromSettings(defaults);
+  if (typeof window.reloadScheduleNotifications === 'function') {
+    window.reloadScheduleNotifications();
+  }
   showSaveMessage('設定をデフォルトに戻しました', 'info');
 }
 
@@ -311,7 +349,11 @@ export function applySettings(settings) {
     absenceConfidenceValue,
     soundEnabled,
     desktopNotification,
+    schedulePreNotificationEnabled,
+    schedulePreNotificationLeadMinutes,
+    schedulePreNotificationLeadMinutesValue,
     showDetections,
+    previewEnabled,
     yoloEnabled,
     voicevoxSpeaker,
   } = elements;
@@ -354,8 +396,25 @@ export function applySettings(settings) {
   if (desktopNotification) {
     desktopNotification.checked = settings.desktopNotification;
   }
+  const preNotificationEnabled = settings.schedulePreNotificationEnabled !== false;
+  const leadMinutes = sanitizeScheduleLeadMinutes(
+    settings.schedulePreNotificationLeadMinutes ?? DEFAULT_MONITOR_SETTINGS.schedulePreNotificationLeadMinutes
+  );
+  if (schedulePreNotificationEnabled) {
+    schedulePreNotificationEnabled.checked = preNotificationEnabled;
+  }
+  if (schedulePreNotificationLeadMinutes) {
+    schedulePreNotificationLeadMinutes.value = leadMinutes;
+    schedulePreNotificationLeadMinutes.disabled = !preNotificationEnabled;
+  }
+  if (schedulePreNotificationLeadMinutesValue) {
+    schedulePreNotificationLeadMinutesValue.textContent = `${leadMinutes}分前`;
+  }
   if (showDetections) {
     showDetections.checked = settings.showDetections !== false;
+  }
+  if (previewEnabled) {
+    previewEnabled.checked = settings.previewEnabled !== false;
   }
   if (yoloEnabled) {
     yoloEnabled.checked = settings.yoloEnabled !== false;
@@ -405,6 +464,12 @@ export function updateLinkedDisplays(key, value) {
         absenceConfidenceValue.textContent = String(value);
       }
       break;
+    case 'schedulePreNotificationLeadMinutes':
+      if (elements.schedulePreNotificationLeadMinutesValue) {
+        const leadMinutes = sanitizeScheduleLeadMinutes(value);
+        elements.schedulePreNotificationLeadMinutesValue.textContent = `${leadMinutes}分前`;
+      }
+      break;
     default:
       break;
   }
@@ -416,15 +481,7 @@ export function updateLinkedDisplays(key, value) {
  */
 function setupAccordion() {
   const headers = document.querySelectorAll('.accordion-header');
-  headers.forEach((header, index) => {
-    if (index === 0) {
-      header.classList.add('active');
-      const content = header.nextElementSibling;
-      if (content) {
-        content.style.maxHeight = `${content.scrollHeight}px`;
-      }
-    }
-
+  headers.forEach((header) => {
     header.addEventListener('click', () => {
       const content = header.nextElementSibling;
       if (!content) {
