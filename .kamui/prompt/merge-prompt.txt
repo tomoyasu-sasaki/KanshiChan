@@ -1,0 +1,18 @@
+以下の手順でdevelopブランチへのマージを実行してください：
+
+1. 現在の作業をコミット
+   - git add . でステージング
+   - git commit -m "適切なコミットメッセージ" でコミット（メッセージは作業内容に応じて記述）
+- 現在のディレクトリを確認
+
+2. リポジトリのルートディレクトリに移動
+   - cd /Users/motokidaisuke/kamui-space-time-editor
+
+3. developブランチにチェックアウトしてマージ
+   - git checkout develop
+   - git merge --no-ff task/元々いたディレクトリのタスクID
+
+実際のコマンド例：
+git add . && git commit -m "適切なコミットメッセージ" && cd /Users/motokidaisuke/kamui-space-time-editor && git checkout develop && git merge --no-ff task/元々いたディレクトリのタスクID
+
+マージする時はdevelopにあるステージングか未ステージの.kamui/tasks-state.jsonのdevelopの方を先にコミットしてからマージ作業すること
