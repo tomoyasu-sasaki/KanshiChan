@@ -21,6 +21,41 @@ const {
 } = require('../../constants/llm-prompts');
 
 /**
+ * ユーザー入力をサニタイズし、プロンプトインジェクション攻撃を防ぐ。
+ * - 制御文字の除去
+ * - システムプロンプトマーカーの無効化
+ * - 過度に長い入力の切り詰め
+ * @param {string} text ユーザー入力
+ * @param {number} maxLength 最大文字数（デフォルト: 1000）
+ * @returns {string} サニタイズされたテキスト
+ */
+function sanitizeUserInput(text, maxLength = 1000) {
+  if (!text || typeof text !== 'string') {
+    return '';
+  }
+
+  let sanitized = text
+    // 制御文字を除去（改行・タブは保持）
+    .replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F]/g, '')
+    // システムプロンプトマーカーを無効化
+    .replace(/システム[:：]/gi, 'システム ')
+    .replace(/アシスタント[:：]/gi, 'アシスタント ')
+    .replace(/ユーザー[:：]/gi, 'ユーザー ')
+    .replace(/<\|system\|>/gi, '')
+    .replace(/<\|assistant\|>/gi, '')
+    .replace(/<\|user\|>/gi, '')
+    // 過度な改行を制限
+    .replace(/\n{4,}/g, '\n\n\n');
+
+  // 最大長を制限
+  if (sanitized.length > maxLength) {
+    sanitized = sanitized.substring(0, maxLength);
+  }
+
+  return sanitized.trim();
+}
+
+/**
  * LLM インスタンス（遅延初期化）
  */
 let llama = null;
@@ -343,6 +378,12 @@ async function inferTaskCommands(transcribedText, options = {}) {
     return { commands: [], warnings: ['入力が空のため、タスクコマンドを生成できませんでした'] };
   }
 
+  // プロンプトインジェクション対策: ユーザー入力をサニタイズ
+  const sanitized = sanitizeUserInput(trimmed);
+  if (!sanitized) {
+    return { commands: [], warnings: ['入力が無効です'] };
+  }
+
   const { model } = await loadLLMModel();
   if (!model) {
     throw new Error('LLM モデルが初期化されていません');
@@ -352,7 +393,7 @@ async function inferTaskCommands(transcribedText, options = {}) {
   const tempContext = await model.createContext({ contextSize: 1536 });
   try {
     const session = new LlamaChatSession({ contextSequence: tempContext.getSequence() });
-    const userPrompt = buildTasksCommandUserPrompt(trimmed, {
+    const userPrompt = buildTasksCommandUserPrompt(sanitized, {
       tasks: Array.isArray(options.tasks) ? options.tasks : [],
       schedules: Array.isArray(options.schedules) ? options.schedules : [],
     });
@@ -392,8 +433,10 @@ function toISO(date) {
 
 function startOfWeek(date) {
   const d = new Date(date);
-  const day = d.getDay(); // 0:Sun
-  const diff = (day + 6) % 7; // Monday=0
+  const day = d.getDay(); // 0:Sun, 1:Mon, ..., 6:Sat
+  // 月曜を週の開始とする場合の差分計算
+  // 日曜(0) → 6日前, 月曜(1) → 0日前, 火曜(2) → 1日前, ... 土曜(6) → 5日前
+  const diff = day === 0 ? 6 : day - 1;
   d.setDate(d.getDate() - diff);
   d.setHours(0, 0, 0, 0);
   return d;

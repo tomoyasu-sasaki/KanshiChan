@@ -108,6 +108,13 @@ function initializeDatabase(app) {
           return;
         }
 
+        // 外部キー制約を有効化
+        db.run('PRAGMA foreign_keys = ON', (pragmaErr) => {
+          if (pragmaErr) {
+            console.warn('[DB] 外部キー制約の有効化に失敗:', pragmaErr);
+          }
+        });
+
         db.serialize(() => {
           db.run(
             `CREATE TABLE IF NOT EXISTS detection_logs (
@@ -268,6 +275,7 @@ function initializeDatabase(app) {
                                                           }
 
                                                           // tasks テーブルとインデックス
+                                                          // NOTE: schedule_id の外部キー制約は、将来 schedules テーブルが追加された際に有効化されます
                                                           db.run(
                                                             `CREATE TABLE IF NOT EXISTS tasks (
                                                               id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -424,6 +432,29 @@ function all(sql, params = []) {
 }
 
 /**
+ * トランザクション内で複数のDB操作を実行する。
+ * - 自動的にBEGIN/COMMIT/ROLLBACKを処理
+ * - エラー発生時は自動的にロールバック
+ * @param {Function} callback トランザクション内で実行する非同期関数
+ * @returns {Promise<any>} callback の戻り値
+ */
+async function transaction(callback) {
+  const db = getDatabase();
+
+  await run('BEGIN TRANSACTION');
+  try {
+    const result = await callback();
+    await run('COMMIT');
+    return result;
+  } catch (error) {
+    await run('ROLLBACK').catch((rollbackErr) => {
+      console.error('[DB] ROLLBACK エラー:', rollbackErr);
+    });
+    throw error;
+  }
+}
+
+/**
  * アプリ終了時に DB をクローズする。
  * @returns {Promise<void>}
  */
@@ -447,5 +478,6 @@ module.exports = {
   getDatabase,
   run,
   all,
+  transaction,
   closeDatabase,
 };
