@@ -15,6 +15,9 @@ const {
   buildSettingsCommandUserPrompt,
   SETTINGS_COMMAND_JSON_SCHEMA,
   buildChatPrompt,
+  TASKS_COMMAND_SYSTEM_PROMPT,
+  buildTasksCommandUserPrompt,
+  TASKS_COMMAND_JSON_SCHEMA,
 } = require('../../constants/llm-prompts');
 
 /**
@@ -292,6 +295,169 @@ async function inferSettingsCommands(transcribedText, options = {}) {
   }
 }
 
+const TASK_ALLOWED_ACTIONS = new Set(['create', 'update', 'delete', 'complete', 'start']);
+const TASK_PRIORITIES = new Set(['low', 'medium', 'high']);
+const TASK_STATUSES = new Set(['todo', 'in_progress', 'done']);
+
+function normalizeTaskPriority(value) {
+  const v = typeof value === 'string' ? value.trim().toLowerCase() : '';
+  return TASK_PRIORITIES.has(v) ? v : null;
+}
+
+function normalizeTaskStatus(value) {
+  const v = typeof value === 'string' ? value.trim().toLowerCase() : '';
+  return TASK_STATUSES.has(v) ? v : null;
+}
+
+function normalizeTaskCommand(raw, index) {
+  if (!raw || typeof raw !== 'object') {
+    console.warn('[LLM] task command が不正です:', raw);
+    return null;
+  }
+  const action = typeof raw.action === 'string' ? raw.action.trim().toLowerCase() : '';
+  if (!TASK_ALLOWED_ACTIONS.has(action)) {
+    console.warn(`[LLM] 未対応の task action "${raw.action}" (index=${index})`);
+    return null;
+  }
+  const id = Number.isFinite(Number(raw.id)) ? Number(raw.id) : null;
+  const title = typeof raw.title === 'string' && raw.title.trim() ? raw.title.trim() : null;
+  const description = typeof raw.description === 'string' && raw.description.trim() ? raw.description.trim() : null;
+  const priority = normalizeTaskPriority(raw.priority);
+  const status = normalizeTaskStatus(raw.status);
+  const startDate = typeof raw.startDate === 'string' && raw.startDate.trim() ? raw.startDate.trim() : null;
+  const endDate = typeof raw.endDate === 'string' && raw.endDate.trim() ? raw.endDate.trim() : null;
+  const scheduleId = Number.isFinite(Number(raw.scheduleId)) ? Number(raw.scheduleId) : null;
+
+  const resolved = resolveRelativeDates({ startDate, endDate });
+
+  return { action, id, title, description, priority, status, startDate: resolved.startDate, endDate: resolved.endDate, scheduleId };
+}
+
+async function inferTaskCommands(transcribedText, options = {}) {
+  if (!transcribedText || typeof transcribedText !== 'string') {
+    throw new Error('文字起こしテキストが不正です');
+  }
+
+  const trimmed = transcribedText.trim();
+  if (!trimmed) {
+    return { commands: [], warnings: ['入力が空のため、タスクコマンドを生成できませんでした'] };
+  }
+
+  const { model } = await loadLLMModel();
+  if (!model) {
+    throw new Error('LLM モデルが初期化されていません');
+  }
+
+  const { LlamaChatSession } = await loadNodeLlamaCpp();
+  const tempContext = await model.createContext({ contextSize: 1536 });
+  try {
+    const session = new LlamaChatSession({ contextSequence: tempContext.getSequence() });
+    const userPrompt = buildTasksCommandUserPrompt(trimmed, {
+      tasks: Array.isArray(options.tasks) ? options.tasks : [],
+      schedules: Array.isArray(options.schedules) ? options.schedules : [],
+    });
+    const fullPrompt = `${TASKS_COMMAND_SYSTEM_PROMPT}\n\n${userPrompt}`;
+
+    const response = await session.prompt(fullPrompt, {
+      maxTokens: 768,
+      temperature: 0.2,
+      topP: 0.9,
+      stopStrings: ['```'],
+    });
+
+    const jsonText = extractFirstJsonBlock(response);
+    if (!jsonText) {
+      throw new Error('LLM の出力から JSON を抽出できませんでした');
+    }
+
+    const parsed = JSON.parse(jsonText);
+    if (!parsed || typeof parsed !== 'object') {
+      throw new Error('LLM の出力がオブジェクトではありません');
+    }
+
+    const commands = Array.isArray(parsed.commands) ? parsed.commands : [];
+    const normalized = commands.map((c, i) => normalizeTaskCommand(c, i)).filter(Boolean);
+    return { commands: normalized };
+  } finally {
+    await tempContext.dispose();
+  }
+}
+
+function toISO(date) {
+  const y = date.getFullYear();
+  const m = String(date.getMonth() + 1).padStart(2, '0');
+  const d = String(date.getDate()).padStart(2, '0');
+  return `${y}-${m}-${d}`;
+}
+
+function startOfWeek(date) {
+  const d = new Date(date);
+  const day = d.getDay(); // 0:Sun
+  const diff = (day + 6) % 7; // Monday=0
+  d.setDate(d.getDate() - diff);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function endOfWeek(date) {
+  const start = startOfWeek(date);
+  const end = new Date(start);
+  end.setDate(start.getDate() + 6);
+  end.setHours(0, 0, 0, 0);
+  return end;
+}
+
+function resolveRelativeDates({ startDate, endDate }, now = new Date()) {
+  const ISO_RE = /^\d{4}-\d{2}-\d{2}$/;
+  let s = startDate;
+  let e = endDate;
+
+  const normalizeToken = (token) => {
+    if (!token || ISO_RE.test(token)) return token;
+    const t = token.trim();
+    if (t === '今日' || t === '本日' || /today/i.test(t)) return toISO(now);
+    if (t === '明日' || /tomorrow/i.test(t)) {
+      const d = new Date(now); d.setDate(d.getDate() + 1); return toISO(d);
+    }
+    if (t === '今週') {
+      return 'W_THIS';
+    }
+    if (t === '来週') {
+      return 'W_NEXT';
+    }
+    if (t === '今週末' || t === '週末') {
+      return 'W_THIS_END';
+    }
+    return token; // それ以外はそのまま（LLMに期待）
+  };
+
+  const ns = normalizeToken(s);
+  const ne = normalizeToken(e);
+
+  if (ns === 'W_THIS' || ne === 'W_THIS') {
+    const sw = startOfWeek(now); const ew = endOfWeek(now);
+    s = toISO(sw); e = toISO(ew);
+  } else if (ns === 'W_NEXT' || ne === 'W_NEXT') {
+    const sw = startOfWeek(now); sw.setDate(sw.getDate() + 7);
+    const ew = new Date(sw); ew.setDate(sw.getDate() + 6);
+    s = toISO(sw); e = toISO(ew);
+  } else if (ns === 'W_THIS_END' || ne === 'W_THIS_END') {
+    const sw = startOfWeek(now);
+    const sat = new Date(sw); sat.setDate(sw.getDate() + 5);
+    const sun = new Date(sw); sun.setDate(sw.getDate() + 6);
+    s = toISO(sat); e = toISO(sun);
+  } else {
+    if (ns && !ISO_RE.test(ns)) s = normalizeToken(ns); else s = ns;
+    if (ne && !ISO_RE.test(ne)) e = normalizeToken(ne); else e = ne;
+  }
+
+  // 「今日/明日」など片方だけ指定されたときは同日に揃える
+  if (s && !e && ISO_RE.test(s)) e = s;
+  if (e && !s && ISO_RE.test(e)) s = e;
+
+  return { startDate: s, endDate: e };
+}
+
 function normalizeSettingsCommand(rawCommand, index) {
   if (!rawCommand || typeof rawCommand !== 'object') {
     console.warn('[LLM] settings command が不正です:', rawCommand);
@@ -435,4 +601,5 @@ module.exports = {
   inferSettingsCommands,
   generateChatReply,
   resetLLMInstance,
+  inferTaskCommands,
 };

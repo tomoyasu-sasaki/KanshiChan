@@ -8,6 +8,7 @@ const { synthesizeWithVoiceVox } = require('../services/voicevox');
 const { getActiveWindowInfo } = require('../services/active-window');
 const audioService = require('../services/audio');
 const { run } = require('../db');
+const tasksService = require('../services/tasks');
 const {
   getDetectionStats,
   getRecentDetectionLogs,
@@ -202,6 +203,47 @@ function registerIpcHandlers({
       return await audioService.checkAvailability();
     } catch (error) {
       console.error('[IPC] audio-check-availability エラー:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  // Tasks CRUD
+  ipcMain.handle('tasks-create', async (_event, payload = {}) => {
+    try {
+      const task = await tasksService.createTask(payload || {});
+      return { success: true, task };
+    } catch (error) {
+      console.error('[IPC] tasks-create エラー:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('tasks-update', async (_event, id, fields = {}) => {
+    try {
+      const task = await tasksService.updateTask(id, fields || {});
+      return { success: true, task };
+    } catch (error) {
+      console.error('[IPC] tasks-update エラー:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('tasks-delete', async (_event, id) => {
+    try {
+      const result = await tasksService.deleteTask(id);
+      return { success: true, result };
+    } catch (error) {
+      console.error('[IPC] tasks-delete エラー:', error);
+      return { success: false, error: error.message };
+    }
+  });
+
+  ipcMain.handle('tasks-list', async (_event, filter = {}) => {
+    try {
+      const items = await tasksService.listTasks(filter || {});
+      return { success: true, items };
+    } catch (error) {
+      console.error('[IPC] tasks-list エラー:', error);
       return { success: false, error: error.message };
     }
   });

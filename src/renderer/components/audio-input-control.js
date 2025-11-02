@@ -289,6 +289,23 @@ function formatResultSummary(result) {
       .join('\n');
   }
 
+  if (result.type === 'tasks') {
+    const commands = Array.isArray(result.commands) ? result.commands : [];
+    if (commands.length === 0) {
+      return '操作は見つかりませんでした';
+    }
+    return commands
+      .map((cmd) => {
+        const parts = [cmd.action];
+        if (cmd.title) parts.push(cmd.title);
+        if (cmd.priority) parts.push(`優先度:${cmd.priority}`);
+        if (cmd.status) parts.push(`状態:${cmd.status}`);
+        if (cmd.startDate || cmd.endDate) parts.push(`${cmd.startDate || '—'}~${cmd.endDate || '—'}`);
+        return parts.join(' ');
+      })
+      .join('\n');
+  }
+
   if (result.type === 'chat') {
     return result.reply || '';
   }

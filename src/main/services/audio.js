@@ -5,7 +5,7 @@
  */
 
 const { transcribeAudio, validateWhisperEnvironment } = require('./whisper');
-const { extractScheduleFromText, inferSettingsCommands, generateChatReply } = require('./llm');
+const { extractScheduleFromText, inferSettingsCommands, generateChatReply, inferTaskCommands } = require('./llm');
 
 /**
  * 音声データを Whisper に渡して文字起こしする。
@@ -53,6 +53,15 @@ async function infer(profileId, text, context = {}) {
         success: true,
         transcribedText: trimmed,
         schedules,
+      };
+    }
+    case 'tasks': {
+      const tasks = Array.isArray(context.tasks) ? context.tasks : [];
+      const schedules = Array.isArray(context.schedules) ? context.schedules : [];
+      const { commands } = await inferTaskCommands(trimmed, { tasks, schedules });
+      return {
+        success: true,
+        commands,
       };
     }
     case 'settings': {

@@ -267,8 +267,90 @@ function initializeDatabase(app) {
                                                             return;
                                                           }
 
-                                                          dbInstance = db;
-                                                          resolve(dbInstance);
+                                                          // tasks テーブルとインデックス
+                                                          db.run(
+                                                            `CREATE TABLE IF NOT EXISTS tasks (
+                                                              id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                                              title TEXT NOT NULL,
+                                                              description TEXT,
+                                                              priority TEXT NOT NULL DEFAULT 'medium' CHECK(priority IN ('low','medium','high')),
+                                                              status TEXT NOT NULL DEFAULT 'todo' CHECK(status IN ('todo','in_progress','done')),
+                                                              start_date INTEGER,
+                                                              end_date INTEGER,
+                                                              schedule_id INTEGER,
+                                                              created_at INTEGER NOT NULL,
+                                                              updated_at INTEGER NOT NULL
+                                                            )`,
+                                                            (tasksTableErr) => {
+                                                              if (tasksTableErr) {
+                                                                reject(tasksTableErr);
+                                                                return;
+                                                              }
+
+                                                              db.run(
+                                                                'CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status)',
+                                                                (tasksStatusIdxErr) => {
+                                                                  if (tasksStatusIdxErr) {
+                                                                    reject(tasksStatusIdxErr);
+                                                                    return;
+                                                                  }
+
+                                                                  db.run(
+                                                                    'CREATE INDEX IF NOT EXISTS idx_tasks_period ON tasks(start_date, end_date)',
+                                                                    (tasksPeriodIdxErr) => {
+                                                                      if (tasksPeriodIdxErr) {
+                                                                        reject(tasksPeriodIdxErr);
+                                                                        return;
+                                                                      }
+
+                                                                      db.run(
+                                                                        'CREATE INDEX IF NOT EXISTS idx_tasks_priority ON tasks(priority)',
+                                                                        (tasksPriorityIdxErr) => {
+                                                                          if (tasksPriorityIdxErr) {
+                                                                            reject(tasksPriorityIdxErr);
+                                                                            return;
+                                                                          }
+
+                                                                          // 既存 DB に対して不足カラムをマイグレーション
+                                                                          db.all('PRAGMA table_info(tasks)', (pragmaErr, rows) => {
+                                                                            if (pragmaErr) {
+                                                                              reject(pragmaErr);
+                                                                              return;
+                                                                            }
+                                                                            const names = new Set((rows || []).map((r) => r.name));
+                                                                            const alters = [];
+                                                                            if (!names.has('schedule_id')) alters.push('ALTER TABLE tasks ADD COLUMN schedule_id INTEGER');
+                                                                            if (!names.has('created_at')) alters.push('ALTER TABLE tasks ADD COLUMN created_at INTEGER');
+                                                                            if (!names.has('updated_at')) alters.push('ALTER TABLE tasks ADD COLUMN updated_at INTEGER');
+                                                                            if (!names.has('priority')) alters.push("ALTER TABLE tasks ADD COLUMN priority TEXT DEFAULT 'medium'");
+                                                                            if (!names.has('status')) alters.push("ALTER TABLE tasks ADD COLUMN status TEXT DEFAULT 'todo'");
+                                                                            if (!names.has('start_date')) alters.push('ALTER TABLE tasks ADD COLUMN start_date INTEGER');
+                                                                            if (!names.has('end_date')) alters.push('ALTER TABLE tasks ADD COLUMN end_date INTEGER');
+
+                                                                            const runNext = (i) => {
+                                                                              if (i >= alters.length) {
+                                                                                dbInstance = db;
+                                                                                resolve(dbInstance);
+                                                                                return;
+                                                                              }
+                                                                              db.run(alters[i], (alterErr) => {
+                                                                                if (alterErr && !/duplicate column name/i.test(alterErr.message || '')) {
+                                                                                  reject(alterErr);
+                                                                                  return;
+                                                                                }
+                                                                                runNext(i + 1);
+                                                                              });
+                                                                            };
+                                                                            runNext(0);
+                                                                          });
+                                                                        }
+                                                                      );
+                                                                    }
+                                                                  );
+                                                                }
+                                                              );
+                                                            }
+                                                          );
                                                         }
                                                       );
                                                     }

@@ -47,6 +47,10 @@
       </div>
 
       <div class="toolbar-center">
+        <button class="tool-button" id="tasksBtn" title="タスク">
+          <span class="icon">📝</span>
+          <span class="label">タスク</span>
+        </button>
         <button class="tool-button" id="scheduleBtn" title="スケジュール">
           <span class="icon">📅</span>
           <span class="label">スケジュール</span>
@@ -201,6 +205,96 @@
       <div id="scheduleItems" class="schedule-items">
         <p class="empty-message">スケジュールはありません</p>
       </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- タスクダイアログ -->
+  <div class="dialog" id="tasksDialog">
+    <div class="dialog-content">
+      <div class="dialog-header">
+        <h2>✅ タスク管理</h2>
+        <button class="close-btn" data-dialog="tasksDialog">×</button>
+      </div>
+
+      <div class="dialog-body">
+        <section class="tasks-voice-section">
+          <h4>音声で操作</h4>
+          <p class="tasks-voice-helper">「新しいタスクを追加」「明日から来週までに変更」「優先度を高に」など</p>
+          <div id="tasksVoiceControl"></div>
+          <div id="tasksVoiceMessage" class="tasks-voice-message"></div>
+        </section>
+
+        <form id="taskForm" class="tasks-form">
+          <input type="hidden" id="taskId">
+          <div class="form-group">
+            <label for="taskTitle">タイトル</label>
+            <input type="text" id="taskTitle" placeholder="例: 週報を作成" required>
+          </div>
+          <div class="form-group">
+            <label for="taskDescription">説明</label>
+            <textarea id="taskDescription" rows="3" placeholder="補足 (任意)"></textarea>
+          </div>
+          <div class="tasks-form-row">
+            <div class="filter-group">
+              <label for="taskPriority">優先度</label>
+              <select id="taskPriority">
+                <option value="low">低</option>
+                <option value="medium" selected>中</option>
+                <option value="high">高</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="taskStatus">ステータス</label>
+              <select id="taskStatus">
+                <option value="todo" selected>未着手</option>
+                <option value="in_progress">進行中</option>
+                <option value="done">完了</option>
+              </select>
+            </div>
+          </div>
+          <div class="tasks-form-row">
+            <div class="filter-group">
+              <label for="taskStartDate">開始日</label>
+              <input type="date" id="taskStartDate">
+            </div>
+            <div class="filter-group">
+              <label for="taskEndDate">終了日</label>
+              <input type="date" id="taskEndDate">
+            </div>
+          </div>
+          <div class="filter-group">
+            <label for="taskScheduleId">スケジュールに紐付け (任意)</label>
+            <select id="taskScheduleId">
+              <option value="">未指定</option>
+            </select>
+          </div>
+          <div class="tasks-form-actions">
+            <button type="submit" class="btn-primary" id="taskSubmitBtn">追加</button>
+            <button type="button" class="btn-secondary" id="taskCancelEditBtn" hidden>キャンセル</button>
+          </div>
+        </form>
+
+        <div class="tasks-list-container">
+          <h3>タスク一覧</h3>
+          <div class="tasks-filters">
+            <label>
+              <input type="checkbox" id="tasksShowOnlyActive">
+              期間中のみ
+            </label>
+            <label>
+              <input type="checkbox" id="tasksHideDone">
+              完了を隠す
+            </label>
+          </div>
+          <div id="tasksItems" class="tasks-items">
+            <p class="empty-message">タスクはありません</p>
+          </div>
+        </div>
+
+        <div class="tasks-tools">
+          <span id="tasksAnnounceHint" class="help-text">毎朝9時に期間中のタスクを読み上げます（日付未設定は除外）</span>
         </div>
       </div>
     </div>
@@ -820,6 +914,7 @@
   <script type="module" src="../renderer/monitor.js"></script>
   <script type="module" src="../renderer/dashboard.js"></script>
   <script type="module" src="../renderer/chat.js"></script>
+  <script type="module" src="../renderer/tasks.js"></script>
   <script type="module" src="../renderer/app.js"></script>
 </body>
 </html>

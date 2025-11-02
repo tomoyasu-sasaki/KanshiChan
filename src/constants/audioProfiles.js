@@ -21,6 +21,23 @@ export const AUDIO_PROMPT_PROFILES = Object.freeze({
       defaultMessageField: 'ttsMessage',
     },
   },
+  tasks: {
+    id: 'tasks',
+    label: 'タスク操作',
+    description: 'タスクの追加・削除・更新（ステータス/日付/優先度/紐付け）',
+    llm: {
+      mode: 'structured',
+      schemaName: 'tasksCommand',
+      systemPrompt:
+        'あなたはタスク管理アシスタントです。ユーザーの発話から、' +
+        '"create|update|delete|complete|start" のいずれかの action と ' +
+        'title/description/priority(status: todo|in_progress|done)/startDate/endDate/scheduleId を抽出して JSON を返してください。',
+    },
+    tts: {
+      // 読み上げはデフォルト無効（必要なら呼び出し側で明示）
+      defaultMessageField: null,
+    },
+  },
   settings: {
     id: 'settings',
     label: '設定変更',

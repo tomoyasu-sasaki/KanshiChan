@@ -60,6 +60,14 @@ function normalizeLlmResponse(profile, response) {
     };
   }
 
+  if (profile.id === 'tasks') {
+    const commands = Array.isArray(response.commands) ? response.commands : [];
+    return {
+      type: 'tasks',
+      commands,
+    };
+  }
+
   if (profile.id === 'chat') {
     const reply = typeof response.reply === 'string' ? response.reply : null;
     if (!reply) {

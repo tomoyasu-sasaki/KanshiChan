@@ -1,0 +1,308 @@
+/**
+ * タスクダイアログのスタイル - デザインシステム準拠
+ */
+
+/* 音声入力セクション */
+.tasks-voice-section {
+  margin-bottom: var(--space-6);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: rgba(72, 138, 153, 0.08);
+  border: 1px solid rgba(72, 138, 153, 0.2);
+}
+
+.tasks-voice-section h4 {
+  margin-top: 0;
+  font-size: var(--text-md);
+  color: var(--text-primary);
+}
+
+.tasks-voice-helper {
+  margin: var(--space-2) 0 var(--space-4);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+}
+
+.tasks-voice-message {
+  margin-top: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+/* フォーム - ダッシュボードの filter-group スタイルに統一 */
+.tasks-form-row {
+  display: flex;
+  gap: var(--space-4);
+  align-items: flex-end;
+}
+
+.tasks-form-row .filter-group {
+  flex: 1;
+}
+
+.tasks-form .filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin-bottom: var(--space-4);
+}
+
+.tasks-form .filter-group label {
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  color: var(--text-secondary);
+}
+
+.tasks-form select,
+.tasks-form input[type="date"] {
+  min-width: 160px;
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-base);
+  color: var(--text-primary);
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-base);
+}
+
+.tasks-form select:hover,
+.tasks-form input[type="date"]:hover {
+  background: rgba(255, 255, 255, 0.75);
+  border-color: var(--primary-start);
+}
+
+.tasks-form select:focus,
+.tasks-form input[type="date"]:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.85);
+  border-color: var(--primary-start);
+  box-shadow: var(--focus-shadow);
+}
+
+.tasks-form-actions {
+  margin-top: var(--space-4);
+  display: flex;
+  gap: var(--space-3);
+}
+
+.tasks-form-actions button {
+  flex: 1;
+}
+
+/* タスク一覧 */
+.tasks-list-container {
+  margin-top: var(--space-6);
+  margin-bottom: var(--space-6);
+}
+
+.tasks-list-container h3 {
+  margin-bottom: var(--space-4);
+  font-size: var(--text-lg);
+  color: var(--text-primary);
+}
+
+.tasks-filters {
+  display: flex;
+  gap: var(--space-4);
+  align-items: center;
+  margin-bottom: var(--space-4);
+  padding: var(--space-3);
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: var(--radius-sm);
+}
+
+.tasks-filters label {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.tasks-items {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.tasks-items .empty-message {
+  color: var(--text-tertiary);
+  font-size: var(--text-sm);
+  text-align: center;
+  padding: var(--space-6) 0;
+}
+
+/* タスクカード - スケジュールと統一 */
+.task-item {
+  background: #ffffff;
+  border-radius: var(--radius-md);
+  padding: var(--space-5);
+  border-left: var(--space-1) solid var(--primary-start);
+  transition: transform var(--transition-base), box-shadow var(--transition-base), border-color var(--transition-smooth);
+  box-shadow: var(--shadow-sm);
+}
+
+.task-item:hover {
+  transform: translateX(var(--space-1));
+  box-shadow: 0 var(--space-1) var(--space-4) rgba(0, 0, 0, 0.15);
+}
+
+.task-item.priority-high {
+  border-left-color: var(--error);
+}
+
+.task-item.priority-medium {
+  border-left-color: var(--warning);
+}
+
+.task-item.priority-low {
+  border-left-color: var(--info);
+}
+
+.task-item.status-done {
+  opacity: 0.6;
+  border-left-color: #adb5bd;
+  background: #f8f9fa;
+}
+
+.task-item.status-in-progress {
+  border-left-color: var(--success);
+  background: #f0fdf4;
+}
+
+.task-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-3);
+}
+
+.task-item-title-area {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.task-item-title-area h4 {
+  color: var(--text-primary);
+  font-size: var(--text-lg);
+  margin: 0;
+  font-weight: var(--font-semibold);
+}
+
+.task-item-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.task-item .btn-edit {
+  background: var(--primary-start);
+  color: #ffffff;
+  border: none;
+  padding: var(--space-1) var(--space-4);
+  border-radius: var(--space-1);
+  cursor: pointer;
+  font-size: var(--text-sm);
+  transition: background var(--transition-smooth);
+}
+
+.task-item .btn-edit:hover {
+  background: var(--primary-end);
+}
+
+.task-item .btn-delete {
+  background: var(--error);
+  color: white;
+  border: none;
+  padding: var(--space-1) var(--space-4);
+  border-radius: var(--space-1);
+  cursor: pointer;
+  font-size: var(--text-sm);
+  transition: background var(--transition-smooth);
+}
+
+.task-item .btn-delete:hover {
+  background: #ee5a52;
+}
+
+.task-item-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-2);
+}
+
+.task-item-description {
+  line-height: 1.6;
+  color: #6c757d;
+  margin-top: var(--space-2);
+  font-size: var(--text-base);
+  white-space: pre-wrap;
+}
+
+.task-item-period {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  font-weight: var(--font-medium);
+}
+
+/* バッジ */
+.badge {
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  display: inline-block;
+}
+
+.badge.priority-low {
+  background: #e7f5ff;
+  color: #1971c2;
+}
+
+.badge.priority-medium {
+  background: #fff9db;
+  color: #e67700;
+}
+
+.badge.priority-high {
+  background: #ffe9e9;
+  color: #c92a2a;
+}
+
+.badge.status-todo {
+  background: #e7f5ff;
+  color: #1864ab;
+}
+
+.badge.status-in-progress {
+  background: #d3f9d8;
+  color: #2b8a3e;
+}
+
+.badge.status-done {
+  background: #e9ecef;
+  color: #868e96;
+}
+
+/* ツールエリア */
+.tasks-tools {
+  margin-top: var(--space-6);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: rgba(72, 138, 153, 0.08);
+  border: 1px solid rgba(72, 138, 153, 0.25);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.help-text {
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+  line-height: 1.5;
+}

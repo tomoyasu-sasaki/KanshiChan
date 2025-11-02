@@ -36,6 +36,11 @@ contextBridge.exposeInMainWorld('electronAPI', {
   typingActivityStats: (options) => ipcRenderer.invoke('typing-activity-stats', options),
   systemEventsRecent: (options) => ipcRenderer.invoke('system-events-recent', options),
   syncSchedules: (schedules) => ipcRenderer.invoke('schedule-sync', schedules),
+  // Tasks API
+  tasksCreate: (payload) => ipcRenderer.invoke('tasks-create', payload),
+  tasksUpdate: (id, fields) => ipcRenderer.invoke('tasks-update', id, fields),
+  tasksDelete: (id) => ipcRenderer.invoke('tasks-delete', id),
+  tasksList: (filter) => ipcRenderer.invoke('tasks-list', filter),
   absenceOverrideGetState: () => ipcRenderer.invoke('absence_override_get_state'),
   absenceOverrideActivate: (payload) => ipcRenderer.invoke('absence_override_activate', payload),
   absenceOverrideExtend: (payload) => ipcRenderer.invoke('absence_override_extend', payload),
