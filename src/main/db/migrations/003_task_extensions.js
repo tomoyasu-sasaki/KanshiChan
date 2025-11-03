@@ -55,6 +55,10 @@ async function recreateTasksTableWithExtensions(run) {
     await run('CREATE INDEX IF NOT EXISTS idx_tasks_parent ON tasks(parent_task_id)');
     await run('CREATE INDEX IF NOT EXISTS idx_tasks_display_order ON tasks(parent_task_id, display_order)');
     await run('CREATE INDEX IF NOT EXISTS idx_tasks_schedule ON tasks(schedule_id)');
+    // Prevent duplicate recurring task occurrences
+    await run(`CREATE UNIQUE INDEX IF NOT EXISTS idx_tasks_unique_repeat_occurrence
+      ON tasks(repeat_config, COALESCE(parent_task_id, 0), start_date)
+      WHERE repeat_config IS NOT NULL AND start_date IS NOT NULL`);
   } finally {
     await run('PRAGMA foreign_keys = ON');
   }

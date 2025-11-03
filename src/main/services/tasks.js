@@ -2,6 +2,8 @@
  * タスク管理サービス（メインプロセス）。
  * - SQLite テーブル tasks, tags, task_tags の CRUD を提供する。
  * - サブタスク、タグ、ドラッグ&ドロップ順序、繰り返しタスクを扱う。
+ *
+ * @module services/tasks
  */
 
 const { run, all, transaction } = require('../db');
@@ -9,6 +11,12 @@ const { run, all, transaction } = require('../db');
 const ALLOWED_PRIORITIES = new Set(['low', 'medium', 'high']);
 const ALLOWED_STATUS = new Set(['todo', 'in_progress', 'done']);
 const REPEAT_TYPES = new Set(['daily', 'weekly', 'monthly']);
+
+// Input length limits for security and database performance
+const MAX_TITLE_LENGTH = 500;
+const MAX_DESCRIPTION_LENGTH = 10000;
+const MAX_TAG_NAME_LENGTH = 100;
+const MAX_TAGS_PER_TASK = 50;
 
 function toNumberOrNull(value) {
   const n = Number(value);
@@ -278,6 +286,9 @@ function normalizeTagNames(rawNames) {
   if (!Array.isArray(rawNames)) {
     return [];
   }
+  if (rawNames.length > MAX_TAGS_PER_TASK) {
+    throw new Error(`タグは ${MAX_TAGS_PER_TASK} 個以内で指定してください`);
+  }
   const result = [];
   const seen = new Set();
   rawNames.forEach((name) => {
@@ -287,6 +298,9 @@ function normalizeTagNames(rawNames) {
     const trimmed = name.trim();
     if (!trimmed) {
       return;
+    }
+    if (trimmed.length > MAX_TAG_NAME_LENGTH) {
+      throw new Error(`タグ名は ${MAX_TAG_NAME_LENGTH} 文字以内で入力してください`);
     }
     const key = trimmed.toLowerCase();
     if (seen.has(key)) {
@@ -578,14 +592,38 @@ async function getTaskById(taskId) {
   return mapRow(rows[0], tagMap);
 }
 
+/**
+ * 新しいタスクを作成する。
+ *
+ * @param {Object} payload - タスク作成パラメータ
+ * @param {string} payload.title - タスクのタイトル（必須、最大500文字）
+ * @param {string} [payload.description] - タスクの説明（最大10000文字）
+ * @param {string} [payload.priority='medium'] - 優先度（'low'|'medium'|'high'）
+ * @param {string} [payload.status='todo'] - ステータス（'todo'|'in_progress'|'done'）
+ * @param {number|string} [payload.startDate] - 開始日時（ミリ秒またはISO文字列）
+ * @param {number|string} [payload.endDate] - 終了日時（ミリ秒またはISO文字列）
+ * @param {number} [payload.scheduleId] - 紐付けるスケジュールID
+ * @param {number} [payload.parentTaskId] - 親タスクID（サブタスクの場合）
+ * @param {number} [payload.displayOrder] - 表示順序
+ * @param {Object} [payload.repeatConfig] - 繰り返し設定
+ * @param {Array<string>} [payload.tags] - タグ名の配列（最大50個、各100文字以内）
+ * @returns {Promise<Object>} 作成されたタスクオブジェクト
+ * @throws {Error} バリデーションエラー、外部キー制約違反など
+ */
 async function createTask(payload = {}) {
   const now = Date.now();
   const title = typeof payload.title === 'string' ? payload.title.trim() : '';
   if (!title) {
     throw new Error('title は必須です');
   }
+  if (title.length > MAX_TITLE_LENGTH) {
+    throw new Error(`title は ${MAX_TITLE_LENGTH} 文字以内で入力してください`);
+  }
 
   const description = typeof payload.description === 'string' ? payload.description.trim() : '';
+  if (description.length > MAX_DESCRIPTION_LENGTH) {
+    throw new Error(`description は ${MAX_DESCRIPTION_LENGTH} 文字以内で入力してください`);
+  }
   const priority = normalizePriority(payload.priority);
   const status = normalizeStatus(payload.status);
   const startDate = parseDateToDayStartMs(payload.startDate);
@@ -645,6 +683,25 @@ async function createTask(payload = {}) {
   });
 }
 
+/**
+ * 既存タスクを更新する。
+ *
+ * @param {number} id - 更新対象のタスクID
+ * @param {Object} fields - 更新するフィールド（指定したフィールドのみ更新）
+ * @param {string} [fields.title] - タスクのタイトル（最大500文字）
+ * @param {string} [fields.description] - タスクの説明（最大10000文字）
+ * @param {string} [fields.priority] - 優先度（'low'|'medium'|'high'）
+ * @param {string} [fields.status] - ステータス（'todo'|'in_progress'|'done'）
+ * @param {number|string} [fields.startDate] - 開始日時
+ * @param {number|string} [fields.endDate] - 終了日時
+ * @param {number} [fields.scheduleId] - スケジュールID
+ * @param {number} [fields.parentTaskId] - 親タスクID
+ * @param {number} [fields.displayOrder] - 表示順序
+ * @param {Object} [fields.repeatConfig] - 繰り返し設定
+ * @param {Array<string>} [fields.tags] - タグ名の配列
+ * @returns {Promise<Object>} 更新後のタスクオブジェクト
+ * @throws {Error} タスクが見つからない、バリデーションエラーなど
+ */
 async function updateTask(id, fields = {}) {
   const taskId = Number(id);
   if (!Number.isFinite(taskId)) {
@@ -668,11 +725,17 @@ async function updateTask(id, fields = {}) {
       if (!v) {
         throw new Error('title は空にできません');
       }
+      if (v.length > MAX_TITLE_LENGTH) {
+        throw new Error(`title は ${MAX_TITLE_LENGTH} 文字以内で入力してください`);
+      }
       sets.push('title = ?');
       params.push(v);
     }
     if (fields.description !== undefined) {
       const v = typeof fields.description === 'string' ? fields.description.trim() : null;
+      if (v && v.length > MAX_DESCRIPTION_LENGTH) {
+        throw new Error(`description は ${MAX_DESCRIPTION_LENGTH} 文字以内で入力してください`);
+      }
       sets.push('description = ?');
       params.push(v);
     }
@@ -760,6 +823,14 @@ async function updateTask(id, fields = {}) {
   });
 }
 
+/**
+ * タスクを削除する。
+ * サブタスクがある場合は外部キー制約により自動的に処理される（ON DELETE SET NULL）。
+ *
+ * @param {number} id - 削除対象のタスクID
+ * @returns {Promise<Object>} 削除されたタスクのID
+ * @throws {Error} IDが不正な場合
+ */
 async function deleteTask(id) {
   const taskId = Number(id);
   if (!Number.isFinite(taskId)) {
@@ -772,6 +843,17 @@ async function deleteTask(id) {
   return { id: taskId };
 }
 
+/**
+ * タスク一覧を取得する。
+ *
+ * @param {Object} [filter={}] - フィルタ条件
+ * @param {string} [filter.status] - ステータスでフィルタ
+ * @param {string} [filter.priority] - 優先度でフィルタ
+ * @param {number} [filter.scheduleId] - スケジュールIDでフィルタ
+ * @param {number} [filter.activeAt] - 指定時刻にアクティブなタスクをフィルタ
+ * @param {Array<string>} [filter.tags] - タグでフィルタ（AND条件）
+ * @returns {Promise<Array<Object>>} タスクオブジェクトの配列
+ */
 async function listTasks(filter = {}) {
   const where = [];
   const params = [];
@@ -909,6 +991,16 @@ async function updateTaskOrders(updates = []) {
   return rows.map((row) => mapRow(row, tagMap));
 }
 
+/**
+ * 条件に一致する複数のタスクを一括削除する。
+ *
+ * @param {Object} [criteria={}] - 削除条件
+ * @param {string} [criteria.status] - ステータス条件
+ * @param {string} [criteria.tag] - タグ条件（単一）
+ * @param {Array<string>} [criteria.tags] - タグ条件（複数、AND）
+ * @param {string} [criteria.timeframe] - 期間条件（'today'|'tomorrow'|'this_week'|'next_week'|'overdue'）
+ * @returns {Promise<Object>} 削除されたタスク数
+ */
 async function bulkDeleteTasks(criteria = {}) {
   const { clause, params } = buildCriteriaWhere(criteria);
   const parentQuery = clause
@@ -924,8 +1016,16 @@ async function bulkDeleteTasks(criteria = {}) {
   return { count: result?.changes ?? 0 };
 }
 
+/**
+ * 条件に一致する複数のタスクのステータスを一括更新する。
+ *
+ * @param {Object} [criteria={}] - 更新対象の条件（bulkDeleteTasks と同じ形式）
+ * @param {string} nextStatus - 新しいステータス（'todo'|'in_progress'|'done'）
+ * @returns {Promise<Object>} 更新されたタスク数
+ * @throws {Error} ステータスが不正な場合
+ */
 async function bulkUpdateStatus(criteria = {}, nextStatus) {
-  const normalizedStatus = normalizeTaskStatus(nextStatus);
+  const normalizedStatus = normalizeStatus(nextStatus);
   if (!normalizedStatus) {
     throw new Error('status が不正です');
   }
