@@ -65,6 +65,7 @@ function getEls() {
     groupBy: document.getElementById('tasksGroupBy'),
     saveSortBtn: document.getElementById('tasksSaveSort'),
     resetSortBtn: document.getElementById('tasksResetSort'),
+    viewToggles: document.querySelectorAll('input[name="tasksView"]'),
   };
 }
 
@@ -108,6 +109,7 @@ document.addEventListener('DOMContentLoaded', () => {
   setupFilters();
   setupAdvancedFilters();
   setupSortControls();
+  setupViewToggle();
   setupRepeatControls();
   setupVoice();
   void loadScheduleOptions();
@@ -208,6 +210,14 @@ function setupSortControls() {
 }
 
 function applySortingAndGrouping() {
+  const { items } = getEls();
+  if (!items) return;
+  const view = localStorage.getItem('tasks.view') || 'list';
+  if (view === 'kanban') {
+    renderKanbanView();
+    return;
+  }
+
   const { sortBy1, sortOrder1, sortBy2, sortOrder2, groupBy } = getEls();
   let tasksToRender = (window.filteredTasks || tasks).slice();
 
@@ -376,6 +386,91 @@ function resetSort() {
   if (groupBy) groupBy.value = '';
   localStorage.removeItem('tasks.sortConfig');
   applySortingAndGrouping();
+}
+
+function setupViewToggle() {
+  const { viewToggles, items } = getEls();
+  if (!viewToggles || !items) return;
+
+  const savedView = localStorage.getItem('tasks.view') || 'list';
+  viewToggles.forEach((toggle) => {
+    if (toggle.value === savedView) {
+      toggle.checked = true;
+    }
+    toggle.addEventListener('change', () => {
+      if (toggle.checked) {
+        const view = toggle.value;
+        localStorage.setItem('tasks.view', view);
+        items.className = `tasks-items tasks-view-${view}`;
+        applyCurrentView();
+      }
+    });
+  });
+
+  items.className = `tasks-items tasks-view-${savedView}`;
+  applyCurrentView();
+}
+
+function applyCurrentView() {
+  const { items } = getEls();
+  if (!items) return;
+  const view = localStorage.getItem('tasks.view') || 'list';
+  if (view === 'kanban') {
+    renderKanbanView();
+  } else {
+    applySortingAndGrouping();
+  }
+}
+
+function renderKanbanView() {
+  const { items, hideDone } = getEls();
+  if (!items) return;
+
+  let visibleTasks = (window.filteredTasks || tasks).slice();
+  if (hideDone?.checked) {
+    visibleTasks = visibleTasks.filter((t) => t.status !== 'done');
+  }
+
+  const columns = {
+    todo: visibleTasks.filter((t) => t.status === 'todo'),
+    in_progress: visibleTasks.filter((t) => t.status === 'in_progress'),
+    done: visibleTasks.filter((t) => t.status === 'done'),
+  };
+
+  items.innerHTML = '';
+
+  ['todo', 'in_progress', 'done'].forEach((status) => {
+    const column = document.createElement('div');
+    column.className = `tasks-kanban-column items-${status}`;
+
+    const header = document.createElement('div');
+    header.className = 'tasks-kanban-column-header';
+    header.textContent = `${statusJa(status)} (${columns[status].length})`;
+    column.appendChild(header);
+
+    const columnItems = document.createElement('div');
+    columnItems.className = 'tasks-kanban-column-items';
+
+    const sorted = columns[status].slice().sort((a, b) => {
+      const orderDiff = (a.displayOrder ?? 0) - (b.displayOrder ?? 0);
+      if (orderDiff !== 0) return orderDiff;
+      return (b.updatedAt ?? 0) - (a.updatedAt ?? 0);
+    });
+
+    sorted.forEach((task) => {
+      columnItems.appendChild(renderTaskItem(task, 0));
+    });
+
+    if (sorted.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'task-empty';
+      empty.textContent = 'タスクはありません';
+      columnItems.appendChild(empty);
+    }
+
+    column.appendChild(columnItems);
+    items.appendChild(column);
+  });
 }
 
 function setupRepeatControls() {

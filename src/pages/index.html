@@ -439,7 +439,21 @@
               <button type="button" class="btn-secondary btn-compact" id="tasksResetSort">リセット</button>
             </div>
           </div>
-          <div id="tasksItems" class="tasks-items">
+          <div class="tasks-view-controls">
+            <label class="tasks-view-toggle">
+              <input type="radio" name="tasksView" value="list" checked>
+              <span>リスト</span>
+            </label>
+            <label class="tasks-view-toggle">
+              <input type="radio" name="tasksView" value="card">
+              <span>カード</span>
+            </label>
+            <label class="tasks-view-toggle">
+              <input type="radio" name="tasksView" value="kanban">
+              <span>カンバン</span>
+            </label>
+          </div>
+          <div id="tasksItems" class="tasks-items tasks-view-list">
             <p class="empty-message">タスクはありません</p>
           </div>
         </div>

@@ -635,3 +635,104 @@
   border-left: 3px solid var(--primary-start);
   border-radius: var(--radius-sm);
 }
+
+/* ビュー切り替え */
+.tasks-view-controls {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+  padding: var(--space-2);
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: var(--radius-sm);
+}
+
+.tasks-view-toggle {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-1) var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-medium);
+  background: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+  transition: all var(--transition-base);
+  font-size: var(--text-sm);
+}
+
+.tasks-view-toggle:hover {
+  background: rgba(255, 255, 255, 0.9);
+  border-color: var(--primary-start);
+}
+
+.tasks-view-toggle input[type="radio"] {
+  margin-right: var(--space-1);
+}
+
+.tasks-view-toggle input[type="radio"]:checked + span {
+  font-weight: var(--font-semibold);
+}
+
+.tasks-view-toggle:has(input[type="radio"]:checked) {
+  background: var(--primary-start);
+  color: white;
+  border-color: var(--primary-start);
+}
+
+/* カードビュー */
+.tasks-view-card .tasks-items {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: var(--space-4);
+}
+
+.tasks-view-card .task-item {
+  min-height: 200px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* カンバンビュー */
+.tasks-view-kanban .tasks-items {
+  display: flex;
+  gap: var(--space-4);
+  overflow-x: auto;
+  padding-bottom: var(--space-2);
+}
+
+.tasks-kanban-column {
+  min-width: 280px;
+  flex: 0 0 280px;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.tasks-kanban-column-header {
+  font-size: var(--text-lg);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  padding-bottom: var(--space-2);
+  border-bottom: 2px solid var(--border-medium);
+}
+
+.tasks-kanban-column-items {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  flex: 1;
+  min-height: 100px;
+}
+
+.tasks-kanban-column.items-todo {
+  border-left: 3px solid var(--info);
+}
+
+.tasks-kanban-column.items-in-progress {
+  border-left: 3px solid var(--success);
+}
+
+.tasks-kanban-column.items-done {
+  border-left: 3px solid #adb5bd;
+}
