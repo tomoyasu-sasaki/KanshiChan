@@ -14,7 +14,8 @@
       "Bash(find:*)",
       "Bash(git commit:*)",
       "Bash(git push:*)",
-      "Bash(mkdir:*)"
+      "Bash(mkdir:*)",
+      "Bash(gh pr list:*)"
     ],
     "deny": [],
     "ask": []
