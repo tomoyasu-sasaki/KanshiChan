@@ -1046,6 +1046,87 @@ async function bulkUpdateStatus(criteria = {}, nextStatus) {
   return { count: result?.changes ?? 0 };
 }
 
+/**
+ * タスク統計情報を取得する。
+ *
+ * @param {Object} [options={}]
+ * @param {number} [options.start] - 開始時刻（UNIX ms）
+ * @param {number} [options.end] - 終了時刻（UNIX ms）
+ * @returns {Promise<Object>} 統計情報
+ */
+async function getTaskStats(options = {}) {
+  const now = Date.now();
+  const defaultStart = now - 7 * 24 * 60 * 60 * 1000;
+  const start = Number.isFinite(options.start) ? options.start : defaultStart;
+  const end = Number.isFinite(options.end) ? options.end : now;
+
+  // 期間内に作成または更新されたタスクを取得
+  const allTasks = await all(
+    `SELECT 
+      id, status, priority, 
+      start_date, end_date, created_at, updated_at,
+      CASE 
+        WHEN status = 'done' AND end_date IS NOT NULL AND start_date IS NOT NULL 
+        THEN end_date - start_date
+        ELSE NULL
+      END AS completion_duration
+    FROM tasks
+    WHERE (created_at BETWEEN ? AND ?) OR (updated_at BETWEEN ? AND ?)
+    ORDER BY created_at DESC`,
+    [start, end, start, end]
+  );
+
+  const stats = {
+    total: allTasks.length,
+    byStatus: { todo: 0, in_progress: 0, done: 0 },
+    byPriority: { low: 0, medium: 0, high: 0 },
+    completionRate: 0,
+    completedCount: 0,
+    averageCompletionDays: null,
+    completionDurations: [],
+  };
+
+  const completionDurations = [];
+
+  allTasks.forEach((task) => {
+    // ステータス別カウント
+    if (task.status && stats.byStatus[task.status] !== undefined) {
+      stats.byStatus[task.status]++;
+    }
+
+    // 優先度別カウント
+    if (task.priority && stats.byPriority[task.priority] !== undefined) {
+      stats.byPriority[task.priority]++;
+    }
+
+    // 完了タスクの統計
+    if (task.status === 'done') {
+      stats.completedCount++;
+      if (task.completion_duration != null && Number.isFinite(task.completion_duration)) {
+        const days = task.completion_duration / (24 * 60 * 60 * 1000);
+        completionDurations.push(days);
+      }
+    }
+  });
+
+  // 完了率計算
+  if (stats.total > 0) {
+    stats.completionRate = Math.round((stats.completedCount / stats.total) * 100);
+  }
+
+  // 平均完了日数の計算
+  if (completionDurations.length > 0) {
+    const sum = completionDurations.reduce((acc, val) => acc + val, 0);
+    stats.averageCompletionDays = Math.round((sum / completionDurations.length) * 10) / 10;
+    stats.completionDurations = completionDurations;
+  }
+
+  return {
+    range: { start, end },
+    summary: stats,
+  };
+}
+
 module.exports = {
   createTask,
   updateTask,
@@ -1056,4 +1137,5 @@ module.exports = {
   updateTaskOrders,
   bulkDeleteTasks,
   bulkUpdateStatus,
+  getTaskStats,
 };

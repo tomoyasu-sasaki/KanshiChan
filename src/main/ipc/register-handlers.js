@@ -377,7 +377,35 @@ function registerIpcHandlers({
         }
       }
 
+      // 更新前の状態を取得（タスク完了通知用）
+      let previousStatus = null;
+      if (fields.status === 'done' && Notification) {
+        try {
+          const existingList = await tasksService.listTasks({});
+          const existingTask = existingList.find((t) => t.id === Number(id));
+          previousStatus = existingTask?.status;
+        } catch (error) {
+          console.warn('[IPC] 更新前タスク状態取得エラー:', error);
+        }
+      }
+
       const task = await tasksService.updateTask(id, fields || {});
+      
+      // タスクが完了状態になった場合に通知を送信
+      if (Notification && previousStatus !== 'done' && task?.status === 'done') {
+        try {
+          const notification = new Notification('✅ タスク完了', {
+            body: `「${task.title || 'タスク'}」が完了しました`,
+            icon: undefined,
+          });
+          notification.onclick = () => {
+            // 通知クリック時の処理（必要に応じてウィンドウをアクティブ化など）
+          };
+        } catch (error) {
+          console.warn('[IPC] タスク完了通知の送信に失敗:', error);
+        }
+      }
+
       return { success: true, task };
     } catch (error) {
       console.error('[IPC] tasks-update エラー:', error);

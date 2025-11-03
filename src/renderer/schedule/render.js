@@ -5,11 +5,14 @@
 import { scheduleItems } from './dom.js';
 import { formatRepeatLabel, formatDateWithWeekday } from './utils.js';
 
+// スケジュールIDごとのタスク一覧のキャッシュ
+const tasksCache = new Map();
+
 /**
  * スケジュールカードを再生成して DOM に反映する。
  * @param {object} params 描画に必要なパラメータ群
  */
-export function renderSchedules({ schedules, occurrences, editingId, onEdit, onDelete }) {
+export async function renderSchedules({ schedules, occurrences, editingId, onEdit, onDelete }) {
   if (!scheduleItems) {
     return;
   }
@@ -35,6 +38,9 @@ export function renderSchedules({ schedules, occurrences, editingId, onEdit, onD
 
   enriched.sort((a, b) => a.occurrence.dateTime - b.occurrence.dateTime);
 
+  // タスク一覧を事前取得
+  await loadTasksForSchedules(enriched.map((e) => e.schedule.id));
+
   enriched.forEach(({ schedule, occurrence }) => {
     scheduleItems.appendChild(createScheduleElement({
       schedule,
@@ -44,6 +50,42 @@ export function renderSchedules({ schedules, occurrences, editingId, onEdit, onD
       onDelete,
     }));
   });
+}
+
+/**
+ * スケジュールIDのリストに対して紐付きタスクを取得してキャッシュに保存する。
+ */
+async function loadTasksForSchedules(scheduleIds) {
+  if (!scheduleIds || scheduleIds.length === 0) {
+    return;
+  }
+
+  try {
+    if (window.electronAPI?.tasksList) {
+      // 各スケジュールIDに対してタスクを取得
+      const tasksPromises = scheduleIds.map(async (scheduleId) => {
+        const response = await window.electronAPI.tasksList({ scheduleId });
+        return {
+          scheduleId,
+          tasks: response?.success && Array.isArray(response.items) ? response.items : [],
+        };
+      });
+
+      const results = await Promise.all(tasksPromises);
+      results.forEach(({ scheduleId, tasks }) => {
+        tasksCache.set(scheduleId, tasks);
+      });
+    }
+  } catch (error) {
+    console.warn('[Schedule] タスク取得エラー:', error);
+  }
+}
+
+/**
+ * タスクキャッシュをクリアする。
+ */
+export function clearTasksCache() {
+  tasksCache.clear();
 }
 
 /**
@@ -157,6 +199,47 @@ function createScheduleElement({ schedule, occurrence, isEditing, onEdit, onDele
     repeatEl.className = 'schedule-repeat';
     repeatEl.textContent = repeatLabel;
     info.appendChild(repeatEl);
+  }
+
+  // 紐付きタスク一覧を表示
+  const linkedTasks = tasksCache.get(schedule.id) || [];
+  if (linkedTasks.length > 0) {
+    const tasksSection = document.createElement('div');
+    tasksSection.className = 'schedule-linked-tasks';
+    const tasksHeader = document.createElement('div');
+    tasksHeader.className = 'schedule-linked-tasks-header';
+    tasksHeader.textContent = `📋 関連タスク (${linkedTasks.length})`;
+    tasksSection.appendChild(tasksHeader);
+
+    const tasksList = document.createElement('ul');
+    tasksList.className = 'schedule-linked-tasks-list';
+    linkedTasks.slice(0, 5).forEach((task) => {
+      const taskItem = document.createElement('li');
+      taskItem.className = `schedule-linked-task-item status-${task.status || 'todo'}`;
+      
+      const taskTitle = document.createElement('span');
+      taskTitle.className = 'schedule-linked-task-title';
+      taskTitle.textContent = task.title || 'タスク';
+      
+      const taskStatus = document.createElement('span');
+      taskStatus.className = 'schedule-linked-task-status';
+      const statusLabels = { todo: '未着手', in_progress: '進行中', done: '完了' };
+      taskStatus.textContent = statusLabels[task.status] || '未着手';
+      
+      taskItem.appendChild(taskTitle);
+      taskItem.appendChild(taskStatus);
+      tasksList.appendChild(taskItem);
+    });
+
+    if (linkedTasks.length > 5) {
+      const moreItem = document.createElement('li');
+      moreItem.className = 'schedule-linked-task-more';
+      moreItem.textContent = `他 ${linkedTasks.length - 5} 件...`;
+      tasksList.appendChild(moreItem);
+    }
+
+    tasksSection.appendChild(tasksList);
+    info.appendChild(tasksSection);
   }
 
   div.appendChild(header);

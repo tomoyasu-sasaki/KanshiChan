@@ -1271,6 +1271,8 @@ async function onSubmitForm(event) {
     if (payload.tags.length) {
       await loadTagOptions();
     }
+    // タスク更新イベントを発行
+    window.dispatchEvent(new CustomEvent('tasks-updated'));
   } catch (error) {
     console.error('[Tasks] 送信エラー:', error);
   } finally {

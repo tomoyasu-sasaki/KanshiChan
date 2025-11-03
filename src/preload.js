@@ -49,6 +49,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   tasksTagsList: () => ipcRenderer.invoke('tasks-tags-list'),
   tasksBulkDelete: (criteria) => ipcRenderer.invoke('tasks-bulk-delete', criteria),
   tasksBulkComplete: (criteria) => ipcRenderer.invoke('tasks-bulk-complete', criteria),
+  tasksStats: (options) => ipcRenderer.invoke('tasks-stats', options),
   absenceOverrideGetState: () => ipcRenderer.invoke('absence_override_get_state'),
   absenceOverrideActivate: (payload) => ipcRenderer.invoke('absence_override_activate', payload),
   absenceOverrideExtend: (payload) => ipcRenderer.invoke('absence_override_extend', payload),

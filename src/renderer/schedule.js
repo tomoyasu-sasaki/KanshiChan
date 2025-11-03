@@ -24,7 +24,7 @@ import {
   formatRepeatLabel,
 } from './schedule/utils.js';
 import { setupRepeatControls, resetRepeatControls, setRepeatSelection } from './schedule/repeat-controls.js';
-import { renderSchedules } from './schedule/render.js';
+import { renderSchedules, clearTasksCache } from './schedule/render.js';
 import { initializeForm, enterEditMode, exitEditMode } from './schedule/form.js';
 import { initializeCsvHandlers } from './schedule/csv.js';
 import { initializeBulkAdd } from './schedule/bulk.js';
@@ -115,7 +115,7 @@ function setupForm() {
  * スケジュール更新通知に反応して再初期化・再描画を行う。
  */
 function registerGlobalListeners() {
-  window.addEventListener('schedules-updated', (event) => {
+  window.addEventListener('schedules-updated', async (event) => {
     if (event?.detail?.source === 'schedule-renderer') {
       return;
     }
@@ -123,12 +123,18 @@ function registerGlobalListeners() {
     if (event?.detail?.source !== 'schedule-model') {
       initializeSchedules();
     }
-    renderAll();
+    await renderAll();
     startNotificationCheck();
   });
 
-  window.addEventListener('schedule-renderer-updated', () => {
-    renderAll();
+  window.addEventListener('schedule-renderer-updated', async () => {
+    await renderAll();
+  });
+
+  // タスク更新時にキャッシュをクリア
+  window.addEventListener('tasks-updated', () => {
+    clearTasksCache();
+    void renderAll();
   });
 }
 
@@ -151,9 +157,9 @@ function computeOccurrences() {
 /**
  * スケジュール一覧の再描画を実行する。
  */
-function renderAll() {
+async function renderAll() {
   const occurrences = computeOccurrences();
-  renderSchedules({
+  await renderSchedules({
     schedules: getSchedules(),
     occurrences,
     editingId: scheduleState.editingScheduleId,
