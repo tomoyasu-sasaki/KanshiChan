@@ -323,6 +323,122 @@
             </label>
             <div class="tasks-tag-filters" id="tasksTagFilters"></div>
           </div>
+          <div class="tasks-advanced-filters" id="tasksAdvancedFilters">
+            <button type="button" class="btn-secondary btn-compact" id="tasksAdvancedFiltersToggle">
+              <span>高度なフィルタ</span>
+              <span class="filter-icon">▼</span>
+            </button>
+            <div class="tasks-advanced-filters-panel" id="tasksAdvancedFiltersPanel" hidden>
+              <div class="filter-group">
+                <label for="tasksFilterStatus">ステータス</label>
+                <select id="tasksFilterStatus" multiple>
+                  <option value="todo">未着手</option>
+                  <option value="in_progress">進行中</option>
+                  <option value="done">完了</option>
+                </select>
+              </div>
+              <div class="filter-group">
+                <label for="tasksFilterPriority">優先度</label>
+                <select id="tasksFilterPriority" multiple>
+                  <option value="low">低</option>
+                  <option value="medium">中</option>
+                  <option value="high">高</option>
+                </select>
+              </div>
+              <div class="filter-group">
+                <label for="tasksFilterDateRange">日付範囲</label>
+                <select id="tasksFilterDateRange">
+                  <option value="">指定なし</option>
+                  <option value="today">今日</option>
+                  <option value="tomorrow">明日</option>
+                  <option value="this_week">今週</option>
+                  <option value="next_week">来週</option>
+                  <option value="this_month">今月</option>
+                  <option value="next_month">来月</option>
+                  <option value="this_quarter">今四半期</option>
+                  <option value="overdue">期限切れ</option>
+                  <option value="custom">カスタム</option>
+                </select>
+              </div>
+              <div class="filter-group" id="tasksFilterCustomDates" hidden>
+                <label>開始日</label>
+                <input type="date" id="tasksFilterStartDate">
+                <label>終了日</label>
+                <input type="date" id="tasksFilterEndDate">
+              </div>
+              <div class="filter-group">
+                <label for="tasksFilterConditionMode">条件の組み合わせ</label>
+                <select id="tasksFilterConditionMode">
+                  <option value="AND">すべて満たす (AND)</option>
+                  <option value="OR">いずれか満たす (OR)</option>
+                </select>
+              </div>
+              <div class="filter-group">
+                <button type="button" class="btn-secondary btn-compact" id="tasksSaveFilter">
+                  フィルタを保存
+                </button>
+                <button type="button" class="btn-secondary btn-compact" id="tasksLoadFilter">
+                  保存済みフィルタを読み込み
+                </button>
+                <button type="button" class="btn-secondary btn-compact" id="tasksClearFilter">
+                  フィルタをクリア
+                </button>
+              </div>
+              <select id="tasksSavedFilters" style="display: none;">
+                <option value="">保存済みフィルタを選択...</option>
+              </select>
+            </div>
+          </div>
+          <div class="tasks-sort-controls" id="tasksSortControls">
+            <div class="tasks-sort-group">
+              <label for="tasksSortBy1">ソート1</label>
+              <select id="tasksSortBy1">
+                <option value="displayOrder">表示順</option>
+                <option value="updatedAt">更新日時</option>
+                <option value="createdAt">作成日時</option>
+                <option value="title">タイトル</option>
+                <option value="priority">優先度</option>
+                <option value="status">ステータス</option>
+                <option value="startDate">開始日</option>
+                <option value="endDate">終了日</option>
+              </select>
+              <select id="tasksSortOrder1">
+                <option value="asc">昇順</option>
+                <option value="desc" selected>降順</option>
+              </select>
+            </div>
+            <div class="tasks-sort-group">
+              <label for="tasksSortBy2">ソート2</label>
+              <select id="tasksSortBy2">
+                <option value="">指定なし</option>
+                <option value="displayOrder">表示順</option>
+                <option value="updatedAt" selected>更新日時</option>
+                <option value="createdAt">作成日時</option>
+                <option value="title">タイトル</option>
+                <option value="priority">優先度</option>
+                <option value="status">ステータス</option>
+                <option value="startDate">開始日</option>
+                <option value="endDate">終了日</option>
+              </select>
+              <select id="tasksSortOrder2">
+                <option value="asc">昇順</option>
+                <option value="desc" selected>降順</option>
+              </select>
+            </div>
+            <div class="tasks-sort-group">
+              <label for="tasksGroupBy">グループ化</label>
+              <select id="tasksGroupBy">
+                <option value="">なし</option>
+                <option value="priority">優先度別</option>
+                <option value="status">ステータス別</option>
+                <option value="parentTaskId">親タスク別</option>
+              </select>
+            </div>
+            <div class="tasks-sort-group">
+              <button type="button" class="btn-secondary btn-compact" id="tasksSaveSort">ソートを保存</button>
+              <button type="button" class="btn-secondary btn-compact" id="tasksResetSort">リセット</button>
+            </div>
+          </div>
           <div id="tasksItems" class="tasks-items">
             <p class="empty-message">タスクはありません</p>
           </div>

@@ -45,6 +45,26 @@ function getEls() {
     hideDone: document.getElementById('tasksHideDone'),
     voiceMsg: document.getElementById('tasksVoiceMessage'),
     tagFilterContainer: document.getElementById('tasksTagFilters'),
+    advancedFiltersToggle: document.getElementById('tasksAdvancedFiltersToggle'),
+    advancedFiltersPanel: document.getElementById('tasksAdvancedFiltersPanel'),
+    filterStatus: document.getElementById('tasksFilterStatus'),
+    filterPriority: document.getElementById('tasksFilterPriority'),
+    filterDateRange: document.getElementById('tasksFilterDateRange'),
+    filterCustomDates: document.getElementById('tasksFilterCustomDates'),
+    filterStartDate: document.getElementById('tasksFilterStartDate'),
+    filterEndDate: document.getElementById('tasksFilterEndDate'),
+    filterConditionMode: document.getElementById('tasksFilterConditionMode'),
+    saveFilterBtn: document.getElementById('tasksSaveFilter'),
+    loadFilterBtn: document.getElementById('tasksLoadFilter'),
+    clearFilterBtn: document.getElementById('tasksClearFilter'),
+    savedFilters: document.getElementById('tasksSavedFilters'),
+    sortBy1: document.getElementById('tasksSortBy1'),
+    sortOrder1: document.getElementById('tasksSortOrder1'),
+    sortBy2: document.getElementById('tasksSortBy2'),
+    sortOrder2: document.getElementById('tasksSortOrder2'),
+    groupBy: document.getElementById('tasksGroupBy'),
+    saveSortBtn: document.getElementById('tasksSaveSort'),
+    resetSortBtn: document.getElementById('tasksResetSort'),
   };
 }
 
@@ -86,6 +106,8 @@ function saveReadingSettings(nextSettings) {
 document.addEventListener('DOMContentLoaded', () => {
   setupForm();
   setupFilters();
+  setupAdvancedFilters();
+  setupSortControls();
   setupRepeatControls();
   setupVoice();
   void loadScheduleOptions();
@@ -107,6 +129,253 @@ function setupFilters() {
   const { showOnlyActive, hideDone } = getEls();
   showOnlyActive?.addEventListener('change', () => loadTasks());
   hideDone?.addEventListener('change', renderList);
+}
+
+function setupAdvancedFilters() {
+  const {
+    advancedFiltersToggle,
+    advancedFiltersPanel,
+    filterDateRange,
+    filterCustomDates,
+    filterStatus,
+    filterPriority,
+    filterStartDate,
+    filterEndDate,
+    filterConditionMode,
+    saveFilterBtn,
+    loadFilterBtn,
+    clearFilterBtn,
+    savedFilters,
+  } = getEls();
+
+  if (!advancedFiltersToggle) return;
+
+  advancedFiltersToggle.addEventListener('click', () => {
+    const isOpen = !advancedFiltersPanel.hidden;
+    advancedFiltersPanel.hidden = !isOpen;
+    const container = advancedFiltersPanel.closest('.tasks-advanced-filters');
+    if (container) {
+      container.setAttribute('data-open', String(!isOpen));
+    }
+  });
+
+  filterDateRange?.addEventListener('change', () => {
+    if (filterCustomDates) {
+      filterCustomDates.hidden = filterDateRange.value !== 'custom';
+    }
+    applyAdvancedFilters();
+  });
+
+  [filterStatus, filterPriority, filterStartDate, filterEndDate, filterConditionMode].forEach((el) => {
+    el?.addEventListener('change', applyAdvancedFilters);
+  });
+
+  saveFilterBtn?.addEventListener('click', saveCurrentFilter);
+  loadFilterBtn?.addEventListener('click', () => {
+    const name = prompt('保存済みフィルタの名前を入力してください:');
+    if (name) loadSavedFilter(name);
+  });
+  clearFilterBtn?.addEventListener('click', clearAdvancedFilters);
+
+  loadSavedFiltersList();
+}
+
+function setupSortControls() {
+  const {
+    sortBy1,
+    sortOrder1,
+    sortBy2,
+    sortOrder2,
+    groupBy,
+    saveSortBtn,
+    resetSortBtn,
+  } = getEls();
+
+  if (!sortBy1) return;
+
+  const applySort = () => {
+    applySortingAndGrouping();
+  };
+
+  [sortBy1, sortOrder1, sortBy2, sortOrder2, groupBy].forEach((el) => {
+    el?.addEventListener('change', applySort);
+  });
+
+  saveSortBtn?.addEventListener('click', saveCurrentSort);
+  resetSortBtn?.addEventListener('click', resetSort);
+
+  loadSavedSort();
+}
+
+function applySortingAndGrouping() {
+  const { sortBy1, sortOrder1, sortBy2, sortOrder2, groupBy } = getEls();
+  let tasksToRender = (window.filteredTasks || tasks).slice();
+
+  const sort1 = sortBy1?.value || 'displayOrder';
+  const order1 = sortOrder1?.value || 'asc';
+  const sort2 = sortBy2?.value || '';
+  const order2 = sortOrder2?.value || 'desc';
+  const group = groupBy?.value || '';
+
+  tasksToRender.sort((a, b) => {
+    let diff1 = compareTasks(a, b, sort1);
+    if (diff1 !== 0) {
+      return order1 === 'asc' ? diff1 : -diff1;
+    }
+    if (sort2) {
+      let diff2 = compareTasks(a, b, sort2);
+      return order2 === 'asc' ? diff2 : -diff2;
+    }
+    return 0;
+  });
+
+  window.sortedTasks = tasksToRender;
+  window.currentGroupBy = group;
+  renderListWithGrouping(tasksToRender, group);
+}
+
+function compareTasks(a, b, field) {
+  switch (field) {
+    case 'displayOrder':
+      return (a.displayOrder ?? 0) - (b.displayOrder ?? 0);
+    case 'updatedAt':
+      return (a.updatedAt ?? 0) - (b.updatedAt ?? 0);
+    case 'createdAt':
+      return (a.createdAt ?? 0) - (b.createdAt ?? 0);
+    case 'title':
+      return (a.title || '').localeCompare(b.title || '', 'ja');
+    case 'priority':
+      const priorityOrder = { high: 3, medium: 2, low: 1 };
+      return (priorityOrder[a.priority] || 0) - (priorityOrder[b.priority] || 0);
+    case 'status':
+      const statusOrder = { todo: 1, in_progress: 2, done: 3 };
+      return (statusOrder[a.status] || 0) - (statusOrder[b.status] || 0);
+    case 'startDate':
+      return (a.startDate ?? 0) - (b.startDate ?? 0);
+    case 'endDate':
+      return (a.endDate ?? 0) - (b.endDate ?? 0);
+    default:
+      return 0;
+  }
+}
+
+function renderListWithGrouping(sourceTasks, groupBy) {
+  const { items, hideDone } = getEls();
+  if (!items) return;
+  items.innerHTML = '';
+
+  let visibleTasks = sourceTasks || tasks.slice();
+  if (hideDone?.checked) {
+    visibleTasks = visibleTasks.filter((t) => t.status !== 'done');
+  }
+
+  if (visibleTasks.length === 0) {
+    const li = document.createElement('div');
+    li.className = 'task-empty';
+    li.textContent = 'タスクはありません';
+    items.appendChild(li);
+    return;
+  }
+
+  if (!groupBy) {
+    const tree = buildTaskTreeForRender(visibleTasks);
+    tree.forEach((task) => items.appendChild(renderTaskItem(task, 0)));
+    return;
+  }
+
+  const groups = groupTasks(visibleTasks, groupBy);
+  Object.keys(groups).forEach((groupKey) => {
+    const header = document.createElement('div');
+    header.className = 'tasks-group-header';
+    header.textContent = formatGroupHeader(groupBy, groupKey);
+    items.appendChild(header);
+
+    const groupTasksList = groups[groupKey];
+    const tree = buildTaskTreeForRender(groupTasksList);
+    tree.forEach((task) => items.appendChild(renderTaskItem(task, 0)));
+  });
+}
+
+function groupTasks(tasks, groupBy) {
+  const groups = {};
+  tasks.forEach((task) => {
+    let key = '';
+    switch (groupBy) {
+      case 'priority':
+        key = task.priority || 'unknown';
+        break;
+      case 'status':
+        key = task.status || 'unknown';
+        break;
+      case 'parentTaskId':
+        key = task.parentTaskId ? `parent_${task.parentTaskId}` : 'root';
+        break;
+      default:
+        key = 'all';
+    }
+    if (!groups[key]) {
+      groups[key] = [];
+    }
+    groups[key].push(task);
+  });
+  return groups;
+}
+
+function formatGroupHeader(groupBy, key) {
+  switch (groupBy) {
+    case 'priority':
+      return `優先度: ${priorityJa(key)}`;
+    case 'status':
+      return `ステータス: ${statusJa(key)}`;
+    case 'parentTaskId':
+      if (key === 'root') return '親タスクなし';
+      const parentId = Number(key.replace('parent_', ''));
+      const parent = tasks.find((t) => t.id === parentId);
+      return parent ? `親タスク: ${parent.title}` : `親タスク: ID ${parentId}`;
+    default:
+      return key;
+  }
+}
+
+function saveCurrentSort() {
+  const { sortBy1, sortOrder1, sortBy2, sortOrder2, groupBy } = getEls();
+  const sortConfig = {
+    sortBy1: sortBy1?.value || 'displayOrder',
+    sortOrder1: sortOrder1?.value || 'asc',
+    sortBy2: sortBy2?.value || '',
+    sortOrder2: sortOrder2?.value || 'desc',
+    groupBy: groupBy?.value || '',
+  };
+  localStorage.setItem('tasks.sortConfig', JSON.stringify(sortConfig));
+  alert('ソート設定を保存しました。');
+}
+
+function loadSavedSort() {
+  try {
+    const saved = localStorage.getItem('tasks.sortConfig');
+    if (!saved) return;
+    const config = JSON.parse(saved);
+    const { sortBy1, sortOrder1, sortBy2, sortOrder2, groupBy } = getEls();
+    if (sortBy1) sortBy1.value = config.sortBy1 || 'displayOrder';
+    if (sortOrder1) sortOrder1.value = config.sortOrder1 || 'asc';
+    if (sortBy2) sortBy2.value = config.sortBy2 || '';
+    if (sortOrder2) sortOrder2.value = config.sortOrder2 || 'desc';
+    if (groupBy) groupBy.value = config.groupBy || '';
+    applySortingAndGrouping();
+  } catch (error) {
+    console.warn('[Tasks] ソート設定の読み込みに失敗:', error);
+  }
+}
+
+function resetSort() {
+  const { sortBy1, sortOrder1, sortBy2, sortOrder2, groupBy } = getEls();
+  if (sortBy1) sortBy1.value = 'displayOrder';
+  if (sortOrder1) sortOrder1.value = 'desc';
+  if (sortBy2) sortBy2.value = 'updatedAt';
+  if (sortOrder2) sortOrder2.value = 'desc';
+  if (groupBy) groupBy.value = '';
+  localStorage.removeItem('tasks.sortConfig');
+  applySortingAndGrouping();
 }
 
 function setupRepeatControls() {
@@ -306,25 +575,139 @@ function setupAnnouncementTimer() {
 async function loadTasks() {
   const { showOnlyActive } = getEls();
   try {
-    const filter = {};
-    if (showOnlyActive?.checked) {
-      filter.activeAt = Date.now();
-    }
-    if (tagFilters.size > 0) {
-      filter.tags = Array.from(tagFilters);
-    }
+    const filter = buildFilter();
     const res = await window.electronAPI.tasksList(filter);
     console.debug('[Tasks] loadTasks filter', filter, 'response', res);
     if (!res?.success) throw new Error(res?.error || 'tasksList 失敗');
     tasks = Array.isArray(res.items) ? res.items : [];
     console.debug('[Tasks] mapped tasks', tasks);
     populateParentOptions();
-    renderList();
+    applyAdvancedFiltersToTasks();
   } catch (error) {
     console.error('[Tasks] 読み込みエラー:', error);
     tasks = [];
     renderList();
   }
+}
+
+function buildFilter() {
+  const { showOnlyActive } = getEls();
+  const filter = {};
+  if (showOnlyActive?.checked) {
+    filter.activeAt = Date.now();
+  }
+  if (tagFilters.size > 0) {
+    filter.tags = Array.from(tagFilters);
+  }
+  const advancedFilter = getAdvancedFilter();
+  if (advancedFilter.status && advancedFilter.status.length > 0) {
+    filter.status = advancedFilter.status[0];
+  }
+  if (advancedFilter.priority && advancedFilter.priority.length > 0) {
+    filter.priority = advancedFilter.priority[0];
+  }
+  if (advancedFilter.timeframe) {
+    filter.timeframe = advancedFilter.timeframe;
+  }
+  return filter;
+}
+
+function getAdvancedFilter() {
+  const {
+    filterStatus,
+    filterPriority,
+    filterDateRange,
+    filterStartDate,
+    filterEndDate,
+    filterConditionMode,
+  } = getEls();
+
+  const filter = {
+    status: filterStatus ? Array.from(filterStatus.selectedOptions).map((opt) => opt.value) : [],
+    priority: filterPriority ? Array.from(filterPriority.selectedOptions).map((opt) => opt.value) : [],
+    timeframe: null,
+    customStartDate: null,
+    customEndDate: null,
+    conditionMode: filterConditionMode?.value || 'AND',
+  };
+
+  if (filterDateRange?.value) {
+    if (filterDateRange.value === 'custom') {
+      filter.customStartDate = filterStartDate?.value ? new Date(filterStartDate.value).getTime() : null;
+      filter.customEndDate = filterEndDate?.value ? new Date(filterEndDate.value).getTime() : null;
+      if (filter.customStartDate || filter.customEndDate) {
+        filter.timeframe = 'custom';
+      }
+    } else {
+      filter.timeframe = filterDateRange.value;
+    }
+  }
+
+  return filter;
+}
+
+function applyAdvancedFilters() {
+  const advancedFilter = getAdvancedFilter();
+  let filtered = tasks.slice();
+
+  if (advancedFilter.conditionMode === 'AND') {
+    if (advancedFilter.status.length > 0) {
+      filtered = filtered.filter((task) => advancedFilter.status.includes(task.status));
+    }
+    if (advancedFilter.priority.length > 0) {
+      filtered = filtered.filter((task) => advancedFilter.priority.includes(task.priority));
+    }
+  } else {
+    if (advancedFilter.status.length > 0 || advancedFilter.priority.length > 0) {
+      filtered = filtered.filter((task) =>
+        advancedFilter.status.includes(task.status) || advancedFilter.priority.includes(task.priority)
+      );
+    }
+  }
+
+  if (advancedFilter.timeframe) {
+    const range = computeTimeframeRange(advancedFilter.timeframe, advancedFilter.customStartDate, advancedFilter.customEndDate);
+    if (range) {
+      filtered = filtered.filter((task) => {
+        const start = task.startDate;
+        const end = task.endDate;
+        if (range.type === 'overdue') {
+          return end != null && end < range.before && task.status !== 'done';
+        }
+        if (range.type === 'range') {
+          return (start == null || start <= range.end) && (end == null || end >= range.start);
+        }
+        return true;
+      });
+    }
+  }
+
+  window.filteredTasks = filtered;
+  window.sortedTasks = null;
+  applySortingAndGrouping();
+}
+
+function applyAdvancedFiltersToTasks() {
+  if (window.filteredTasks) {
+    window.sortedTasks = null;
+    applySortingAndGrouping();
+  } else {
+    applyAdvancedFilters();
+  }
+}
+
+function computeTimeframeRange(timeframe, customStartDate, customEndDate) {
+  if (timeframe === 'custom') {
+    if (customStartDate || customEndDate) {
+      return {
+        type: 'range',
+        start: customStartDate || 0,
+        end: customEndDate || Date.now() + 365 * 24 * 60 * 60 * 1000,
+      };
+    }
+    return null;
+  }
+  return computeClientTimeframeRange(timeframe);
 }
 
 function registerScheduleListeners() {
@@ -462,24 +845,12 @@ function buildTaskTreeForRender(sourceTasks) {
   return roots;
 }
 
-function renderList() {
-  const { items, hideDone } = getEls();
-  if (!items) return;
-  items.innerHTML = '';
-  let visibleTasks = tasks.slice();
-  if (hideDone?.checked) {
-    visibleTasks = visibleTasks.filter((t) => t.status !== 'done');
+function renderList(sourceTasks = null) {
+  if (window.currentGroupBy) {
+    renderListWithGrouping(sourceTasks || window.sortedTasks || tasks.slice(), window.currentGroupBy);
+  } else {
+    renderListWithGrouping(sourceTasks || window.sortedTasks || tasks.slice(), '');
   }
-  console.debug('[Tasks] renderList total', tasks.length, 'visible', visibleTasks.length);
-  if (visibleTasks.length === 0) {
-    const li = document.createElement('div');
-    li.className = 'task-empty';
-    li.textContent = 'タスクはありません';
-    items.appendChild(li);
-    return;
-  }
-  const tree = buildTaskTreeForRender(visibleTasks);
-  tree.forEach((task) => items.appendChild(renderTaskItem(task, 0)));
 }
 
 function renderTaskItem(task, depth) {
@@ -1285,6 +1656,36 @@ function endOfWeekClient(timestamp) {
   return d.getTime();
 }
 
+function startOfMonthClient(timestamp) {
+  const d = new Date(timestamp);
+  d.setDate(1);
+  d.setHours(0, 0, 0, 0);
+  return d.getTime();
+}
+
+function endOfMonthClient(timestamp) {
+  const d = new Date(timestamp);
+  d.setMonth(d.getMonth() + 1, 0);
+  d.setHours(23, 59, 59, 999);
+  return d.getTime();
+}
+
+function startOfQuarterClient(timestamp) {
+  const d = new Date(timestamp);
+  const quarter = Math.floor(d.getMonth() / 3);
+  d.setMonth(quarter * 3, 1);
+  d.setHours(0, 0, 0, 0);
+  return d.getTime();
+}
+
+function endOfQuarterClient(timestamp) {
+  const d = new Date(timestamp);
+  const quarter = Math.floor(d.getMonth() / 3);
+  d.setMonth((quarter + 1) * 3, 0);
+  d.setHours(23, 59, 59, 999);
+  return d.getTime();
+}
+
 function computeClientTimeframeRange(timeframe) {
   const now = Date.now();
   switch (timeframe) {
@@ -1302,6 +1703,15 @@ function computeClientTimeframeRange(timeframe) {
       nextWeek.setDate(nextWeek.getDate() + 7);
       return { type: 'range', start: startOfWeekClient(nextWeek), end: endOfWeekClient(nextWeek) };
     }
+    case 'this_month':
+      return { type: 'range', start: startOfMonthClient(now), end: endOfMonthClient(now) };
+    case 'next_month': {
+      const nextMonth = new Date(now);
+      nextMonth.setMonth(nextMonth.getMonth() + 1);
+      return { type: 'range', start: startOfMonthClient(nextMonth), end: endOfMonthClient(nextMonth) };
+    }
+    case 'this_quarter':
+      return { type: 'range', start: startOfQuarterClient(now), end: endOfQuarterClient(now) };
     case 'overdue':
       return { type: 'overdue', before: startOfDayClient(now) };
     default:
@@ -1315,7 +1725,116 @@ function describeTimeframe(timeframe) {
     case 'tomorrow': return '明日の';
     case 'this_week': return '今週の';
     case 'next_week': return '来週の';
+    case 'this_month': return '今月の';
+    case 'next_month': return '来月の';
+    case 'this_quarter': return '今四半期の';
     case 'overdue': return '期限切れの';
     default: return '対象の';
   }
+}
+
+function saveCurrentFilter() {
+  const name = prompt('フィルタの名前を入力してください:');
+  if (!name || !name.trim()) return;
+  const filter = getAdvancedFilter();
+  const saved = JSON.parse(localStorage.getItem('tasks.savedFilters') || '{}');
+  saved[name.trim()] = filter;
+  localStorage.setItem('tasks.savedFilters', JSON.stringify(saved));
+  loadSavedFiltersList();
+  alert(`フィルタ「${name}」を保存しました。`);
+}
+
+function loadSavedFilter(name) {
+  const saved = JSON.parse(localStorage.getItem('tasks.savedFilters') || '{}');
+  const filter = saved[name];
+  if (!filter) {
+    alert(`フィルタ「${name}」が見つかりません。`);
+    return;
+  }
+  applySavedFilter(filter);
+  applyAdvancedFilters();
+}
+
+function applySavedFilter(filter) {
+  const {
+    filterStatus,
+    filterPriority,
+    filterDateRange,
+    filterStartDate,
+    filterEndDate,
+    filterConditionMode,
+    filterCustomDates,
+  } = getEls();
+
+  if (filterStatus && Array.isArray(filter.status)) {
+    Array.from(filterStatus.options).forEach((opt) => {
+      opt.selected = filter.status.includes(opt.value);
+    });
+  }
+  if (filterPriority && Array.isArray(filter.priority)) {
+    Array.from(filterPriority.options).forEach((opt) => {
+      opt.selected = filter.priority.includes(opt.value);
+    });
+  }
+  if (filterDateRange) {
+    filterDateRange.value = filter.timeframe === 'custom' ? 'custom' : (filter.timeframe || '');
+  }
+  if (filterConditionMode) {
+    filterConditionMode.value = filter.conditionMode || 'AND';
+  }
+  if (filterCustomDates) {
+    filterCustomDates.hidden = filter.timeframe !== 'custom';
+  }
+  if (filterStartDate && filter.customStartDate) {
+    const d = new Date(filter.customStartDate);
+    filterStartDate.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+  if (filterEndDate && filter.customEndDate) {
+    const d = new Date(filter.customEndDate);
+    filterEndDate.value = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+}
+
+function loadSavedFiltersList() {
+  const savedFiltersEl = getEls().savedFilters;
+  if (!savedFiltersEl) return;
+  const saved = JSON.parse(localStorage.getItem('tasks.savedFilters') || '{}');
+  savedFiltersEl.innerHTML = '<option value="">保存済みフィルタを選択...</option>';
+  Object.keys(saved).forEach((name) => {
+    const option = document.createElement('option');
+    option.value = name;
+    option.textContent = name;
+    savedFiltersEl.appendChild(option);
+  });
+  savedFiltersEl.addEventListener('change', () => {
+    if (savedFiltersEl.value) {
+      loadSavedFilter(savedFiltersEl.value);
+    }
+  });
+}
+
+function clearAdvancedFilters() {
+  const {
+    filterStatus,
+    filterPriority,
+    filterDateRange,
+    filterStartDate,
+    filterEndDate,
+    filterConditionMode,
+    filterCustomDates,
+  } = getEls();
+
+  if (filterStatus) {
+    Array.from(filterStatus.options).forEach((opt) => { opt.selected = false; });
+  }
+  if (filterPriority) {
+    Array.from(filterPriority.options).forEach((opt) => { opt.selected = false; });
+  }
+  if (filterDateRange) filterDateRange.value = '';
+  if (filterStartDate) filterStartDate.value = '';
+  if (filterEndDate) filterEndDate.value = '';
+  if (filterConditionMode) filterConditionMode.value = 'AND';
+  if (filterCustomDates) filterCustomDates.hidden = true;
+  window.filteredTasks = null;
+  loadTasks();
 }
