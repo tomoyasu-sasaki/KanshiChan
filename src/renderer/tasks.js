@@ -220,7 +220,8 @@ function applySortingAndGrouping() {
   }
 
   const { sortBy1, sortOrder1, sortBy2, sortOrder2, groupBy } = getEls();
-  let tasksToRender = (window.filteredTasks || tasks).slice();
+  // フィルタリング済みタスクがあればそれを使い、なければ全タスクから開始
+  let tasksToRender = (window.filteredTasks != null ? window.filteredTasks : tasks).slice();
 
   const sort1 = sortBy1?.value || 'displayOrder';
   const order1 = sortOrder1?.value || 'asc';
@@ -427,7 +428,8 @@ function renderKanbanView() {
   const { items, hideDone } = getEls();
   if (!items) return;
 
-  let visibleTasks = (window.filteredTasks || tasks).slice();
+  // フィルタリング済みタスクがあればそれを使い、なければ全タスクから開始
+  let visibleTasks = (window.filteredTasks != null ? window.filteredTasks : tasks).slice();
   if (hideDone?.checked) {
     visibleTasks = visibleTasks.filter((t) => t.status !== 'done');
   }
@@ -678,10 +680,15 @@ async function loadTasks() {
     tasks = Array.isArray(res.items) ? res.items : [];
     console.debug('[Tasks] mapped tasks', tasks);
     populateParentOptions();
+    // フィルタリング済みタスクをリセットして、最新のタスクリストから再計算
+    window.filteredTasks = null;
+    window.sortedTasks = null;
     applyAdvancedFiltersToTasks();
   } catch (error) {
     console.error('[Tasks] 読み込みエラー:', error);
     tasks = [];
+    window.filteredTasks = null;
+    window.sortedTasks = null;
     renderList();
   }
 }
@@ -784,12 +791,10 @@ function applyAdvancedFilters() {
 }
 
 function applyAdvancedFiltersToTasks() {
-  if (window.filteredTasks) {
-    window.sortedTasks = null;
-    applySortingAndGrouping();
-  } else {
-    applyAdvancedFilters();
-  }
+  // 常に最新のtasks配列からフィルタリングを再計算
+  window.filteredTasks = null;
+  window.sortedTasks = null;
+  applyAdvancedFilters();
 }
 
 function computeTimeframeRange(timeframe, customStartDate, customEndDate) {
@@ -942,11 +947,10 @@ function buildTaskTreeForRender(sourceTasks) {
 }
 
 function renderList(sourceTasks = null) {
-  if (window.currentGroupBy) {
-    renderListWithGrouping(sourceTasks || window.sortedTasks || tasks.slice(), window.currentGroupBy);
-  } else {
-    renderListWithGrouping(sourceTasks || window.sortedTasks || tasks.slice(), '');
-  }
+  // ソート済みタスクがあれば優先的に使用
+  const tasksToRender = sourceTasks || window.sortedTasks || (window.filteredTasks != null ? window.filteredTasks : tasks).slice();
+  const groupBy = window.currentGroupBy || '';
+  renderListWithGrouping(tasksToRender, groupBy);
 }
 
 function renderTaskItem(task, depth) {
