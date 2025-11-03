@@ -500,6 +500,16 @@ function registerIpcHandlers({
     }
   });
 
+  ipcMain.handle('tasks-stats', async (_event, options = {}) => {
+    try {
+      const stats = await tasksService.getTaskStats(options || {});
+      return { success: true, data: stats };
+    } catch (error) {
+      console.error('[IPC] tasks-stats エラー:', error);
+      return { success: false, error: sanitizeErrorMessage(error) };
+    }
+  });
+
   ipcMain.handle('detection-log-record', async (_event, payload) => {
     try {
       if (!payload || typeof payload !== 'object') {
