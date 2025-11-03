@@ -15,6 +15,7 @@ const { createSlackReporter } = require('./src/main/services/slack-reporter');
 const { createTypingMonitor } = require('./src/main/services/typing-monitor');
 const { createSystemEventMonitor } = require('./src/main/services/system-events');
 const { createAbsenceOverrideManager } = require('./src/main/services/absence-override');
+const tasksService = require('./src/main/services/tasks');
 
 let mainWindow = null;
 let yoloDetector = null;
@@ -71,7 +72,10 @@ app.whenReady().then(async () => {
 
   configStore = createConfigStore(app);
   absenceOverrideManager = createAbsenceOverrideManager({ configStore });
-  slackReporter = createSlackReporter({ configStore, absenceOverrideManager });
+  slackReporter = createSlackReporter(
+    { configStore, absenceOverrideManager },
+    { tasksService }
+  );
   typingMonitor = createTypingMonitor({ configStore });
   systemEventMonitor = createSystemEventMonitor({ powerMonitor });
 

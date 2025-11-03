@@ -47,6 +47,18 @@ function formatDuration(seconds) {
   return `${minutes}分`;
 }
 
+function startOfDay(ms) {
+  const d = new Date(ms);
+  d.setHours(0, 0, 0, 0);
+  return d.getTime();
+}
+
+function endOfDay(ms) {
+  const d = new Date(ms);
+  d.setHours(23, 59, 59, 999);
+  return d.getTime();
+}
+
 const REPEAT_TYPE_ALIASES = Object.freeze({
   weekly: 'weekly',
   week: 'weekly',
@@ -479,6 +491,60 @@ function createSlackReporter({ configStore, absenceOverrideManager }, dependenci
         .map((item) => `${item.label}${item.count}`)
         .join(' / ');
       lines.push(`• システムイベント: ${summaryText}`);
+    }
+
+    // タスク統計情報を追加
+    if (options.includeTasks !== false && dependencies.tasksService) {
+      try {
+        const taskStats = await dependencies.tasksService.getTaskStats({
+          start: startTimestamp,
+          end: endTimestamp,
+        });
+        const summary = taskStats?.summary || {};
+        if (summary.total > 0) {
+          lines.push(`• タスク統計:`);
+          lines.push(`  総タスク数: ${summary.total}`);
+          lines.push(`  完了率: ${summary.completionRate || 0}% (完了: ${summary.completedCount || 0}件)`);
+          lines.push(`  ステータス内訳: 未着手${summary.byStatus?.todo || 0} / 進行中${summary.byStatus?.in_progress || 0} / 完了${summary.byStatus?.done || 0}`);
+          if (summary.averageCompletionDays != null) {
+            lines.push(`  平均完了日数: ${summary.averageCompletionDays}日`);
+          }
+
+          // 期限切れタスクと今日開始予定タスクの情報
+          const todayTasks = await dependencies.tasksService.listTasks({
+            activeAt: now,
+          });
+          const overdueTasks = todayTasks.filter((task) => {
+            return task.status !== 'done' && task.endDate != null && task.endDate < now;
+          });
+          const startingTodayTasks = todayTasks.filter((task) => {
+            return task.status !== 'done' && task.startDate != null && 
+                   task.startDate >= startOfDay(now) && task.startDate < endOfDay(now);
+          });
+
+          if (overdueTasks.length > 0) {
+            lines.push(`  期限切れタスク: ${overdueTasks.length}件`);
+            overdueTasks.slice(0, 3).forEach((task) => {
+              lines.push(`    - ${task.title}`);
+            });
+            if (overdueTasks.length > 3) {
+              lines.push(`    ...他${overdueTasks.length - 3}件`);
+            }
+          }
+
+          if (startingTodayTasks.length > 0) {
+            lines.push(`  今日開始予定: ${startingTodayTasks.length}件`);
+            startingTodayTasks.slice(0, 3).forEach((task) => {
+              lines.push(`    - ${task.title}`);
+            });
+            if (startingTodayTasks.length > 3) {
+              lines.push(`    ...他${startingTodayTasks.length - 3}件`);
+            }
+          }
+        }
+      } catch (error) {
+        console.warn('[SlackReporter] タスク統計取得エラー:', error);
+      }
     }
 
     if (options.includeSchedules !== false) {
