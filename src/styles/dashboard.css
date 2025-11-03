@@ -540,3 +540,112 @@
     width: 100%;
   }
 }
+
+/* ==============================================
+   タスク統計セクション
+   ============================================== */
+.task-stats-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+
+.task-stat-card {
+  background: linear-gradient(135deg, rgba(72, 138, 153, 0.1) 0%, rgba(219, 174, 88, 0.08) 100%);
+}
+
+.task-stats-charts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--space-4);
+  margin-top: var(--space-4);
+}
+
+.task-stats-chart-section {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+}
+
+.task-stats-chart-section h4 {
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  margin: 0 0 var(--space-3) 0;
+}
+
+.status-bar-chart,
+.priority-bar-chart {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.status-bar-item,
+.priority-bar-item {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.status-bar-label,
+.priority-bar-label {
+  font-size: var(--text-sm);
+  font-weight: var(--font-medium);
+  color: var(--text-secondary);
+}
+
+.status-bar-container,
+.priority-bar-container {
+  position: relative;
+  width: 100%;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+}
+
+.status-bar-fill,
+.priority-bar-fill {
+  height: 100%;
+  transition: width var(--transition-smooth);
+  border-radius: var(--radius-sm);
+}
+
+.status-bar-fill.status-todo {
+  background: linear-gradient(90deg, #ffd43b 0%, #ffc107 100%);
+}
+
+.status-bar-fill.status-in-progress {
+  background: linear-gradient(90deg, #4dabf7 0%, #339af0 100%);
+}
+
+.status-bar-fill.status-done {
+  background: linear-gradient(90deg, #51cf66 0%, #40c057 100%);
+}
+
+.priority-bar-fill.priority-high {
+  background: linear-gradient(90deg, #ff6b6b 0%, #fa5252 100%);
+}
+
+.priority-bar-fill.priority-medium {
+  background: linear-gradient(90deg, #ffa94d 0%, #ff922b 100%);
+}
+
+.priority-bar-fill.priority-low {
+  background: linear-gradient(90deg, #69db7c 0%, #51cf66 100%);
+}
+
+.status-bar-value,
+.priority-bar-value {
+  position: absolute;
+  right: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  z-index: 1;
+}

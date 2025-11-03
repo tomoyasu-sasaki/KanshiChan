@@ -5,13 +5,13 @@
   "graphRenderingMode": "multi-agent",
   "linkDisplayMode": "all",
   "graphStats": {
-    "totalNodes": 179,
+    "totalNodes": 180,
     "folders": 35,
-    "files": 144,
+    "files": 145,
     "images": 19,
     "videos": 0,
     "audio": 0,
-    "code": 94,
+    "code": 95,
     "text": 9,
     "html": 2,
     "yaml": 0,
@@ -564,6 +564,11 @@
                     "name": "tables.js",
                     "type": "file",
                     "path": "src/renderer/dashboard/tables.js"
+                  },
+                  {
+                    "name": "tasks.js",
+                    "type": "file",
+                    "path": "src/renderer/dashboard/tasks.js"
                   },
                   {
                     "name": "typing.js",
@@ -3002,7 +3007,7 @@
         "glowIntensity": 0,
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer",
-        "childFileCount": 11,
+        "childFileCount": 12,
         "x": -349.24414319283636,
         "y": 45.20470425401749,
         "z": 232.52075728013742,
@@ -3185,6 +3190,28 @@
         "vx": -0.8139194804584322,
         "vy": 0.0015610674012655544,
         "vz": -0.5772486346605153
+      },
+      {
+        "id": "kanshichan/src/renderer/dashboard/tasks.js",
+        "name": "tasks.js",
+        "path": "kanshichan/src/renderer/dashboard/tasks.js",
+        "type": "file",
+        "lines": 0,
+        "val": 6,
+        "color": "#2c3038",
+        "baseColor": "#f7df1e",
+        "originalColor": "#f7df1e",
+        "defaultGlow": 0.1,
+        "glowIntensity": 0,
+        "highlighted": false,
+        "parentPath": "kanshichan/src/renderer/dashboard",
+        "childFileCount": 0,
+        "x": -352.4902433863659,
+        "y": 46.38740739442823,
+        "z": 231.79168265277826,
+        "vx": 0.02259934478845402,
+        "vy": -0.1905821214697009,
+        "vz": 0.465840277580147
       },
       {
         "id": "kanshichan/src/renderer/dashboard/typing.js",
@@ -5423,6 +5450,11 @@
       },
       {
         "source": "kanshichan/src/renderer/dashboard",
+        "target": "kanshichan/src/renderer/dashboard/tasks.js",
+        "type": "tree"
+      },
+      {
+        "source": "kanshichan/src/renderer/dashboard",
         "target": "kanshichan/src/renderer/dashboard/typing.js",
         "type": "tree"
       },
@@ -6021,9 +6053,9 @@
         "label": "現在のコードベース",
         "files": [],
         "branch": "feature/tasks-management",
-        "targetCommitHash": "b2990af2fab268cff1b1661818edf767896c492d",
+        "targetCommitHash": "630268b34cb90d84d7e0ab14ab70280bb157a8bb",
         "worktreePath": "/Users/tmys-sasaki/Projects/Public/kanshichan",
-        "timestamp": 1762213046406,
+        "timestamp": 1762213430775,
         "lane": 1,
         "branchLabel": "feature/tasks-management",
         "branchTags": [
@@ -6035,14 +6067,17 @@
       },
       {
         "type": "unstaged",
-        "label": "未ステージ (1)",
+        "label": "未ステージ (4)",
         "files": [
-          "src/main/services/slack-reporter.js"
+          "src/pages/index.html",
+          "src/renderer/dashboard/data-loader.js",
+          "src/renderer/dashboard/state.js",
+          "src/renderer/dashboard/tasks.js"
         ],
         "branch": "feature/tasks-management",
-        "targetCommitHash": "b2990af2fab268cff1b1661818edf767896c492d",
+        "targetCommitHash": "630268b34cb90d84d7e0ab14ab70280bb157a8bb",
         "worktreePath": "/Users/tmys-sasaki/Projects/Public/kanshichan",
-        "timestamp": 1762213046406,
+        "timestamp": 1762213430775,
         "sortOrder": 0,
         "lane": 1,
         "branchColor": "#e8a84f",
@@ -6052,16 +6087,58 @@
         "type": "staged",
         "label": "ステージ済み (1)",
         "files": [
-          "ocs/tasks-implementation-plan.md"
+          "kamui/system-graph-state.json"
         ],
         "branch": "feature/tasks-management",
-        "targetCommitHash": "b2990af2fab268cff1b1661818edf767896c492d",
+        "targetCommitHash": "630268b34cb90d84d7e0ab14ab70280bb157a8bb",
         "worktreePath": "/Users/tmys-sasaki/Projects/Public/kanshichan",
-        "timestamp": 1762213046406,
+        "timestamp": 1762213430775,
         "sortOrder": 1,
         "lane": 1,
         "branchColor": "#e8a84f",
         "index": 2
+      },
+      {
+        "type": "commit",
+        "label": "feat: Phase 3.3 Slack連携実装完了",
+        "commit": {
+          "hash": "630268b34cb90d84d7e0ab14ab70280bb157a8bb",
+          "subject": "feat: Phase 3.3 Slack連携実装完了",
+          "author": "tomoyasu-sasaki",
+          "timestamp": 1762213076,
+          "parents": [
+            "b2990af2fab268cff1b1661818edf767896c492d"
+          ],
+          "parent": "b2990af2fab268cff1b1661818edf767896c492d",
+          "refs": "HEAD -> feature/tasks-management",
+          "branches": [
+            "HEAD -> feature/tasks-management",
+            "feature/tasks-management"
+          ]
+        },
+        "commitHash": "630268b34cb90d84d7e0ab14ab70280bb157a8bb",
+        "lane": 1,
+        "parentLinks": [
+          {
+            "hash": "b2990af2fab268cff1b1661818edf767896c492d",
+            "lane": 0
+          }
+        ],
+        "primaryBranchName": "feature/tasks-management",
+        "branchColor": "#e8a84f",
+        "branchTags": [
+          "feature/tasks-management"
+        ],
+        "worktrees": [
+          {
+            "path": "/Users/tmys-sasaki/Projects/Public/kanshichan",
+            "head": "630268b34cb90d84d7e0ab14ab70280bb157a8bb",
+            "branch": "feature/tasks-management",
+            "normalizedPath": "/Users/tmys-sasaki/Projects/Public/kanshichan",
+            "lane": 1
+          }
+        ],
+        "index": 3
       },
       {
         "type": "commit",
@@ -6075,35 +6152,20 @@
             "bf96f4e3390d0effa568252b714d3065da45e362"
           ],
           "parent": "bf96f4e3390d0effa568252b714d3065da45e362",
-          "refs": "HEAD -> feature/tasks-management",
-          "branches": [
-            "HEAD -> feature/tasks-management",
-            "feature/tasks-management"
-          ]
+          "refs": "",
+          "branches": []
         },
         "commitHash": "b2990af2fab268cff1b1661818edf767896c492d",
-        "lane": 1,
+        "lane": 0,
         "parentLinks": [
           {
             "hash": "bf96f4e3390d0effa568252b714d3065da45e362",
             "lane": 0
           }
         ],
-        "primaryBranchName": "feature/tasks-management",
-        "branchColor": "#e8a84f",
-        "branchTags": [
-          "feature/tasks-management"
-        ],
-        "worktrees": [
-          {
-            "path": "/Users/tmys-sasaki/Projects/Public/kanshichan",
-            "head": "b2990af2fab268cff1b1661818edf767896c492d",
-            "branch": "feature/tasks-management",
-            "normalizedPath": "/Users/tmys-sasaki/Projects/Public/kanshichan",
-            "lane": 1
-          }
-        ],
-        "index": 3
+        "branchColor": "#4f85e8",
+        "branchTags": [],
+        "index": 4
       },
       {
         "type": "commit",
@@ -6130,7 +6192,7 @@
         ],
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 4
+        "index": 5
       },
       {
         "type": "commit",
@@ -6157,7 +6219,7 @@
         ],
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 5
+        "index": 6
       },
       {
         "type": "commit",
@@ -6184,7 +6246,7 @@
         ],
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 6
+        "index": 7
       },
       {
         "type": "commit",
@@ -6211,7 +6273,7 @@
         ],
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 7
+        "index": 8
       },
       {
         "type": "commit",
@@ -6238,7 +6300,7 @@
         ],
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 8
+        "index": 9
       },
       {
         "type": "commit",
@@ -6265,7 +6327,7 @@
         ],
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 9
+        "index": 10
       },
       {
         "type": "commit",
@@ -6292,7 +6354,7 @@
         ],
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 10
+        "index": 11
       },
       {
         "type": "commit",
@@ -6322,7 +6384,7 @@
         "primaryBranchName": "feature/tasks-management",
         "branchColor": "#e8a84f",
         "branchTags": [],
-        "index": 11
+        "index": 12
       },
       {
         "type": "commit",
@@ -6349,7 +6411,7 @@
         ],
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 12
+        "index": 13
       },
       {
         "type": "commit",
@@ -6376,7 +6438,7 @@
         ],
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 13
+        "index": 14
       },
       {
         "type": "commit",
@@ -6403,7 +6465,7 @@
         ],
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 14
+        "index": 15
       },
       {
         "type": "commit",
@@ -6430,7 +6492,7 @@
         ],
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 15
+        "index": 16
       },
       {
         "type": "commit",
@@ -6457,7 +6519,7 @@
         ],
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 16
+        "index": 17
       },
       {
         "type": "commit",
@@ -6493,7 +6555,7 @@
           "main",
           "develop"
         ],
-        "index": 17
+        "index": 18
       },
       {
         "type": "commit",
@@ -6525,7 +6587,7 @@
         ],
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 18
+        "index": 19
       },
       {
         "type": "commit",
@@ -6552,7 +6614,7 @@
         ],
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 19
+        "index": 20
       },
       {
         "type": "commit",
@@ -6579,7 +6641,7 @@
         ],
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 20
+        "index": 21
       },
       {
         "type": "commit",
@@ -6606,7 +6668,7 @@
         ],
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 21
+        "index": 22
       },
       {
         "type": "commit",
@@ -6633,7 +6695,7 @@
         ],
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 22
+        "index": 23
       },
       {
         "type": "commit",
@@ -6660,7 +6722,7 @@
         ],
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 23
+        "index": 24
       },
       {
         "type": "commit",
@@ -6687,7 +6749,7 @@
         ],
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 24
+        "index": 25
       },
       {
         "type": "commit",
@@ -6714,7 +6776,7 @@
         ],
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 25
+        "index": 26
       },
       {
         "type": "commit",
@@ -6741,7 +6803,7 @@
         ],
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 26
+        "index": 27
       },
       {
         "type": "commit",
@@ -6768,7 +6830,7 @@
         ],
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 27
+        "index": 28
       },
       {
         "type": "commit",
@@ -6795,7 +6857,7 @@
         ],
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 28
+        "index": 29
       },
       {
         "type": "commit",
@@ -6822,7 +6884,7 @@
         ],
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 29
+        "index": 30
       },
       {
         "type": "commit",
@@ -6849,7 +6911,7 @@
         ],
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 30
+        "index": 31
       },
       {
         "type": "commit",
@@ -6876,7 +6938,7 @@
         ],
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 31
+        "index": 32
       },
       {
         "type": "commit",
@@ -6903,7 +6965,7 @@
         ],
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 32
+        "index": 33
       },
       {
         "type": "commit",
@@ -6930,7 +6992,7 @@
         ],
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 33
+        "index": 34
       },
       {
         "type": "commit",
@@ -6957,7 +7019,7 @@
         ],
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 34
+        "index": 35
       },
       {
         "type": "commit",
@@ -6984,7 +7046,7 @@
         ],
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 35
+        "index": 36
       },
       {
         "type": "commit",
@@ -7011,7 +7073,7 @@
         ],
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 36
+        "index": 37
       },
       {
         "type": "commit",
@@ -7038,7 +7100,7 @@
         ],
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 37
+        "index": 38
       },
       {
         "type": "commit",
@@ -7065,7 +7127,7 @@
         ],
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 38
+        "index": 39
       },
       {
         "type": "commit",
@@ -7092,7 +7154,7 @@
         ],
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 39
+        "index": 40
       },
       {
         "type": "commit",
@@ -7119,7 +7181,7 @@
         ],
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 40
+        "index": 41
       },
       {
         "type": "commit",
@@ -7146,7 +7208,7 @@
         ],
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 41
+        "index": 42
       },
       {
         "type": "commit",
@@ -7173,7 +7235,7 @@
         ],
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 42
+        "index": 43
       },
       {
         "type": "commit",
@@ -7200,7 +7262,7 @@
         ],
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 43
+        "index": 44
       },
       {
         "type": "commit",
@@ -7227,7 +7289,7 @@
         ],
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 44
+        "index": 45
       },
       {
         "type": "commit",
@@ -7254,7 +7316,7 @@
         ],
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 45
+        "index": 46
       },
       {
         "type": "commit",
@@ -7285,7 +7347,7 @@
         "primaryBranchName": "main",
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 46
+        "index": 47
       },
       {
         "type": "commit",
@@ -7312,7 +7374,7 @@
         ],
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 47
+        "index": 48
       },
       {
         "type": "commit",
@@ -7339,7 +7401,7 @@
         ],
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 48
+        "index": 49
       },
       {
         "type": "commit",
@@ -7366,7 +7428,7 @@
         ],
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 49
+        "index": 50
       },
       {
         "type": "commit",
@@ -7393,7 +7455,7 @@
         ],
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 50
+        "index": 51
       },
       {
         "type": "commit",
@@ -7424,7 +7486,7 @@
         "primaryBranchName": "main",
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 51
+        "index": 52
       },
       {
         "type": "commit",
@@ -7444,17 +7506,17 @@
         "parentLinks": [],
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 52
+        "index": 53
       },
       {
         "type": "empty",
         "label": "初期状態 (初回コミット以前)",
         "files": [],
         "marker": "pre-history",
-        "index": 53
+        "index": 54
       }
     ]
   },
   "projectRoot": "/Users/tmys-sasaki/Projects/Public/kanshichan",
-  "savedAt": 1762213050177
+  "savedAt": 1762213434182
 }

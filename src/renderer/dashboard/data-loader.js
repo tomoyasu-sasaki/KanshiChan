@@ -24,6 +24,7 @@ import {
 } from './typing.js';
 import { refreshSystemEvents } from './system-events.js';
 import { refreshUpcomingSchedules } from './upcoming.js';
+import { renderTaskStats } from './tasks.js';
 
 /**
  * 現在の選択状態に基づき集計期間を算出する。
@@ -74,7 +75,7 @@ export async function loadDashboardData() {
 
   try {
     // overrideSummaryRes は absence_override_events の集計で、検知ログとは異なる SQL を叩くため個別に取得する。
-    const [statsRes, recentRes, appUsageRes, overrideSummaryRes] = await Promise.all([
+    const [statsRes, recentRes, appUsageRes, overrideSummaryRes, taskStatsRes] = await Promise.all([
       window.electronAPI?.detectionLogStats?.({
         start,
         end,
@@ -83,6 +84,7 @@ export async function loadDashboardData() {
       window.electronAPI?.detectionLogRecent?.({ limit: 100 }) ?? Promise.resolve({ success: false }),
       window.electronAPI?.appUsageStats?.({ start, end, limit: 10 }) ?? Promise.resolve({ success: false }),
       window.electronAPI?.absenceOverrideSummary?.({ start, end }) ?? Promise.resolve({ success: false }),
+      window.electronAPI?.tasksStats?.({ start, end }) ?? Promise.resolve({ success: false }),
     ]);
 
     if (statsRes?.success) {
@@ -109,11 +111,18 @@ export async function loadDashboardData() {
       state.absenceOverrideSummary = null;
     }
 
+    if (taskStatsRes?.success) {
+      state.taskStats = taskStatsRes.data || null;
+    } else {
+      state.taskStats = null;
+    }
+
     renderKpis();
     renderChart();
     renderLogTable();
     renderAppUsageTable();
     renderChromeUsageTable();
+    renderTaskStats();
   } catch (error) {
     console.error('[Dashboard] データ取得エラー:', error);
   }
