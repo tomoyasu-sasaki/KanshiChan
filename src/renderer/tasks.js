@@ -1332,12 +1332,33 @@ function exitEdit() {
 
 async function deleteTask(id) {
   if (!confirm('このタスクを削除しますか？')) return;
+  const deletedId = Number(id);
   try {
-    const res = await window.electronAPI.tasksDelete(Number(id));
+    const res = await window.electronAPI.tasksDelete(deletedId);
     if (!res?.success) throw new Error(res?.error || '削除に失敗しました');
-    await loadTasks();
+    
+    // 削除されたタスクを即座に配列から除外（最適化）
+    tasks = tasks.filter((task) => task.id !== deletedId);
+    
+    // フィルタリング済み/ソート済みタスクからも削除
+    if (window.filteredTasks != null) {
+      window.filteredTasks = window.filteredTasks.filter((task) => task.id !== deletedId);
+    }
+    if (window.sortedTasks != null) {
+      window.sortedTasks = window.sortedTasks.filter((task) => task.id !== deletedId);
+    }
+    
+    // 親タスクオプションを更新
+    populateParentOptions();
+    
+    // UIを即座に更新（loadTasks()を呼ばずに直接描画）
+    applyAdvancedFiltersToTasks();
+    
+    // バックエンドから最新データを取得して同期（非同期で実行）
+    void loadTasks();
   } catch (error) {
     console.error('[Tasks] 削除エラー:', error);
+    alert('タスクの削除に失敗しました: ' + (error.message || '不明なエラー'));
   }
 }
 
