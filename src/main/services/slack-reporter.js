@@ -4,6 +4,7 @@
  * - 手動送信、履歴取得、設定更新を IPC 経由で提供する。
  */
 const { run, all } = require('../db');
+const schedulesService = require('./schedules');
 const {
   getDetectionStats,
   getAppUsageStats,
@@ -109,22 +110,26 @@ function getScheduleTitle(schedule) {
   return rawTitle || '予定';
 }
 
-function parseScheduleCache(configStore) {
-  const raw = configStore.get('scheduleCache', []);
-  if (!Array.isArray(raw)) {
+async function fetchScheduleSummaries() {
+  try {
+    const items = await schedulesService.listSchedules({ withoutMeta: true });
+    if (!Array.isArray(items)) {
+      return [];
+    }
+    return items
+      .map((item) => ({
+        id: item.id,
+        title: getScheduleTitle(item),
+        date: item.date || null,
+        time: typeof item.time === 'string' ? item.time : '',
+        description: typeof item.description === 'string' ? item.description : '',
+        repeat: normalizeRepeatConfig(item.repeat),
+      }))
+      .filter((item) => item.time);
+  } catch (error) {
+    console.warn('[SlackReporter] failed to load schedules:', error);
     return [];
   }
-
-  return raw
-    .map((item) => ({
-      id: item.id,
-      title: getScheduleTitle(item),
-      date: item.date || null,
-      time: typeof item.time === 'string' ? item.time : '',
-      description: typeof item.description === 'string' ? item.description : '',
-      repeat: normalizeRepeatConfig(item.repeat),
-    }))
-    .filter((item) => item.time);
 }
 
 function getNextOccurrence(schedule, referenceDate = new Date()) {
@@ -203,13 +208,13 @@ function formatRelativeMinutes(minutes) {
   return `あと${hours}時間${mins}分`;
 }
 
-function buildUpcomingScheduleLines(configStore, options = {}) {
+async function buildUpcomingScheduleLines(options = {}) {
   const now = options.now instanceof Date ? options.now : new Date();
   const limit = Number.isInteger(options.limit) ? options.limit : 5;
   const rangeHours = Number.isFinite(options.rangeHours) ? options.rangeHours : 24;
   const rangeMs = rangeHours * 60 * 60 * 1000;
 
-  const schedules = parseScheduleCache(configStore);
+  const schedules = await fetchScheduleSummaries();
   const upcoming = [];
 
   schedules.forEach((schedule) => {
@@ -477,7 +482,7 @@ function createSlackReporter({ configStore, absenceOverrideManager }, dependenci
     }
 
     if (options.includeSchedules !== false) {
-      const scheduleLines = buildUpcomingScheduleLines(configStore, { now, limit: 5, rangeHours: 24 });
+      const scheduleLines = await buildUpcomingScheduleLines({ now, limit: 5, rangeHours: 24 });
       if (scheduleLines.length > 0) {
         lines.push('• 直近の予定:');
         scheduleLines.forEach((entry) => {

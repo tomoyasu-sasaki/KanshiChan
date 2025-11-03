@@ -59,6 +59,12 @@ async function infer(profileId, text, context = {}) {
       const tasks = Array.isArray(context.tasks) ? context.tasks : [];
       const schedules = Array.isArray(context.schedules) ? context.schedules : [];
       const { commands } = await inferTaskCommands(trimmed, { tasks, schedules });
+      // ターミナル（メインプロセス）に LLM 抽出結果を出力
+      try {
+        console.info('[Audio] tasks commands extracted:', JSON.stringify({ text: trimmed, commands }, null, 2));
+      } catch (_) {
+        console.info('[Audio] tasks commands extracted (non-JSON serializable)');
+      }
       return {
         success: true,
         commands,

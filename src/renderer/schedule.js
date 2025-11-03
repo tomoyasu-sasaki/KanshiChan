@@ -120,7 +120,9 @@ function registerGlobalListeners() {
       return;
     }
     stopNotificationCheck();
-    initializeSchedules();
+    if (event?.detail?.source !== 'schedule-model') {
+      initializeSchedules();
+    }
     renderAll();
     startNotificationCheck();
   });

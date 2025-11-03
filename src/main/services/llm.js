@@ -330,7 +330,7 @@ async function inferSettingsCommands(transcribedText, options = {}) {
   }
 }
 
-const TASK_ALLOWED_ACTIONS = new Set(['create', 'update', 'delete', 'complete', 'start']);
+const TASK_ALLOWED_ACTIONS = new Set(['create', 'update', 'delete', 'complete', 'start', 'bulk_delete', 'bulk_complete', 'search']);
 const TASK_PRIORITIES = new Set(['low', 'medium', 'high']);
 const TASK_STATUSES = new Set(['todo', 'in_progress', 'done']);
 
@@ -342,6 +342,56 @@ function normalizeTaskPriority(value) {
 function normalizeTaskStatus(value) {
   const v = typeof value === 'string' ? value.trim().toLowerCase() : '';
   return TASK_STATUSES.has(v) ? v : null;
+}
+
+function normalizeTagList(rawTags) {
+  if (!Array.isArray(rawTags)) {
+    return [];
+  }
+  const seen = new Set();
+  const tags = [];
+  rawTags.forEach((item) => {
+    if (typeof item !== 'string') return;
+    const trimmed = item.trim();
+    if (!trimmed) return;
+    const key = trimmed.toLowerCase();
+    if (seen.has(key)) return;
+    seen.add(key);
+    tags.push(trimmed);
+  });
+  return tags;
+}
+
+function normalizeCriteria(raw, index) {
+  if (!raw || typeof raw !== 'object') {
+    return null;
+  }
+  const criteria = {};
+  if (raw.status) {
+    const status = normalizeTaskStatus(raw.status);
+    if (status) {
+      criteria.status = status;
+    }
+  }
+  if (typeof raw.tag === 'string' && raw.tag.trim()) {
+    criteria.tag = raw.tag.trim();
+  }
+  if (Array.isArray(raw.tags) && raw.tags.length > 0) {
+    const list = normalizeTagList(raw.tags);
+    if (list.length > 0) {
+      criteria.tags = list;
+    }
+  }
+  if (typeof raw.timeframe === 'string') {
+    const timeframe = raw.timeframe.trim().toLowerCase();
+    const allowed = new Set(['today', 'tomorrow', 'this_week', 'next_week', 'overdue']);
+    if (allowed.has(timeframe)) {
+      criteria.timeframe = timeframe;
+    } else if (timeframe) {
+      console.warn(`[LLM] 未対応の timeframe "${raw.timeframe}" (index=${index})`);
+    }
+  }
+  return Object.keys(criteria).length > 0 ? criteria : null;
 }
 
 function normalizeTaskCommand(raw, index) {
@@ -361,11 +411,34 @@ function normalizeTaskCommand(raw, index) {
   const status = normalizeTaskStatus(raw.status);
   const startDate = typeof raw.startDate === 'string' && raw.startDate.trim() ? raw.startDate.trim() : null;
   const endDate = typeof raw.endDate === 'string' && raw.endDate.trim() ? raw.endDate.trim() : null;
-  const scheduleId = Number.isFinite(Number(raw.scheduleId)) ? Number(raw.scheduleId) : null;
+  const scheduleCandidate = Number(raw.scheduleId);
+  const scheduleId = Number.isInteger(scheduleCandidate) && scheduleCandidate > 0 ? scheduleCandidate : null;
+  const parentCandidate = Number(raw.parentId);
+  const parentId = Number.isInteger(parentCandidate) && parentCandidate > 0 ? parentCandidate : null;
+  const parentTitle = typeof raw.parentTitle === 'string' && raw.parentTitle.trim() ? raw.parentTitle.trim() : null;
+  const tags = normalizeTagList(raw.tags);
+  const tagModeRaw = typeof raw.tagMode === 'string' ? raw.tagMode.trim().toLowerCase() : null;
+  const tagMode = tagModeRaw && ['set', 'add', 'remove'].includes(tagModeRaw) ? tagModeRaw : null;
+  const criteria = normalizeCriteria(raw.criteria, index);
 
   const resolved = resolveRelativeDates({ startDate, endDate });
 
-  return { action, id, title, description, priority, status, startDate: resolved.startDate, endDate: resolved.endDate, scheduleId };
+  return {
+    action,
+    id,
+    title,
+    description,
+    priority,
+    status,
+    startDate: resolved.startDate,
+    endDate: resolved.endDate,
+    scheduleId,
+    parentId,
+    parentTitle,
+    tags,
+    tagMode,
+    criteria,
+  };
 }
 
 async function inferTaskCommands(transcribedText, options = {}) {
@@ -418,7 +491,22 @@ async function inferTaskCommands(transcribedText, options = {}) {
 
     const commands = Array.isArray(parsed.commands) ? parsed.commands : [];
     const normalized = commands.map((c, i) => normalizeTaskCommand(c, i)).filter(Boolean);
-    return { commands: normalized };
+
+    // "未定/未設定/なし/無し" や日付言及なしの場合は startDate/endDate を出力しないように補正
+    const text = sanitized;
+    const mentionsNoDate = /未定|未設定|なし|無し/.test(text) && /(日付|開始|終了|期間)/.test(text);
+    const hasExplicitDate = /\d{4}-\d{2}-\d{2}|\d+月\d+日|今日|本日|明日|今週|来週|週末|曜日|まで|から/.test(text);
+    const postProcessed = normalized.map((cmd) => {
+      if (cmd && (cmd.action === 'create' || cmd.action === 'update')) {
+        if (mentionsNoDate || !hasExplicitDate) {
+          cmd.startDate = null;
+          cmd.endDate = null;
+        }
+      }
+      return cmd;
+    });
+
+    return { commands: postProcessed };
   } finally {
     await tempContext.dispose();
   }

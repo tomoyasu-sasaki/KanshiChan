@@ -137,6 +137,7 @@
 
 /* タスクカード - スケジュールと統一 */
 .task-item {
+  --task-depth: 0;
   background: #ffffff;
   border-radius: var(--radius-md);
   padding: var(--space-5);
@@ -228,6 +229,21 @@
   background: #ee5a52;
 }
 
+.task-item .btn-subtask {
+  background: var(--info);
+  color: white;
+  border: none;
+  padding: var(--space-1) var(--space-4);
+  border-radius: var(--space-1);
+  cursor: pointer;
+  font-size: var(--text-sm);
+  transition: background var(--transition-smooth);
+}
+
+.task-item .btn-subtask:hover {
+  background: #1c7ed6;
+}
+
 .task-item-meta {
   display: flex;
   align-items: center;
@@ -305,4 +321,202 @@
   font-size: var(--text-sm);
   color: var(--text-tertiary);
   line-height: 1.5;
+}
+
+.tasks-reading-settings {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.tasks-reading-settings .reading-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+}
+
+.tasks-reading-settings input[type='time'],
+.tasks-reading-settings select {
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+}
+
+.tasks-reading-settings .reading-statuses,
+.tasks-reading-settings .reading-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.tasks-reading-settings .reading-statuses label,
+.tasks-reading-settings .reading-tags label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: var(--space-1) var(--space-2);
+  cursor: pointer;
+}
+
+.tasks-reading-settings .reading-tags label {
+  border-color: color-mix(in srgb, var(--tag-color, var(--primary-start)) 25%, transparent);
+  background: color-mix(in srgb, var(--tag-color, var(--primary-start)) 10%, transparent);
+  color: var(--text-secondary);
+}
+
+/* 追加機能スタイル */
+.task-item.dragging {
+  opacity: 0.6;
+  box-shadow: none;
+}
+
+.task-item.drag-over {
+  border-color: var(--primary-end);
+  box-shadow: inset 0 0 0 2px rgba(72, 138, 153, 0.2);
+}
+
+.task-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.task-tag-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0 var(--space-2);
+  height: 24px;
+  border-radius: 999px;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  background: color-mix(in srgb, var(--tag-color) 18%, transparent);
+  color: var(--tag-color);
+  border: 1px solid color-mix(in srgb, var(--tag-color) 35%, transparent);
+}
+
+.task-repeat-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 0 var(--space-2);
+  height: 22px;
+  border-radius: 999px;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  background: rgba(72, 138, 153, 0.12);
+  color: var(--primary-start);
+}
+
+.task-children {
+  margin-top: var(--space-4);
+  margin-left: var(--space-4);
+  padding-left: var(--space-4);
+  border-left: 2px dashed rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.task-item-title-area {
+  position: relative;
+  padding-left: calc(var(--task-depth) * var(--space-4));
+}
+
+.tasks-repeat-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
+}
+
+.tasks-repeat-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.tasks-repeat-controls select,
+.tasks-repeat-controls input[type='number'] {
+  min-width: 120px;
+  padding: var(--space-1) var(--space-2);
+  font-size: var(--text-base);
+  border: 1px solid var(--border-medium);
+  border-radius: var(--radius-sm);
+}
+
+.tasks-repeat-controls .repeat-interval {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.tasks-repeat-weekdays {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.tasks-repeat-weekdays label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  background: rgba(255, 255, 255, 0.7);
+  cursor: pointer;
+}
+
+.tasks-repeat-weekdays label input {
+  accent-color: var(--primary-start);
+}
+
+.tasks-tag-filters {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-left: auto;
+}
+
+.tag-filter-empty {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+}
+
+.tag-filter-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-2);
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--tag-color) 35%, transparent);
+  background: color-mix(in srgb, var(--tag-color) 15%, transparent);
+  cursor: pointer;
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+}
+
+.tag-filter-item input {
+  accent-color: var(--tag-color);
+}
+
+.tag-filter-badge {
+  color: var(--tag-color);
+  font-weight: 600;
 }

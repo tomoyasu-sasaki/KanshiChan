@@ -160,13 +160,22 @@ const TASKS_COMMAND_SYSTEM_PROMPT = `あなたはタスク管理アシスタン�
    - 可能な限り 24 時間制のタイムゾーンはシステムのローカルを前提に計算
 2. 「〜まで」「〜から」の表現がある場合、startDate/endDate に反映
 3. 曖昧な場合は、無理に推測せず該当フィールドを省略
+4. ユーザーが「未定」「未設定」「なし/無し」等と述べた場合、startDate と endDate は null（または出力自体を省略）にする。決して本日などのデフォルト日付を補完しない。
+5. ユーザーが日付に一切言及していない場合も、startDate/endDate を出力しない（null または省略）。
+
+【追加コマンド】
+- サブタスク作成: action は "create" のまま、parentTitle (または parentId) に親タスク名を入れる
+- タグ操作: action "update" で tags に文字列配列、tagMode に set|add|remove を指定
+- 一括操作: 例「完了したタスクを全部削除」→ action "bulk_delete" + criteria.status="done"
+- 検索リクエスト: 例「来週のタスクを教えて」→ action "search" + criteria.timeframe=next_week
+  - timeframe は today/tomorrow/this_week/next_week/overdue を想定
 
 【出力仕様】
 - JSON オブジェクトに commands 配列を含める
-- 各要素は { "action": "create|update|delete|complete|start", "id": 任意, "title": 任意, "description": 任意, "priority": 任意, "status": 任意, "startDate": 任意, "endDate": 任意, "scheduleId": 任意 } の形式
+- 各要素は { "action": "create|update|delete|complete|start|bulk_delete|bulk_complete|search", "id": 任意, "title": 任意, "description": 任意, "priority": 任意, "status": 任意, "startDate": 任意, "endDate": 任意, "scheduleId": 任意, "parentTitle": 任意, "tags": 任意, "tagMode": 任意, "criteria": 任意 } の形式
 - priority は low|medium|high のいずれか
 - status は todo|in_progress|done のいずれか
-- startDate/endDate は YYYY-MM-DD 形式（相対表現は必ず正規化）
+- startDate/endDate は、ユーザーが日付/期間を明示した場合のみ YYYY-MM-DD 形式（相対表現は正規化）。未定/未設定/言及なしの場合は null または省略。
 - id が未指定で update/delete/complete/start の場合、タイトル一致の補助に title を含められます（曖昧なら出力しない）`;
 
 function buildTasksCommandUserPrompt(transcribedText, options = {}) {
@@ -188,7 +197,7 @@ function buildTasksCommandUserPrompt(transcribedText, options = {}) {
     String(now.getDate()).padStart(2, '0'),
   ].join('-');
 
-  return `【現在の日時情報】\n今日の日付: ${today} (${todayISO})\n\n【既存のタスク(一部)】\n${tasksLine}\n【既存のスケジュール(一部)】\n${schedulesLine}\n\n【音声入力テキスト】\n${transcribedText}\n\n相対日付は必ず YYYY-MM-DD に正規化し、commands 配列のみを JSON で返してください。`;
+  return `【現在の日時情報】\n今日の日付: ${today} (${todayISO})\n\n【既存のタスク(一部)】\n${tasksLine}\n【既存のスケジュール(一部)】\n${schedulesLine}\n\n【音声入力テキスト】\n${transcribedText}\n\n相対日付が含まれる場合のみ YYYY-MM-DD に正規化してください。日付に言及がない、または「未定/未設定/なし/無し」の場合は startDate と endDate を出力しない（null または省略）。commands 配列のみを JSON で返してください。`;
 }
 
 const TASKS_COMMAND_JSON_SCHEMA = {
@@ -199,7 +208,7 @@ const TASKS_COMMAND_JSON_SCHEMA = {
       items: {
         type: 'object',
         properties: {
-          action: { type: 'string', enum: ['create', 'update', 'delete', 'complete', 'start'] },
+          action: { type: 'string', enum: ['create', 'update', 'delete', 'complete', 'start', 'bulk_delete', 'bulk_complete', 'search'] },
           id: { type: ['integer', 'null'] },
           title: { type: ['string', 'null'] },
           description: { type: ['string', 'null'] },
@@ -208,6 +217,26 @@ const TASKS_COMMAND_JSON_SCHEMA = {
           startDate: { type: ['string', 'null'] },
           endDate: { type: ['string', 'null'] },
           scheduleId: { type: ['integer', 'null'] },
+          parentId: { type: ['integer', 'null'] },
+          parentTitle: { type: ['string', 'null'] },
+          tags: {
+            type: ['array', 'null'],
+            items: { type: 'string' },
+          },
+          tagMode: { type: ['string', 'null'], enum: ['set', 'add', 'remove', null] },
+          criteria: {
+            type: ['object', 'null'],
+            properties: {
+              status: { type: ['string', 'null'], enum: ['todo', 'in_progress', 'done', null] },
+              timeframe: { type: ['string', 'null'], enum: ['today', 'tomorrow', 'this_week', 'next_week', 'overdue', null] },
+              tag: { type: ['string', 'null'] },
+              tags: {
+                type: ['array', 'null'],
+                items: { type: 'string' },
+              },
+            },
+            additionalProperties: false,
+          },
         },
         required: ['action'],
         additionalProperties: false,

@@ -270,6 +270,40 @@
               <option value="">未指定</option>
             </select>
           </div>
+          <div class="filter-group">
+            <label for="taskParentId">親タスク (任意)</label>
+            <select id="taskParentId">
+              <option value="">未指定</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="taskTagsInput">タグ (カンマ区切り)</label>
+            <input type="text" id="taskTagsInput" placeholder="例: 緊急, 共有事項">
+          </div>
+          <div class="tasks-repeat-section">
+            <label for="taskRepeatType">繰り返し設定</label>
+            <div class="tasks-repeat-controls">
+              <select id="taskRepeatType">
+                <option value="none" selected>繰り返しなし</option>
+                <option value="daily">毎日</option>
+                <option value="weekly">毎週</option>
+                <option value="monthly">毎月</option>
+              </select>
+              <label class="repeat-interval">
+                <span>間隔</span>
+                <input type="number" id="taskRepeatInterval" min="1" value="1">
+              </label>
+            </div>
+            <div class="tasks-repeat-weekdays" id="taskRepeatWeekdays">
+              <label><input type="checkbox" value="1">月</label>
+              <label><input type="checkbox" value="2">火</label>
+              <label><input type="checkbox" value="3">水</label>
+              <label><input type="checkbox" value="4">木</label>
+              <label><input type="checkbox" value="5">金</label>
+              <label><input type="checkbox" value="6">土</label>
+              <label><input type="checkbox" value="0">日</label>
+            </div>
+          </div>
           <div class="tasks-form-actions">
             <button type="submit" class="btn-primary" id="taskSubmitBtn">追加</button>
             <button type="button" class="btn-secondary" id="taskCancelEditBtn" hidden>キャンセル</button>
@@ -287,6 +321,7 @@
               <input type="checkbox" id="tasksHideDone">
               完了を隠す
             </label>
+            <div class="tasks-tag-filters" id="tasksTagFilters"></div>
           </div>
           <div id="tasksItems" class="tasks-items">
             <p class="empty-message">タスクはありません</p>
@@ -294,6 +329,7 @@
         </div>
 
         <div class="tasks-tools">
+          <div class="tasks-reading-settings" id="tasksReadingSettings"></div>
           <span id="tasksAnnounceHint" class="help-text">毎朝9時に期間中のタスクを読み上げます（日付未設定は除外）</span>
         </div>
       </div>
