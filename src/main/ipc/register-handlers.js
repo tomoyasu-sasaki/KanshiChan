@@ -4,10 +4,107 @@
  * - 依存オブジェクトを DI することでテストや将来の差し替えを容易にする。
  */
 const { BrowserWindow } = require('electron');
+
+/**
+ * エラーメッセージをサニタイズし、機密情報の漏洩を防ぐ。
+ * - パス情報の除去
+ * - スタックトレースの除去
+ * @param {Error|string} error エラーオブジェクトまたはメッセージ
+ * @returns {string} サニタイズされたエラーメッセージ
+ */
+function sanitizeErrorMessage(error) {
+  let message = typeof error === 'string' ? error : (error?.message || '不明なエラーが発生しました');
+
+  // ファイルパスを除去
+  message = message.replace(/\/[^\s]+\.(js|ts|json)/gi, '[ファイルパス]');
+  message = message.replace(/[A-Z]:\\[^\s]+/gi, '[ファイルパス]');
+
+  // スタックトレースを除去
+  message = message.split('\n')[0];
+
+  // SQLクエリを除去
+  message = message.replace(/SELECT .* FROM .*/gi, '[SQLクエリ]');
+  message = message.replace(/INSERT INTO .*/gi, '[SQLクエリ]');
+  message = message.replace(/UPDATE .* SET .*/gi, '[SQLクエリ]');
+  message = message.replace(/DELETE FROM .*/gi, '[SQLクエリ]');
+
+  return message;
+}
+
+/**
+ * タスクペイロードを検証する。
+ * @param {any} payload 検証対象
+ * @returns {{valid: boolean, error?: string}}
+ */
+function validateTaskPayload(payload) {
+  if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+    return { valid: false, error: 'payload はオブジェクトである必要があります' };
+  }
+
+  if (payload.title !== undefined && typeof payload.title !== 'string') {
+    return { valid: false, error: 'title は文字列である必要があります' };
+  }
+
+  if (payload.description !== undefined && typeof payload.description !== 'string') {
+    return { valid: false, error: 'description は文字列である必要があります' };
+  }
+
+  if (payload.priority !== undefined) {
+    const validPriorities = ['low', 'medium', 'high'];
+    if (typeof payload.priority !== 'string' || !validPriorities.includes(payload.priority.toLowerCase())) {
+      return { valid: false, error: 'priority は low, medium, high のいずれかである必要があります' };
+    }
+  }
+
+  if (payload.status !== undefined) {
+    const validStatuses = ['todo', 'in_progress', 'done'];
+    if (typeof payload.status !== 'string' || !validStatuses.includes(payload.status.toLowerCase())) {
+      return { valid: false, error: 'status は todo, in_progress, done のいずれかである必要があります' };
+    }
+  }
+
+  if (payload.parentTaskId !== undefined && payload.parentTaskId !== null) {
+    if (!Number.isFinite(Number(payload.parentTaskId))) {
+      return { valid: false, error: 'parentTaskId は数値または null である必要があります' };
+    }
+  }
+
+  if (payload.displayOrder !== undefined && payload.displayOrder !== null) {
+    if (!Number.isFinite(Number(payload.displayOrder))) {
+      return { valid: false, error: 'displayOrder は数値である必要があります' };
+    }
+  }
+
+  if (payload.tags !== undefined) {
+    if (!Array.isArray(payload.tags)) {
+      return { valid: false, error: 'tags は文字列配列である必要があります' };
+    }
+    const invalid = payload.tags.some((tag) => typeof tag !== 'string');
+    if (invalid) {
+      return { valid: false, error: 'tags には文字列のみ指定できます' };
+    }
+  }
+
+  if (payload.repeatConfig !== undefined && payload.repeatConfig !== null) {
+    if (typeof payload.repeatConfig !== 'object') {
+      return { valid: false, error: 'repeatConfig はオブジェクトである必要があります' };
+    }
+    if (payload.repeatConfig.type !== undefined && typeof payload.repeatConfig.type !== 'string') {
+      return { valid: false, error: 'repeatConfig.type は文字列である必要があります' };
+    }
+    if (payload.repeatConfig.weekdays !== undefined && !Array.isArray(payload.repeatConfig.weekdays)) {
+      return { valid: false, error: 'repeatConfig.weekdays は配列である必要があります' };
+    }
+  }
+
+  return { valid: true };
+}
 const { synthesizeWithVoiceVox } = require('../services/voicevox');
 const { getActiveWindowInfo } = require('../services/active-window');
 const audioService = require('../services/audio');
 const { run } = require('../db');
+const schedulesService = require('../services/schedules');
+const tasksService = require('../services/tasks');
 const {
   getDetectionStats,
   getRecentDetectionLogs,
@@ -101,22 +198,63 @@ function registerIpcHandlers({
     const entry = context?.archived;
     logAbsenceOverrideEvent(entry, 'expired');
   });
-  ipcMain.handle('save-schedule', async (_event, schedule) => {
-    return { success: true, schedule };
-  });
-
-  ipcMain.handle('schedule-sync', async (_event, payload = []) => {
+  async function handleSchedulesReplace(_event, payload = []) {
     try {
       if (!Array.isArray(payload)) {
         throw new Error('スケジュール配列が不正です');
       }
-      if (configStore) {
-        configStore.set('scheduleCache', payload);
-      }
-      return { success: true };
+      const items = await schedulesService.replaceAllSchedules(payload);
+      return { success: true, items };
     } catch (error) {
-      console.error('[IPC] スケジュール同期エラー:', error);
-      return { success: false, error: error.message };
+      console.error('[IPC] schedules replace error:', error);
+      return { success: false, error: sanitizeErrorMessage(error) };
+    }
+  }
+
+  ipcMain.handle('schedules-list', async () => {
+    try {
+      const items = await schedulesService.listSchedules();
+      return { success: true, items };
+    } catch (error) {
+      console.error('[IPC] schedules list error:', error);
+      return { success: false, error: sanitizeErrorMessage(error) };
+    }
+  });
+
+  ipcMain.handle('schedules-replace', handleSchedulesReplace);
+  // Backward compatibility: allow existing renderer code that still invokes schedule-sync.
+  ipcMain.handle('schedule-sync', handleSchedulesReplace);
+
+  ipcMain.handle('schedules-upsert', async (_event, payload = null) => {
+    try {
+      const item = await schedulesService.upsertSchedule(payload || {});
+      return { success: true, item };
+    } catch (error) {
+      console.error('[IPC] schedules upsert error:', error);
+      return { success: false, error: sanitizeErrorMessage(error) };
+    }
+  });
+
+  ipcMain.handle('schedules-upsert-many', async (_event, payload = []) => {
+    try {
+      if (!Array.isArray(payload)) {
+        throw new Error('スケジュール配列が不正です');
+      }
+      const items = await schedulesService.upsertSchedules(payload);
+      return { success: true, items };
+    } catch (error) {
+      console.error('[IPC] schedules bulk upsert error:', error);
+      return { success: false, error: sanitizeErrorMessage(error) };
+    }
+  });
+
+  ipcMain.handle('schedules-delete', async (_event, id) => {
+    try {
+      const result = await schedulesService.deleteSchedule(id);
+      return { success: true, item: result };
+    } catch (error) {
+      console.error('[IPC] schedules delete error:', error);
+      return { success: false, error: sanitizeErrorMessage(error) };
     }
   });
 
@@ -203,6 +341,172 @@ function registerIpcHandlers({
     } catch (error) {
       console.error('[IPC] audio-check-availability エラー:', error);
       return { success: false, error: error.message };
+    }
+  });
+
+  // Tasks CRUD
+  ipcMain.handle('tasks-create', async (_event, payload = {}) => {
+    try {
+      // ペイロードの検証
+      const validation = validateTaskPayload(payload);
+      if (!validation.valid) {
+        return { success: false, error: validation.error };
+      }
+
+      const task = await tasksService.createTask(payload || {});
+      console.info('[IPC] tasks-create success', task);
+      return { success: true, task };
+    } catch (error) {
+      console.error('[IPC] tasks-create エラー:', error);
+      return { success: false, error: sanitizeErrorMessage(error) };
+    }
+  });
+
+  ipcMain.handle('tasks-update', async (_event, id, fields = {}) => {
+    try {
+      // IDの検証
+      if (!Number.isFinite(Number(id))) {
+        return { success: false, error: 'タスク ID が不正です' };
+      }
+
+      // フィールドの検証
+      if (fields && typeof fields === 'object') {
+        const validation = validateTaskPayload(fields);
+        if (!validation.valid) {
+          return { success: false, error: validation.error };
+        }
+      }
+
+      // 更新前の状態を取得（タスク完了通知用）
+      let previousStatus = null;
+      if (fields.status === 'done' && Notification) {
+        try {
+          const existingList = await tasksService.listTasks({});
+          const existingTask = existingList.find((t) => t.id === Number(id));
+          previousStatus = existingTask?.status;
+        } catch (error) {
+          console.warn('[IPC] 更新前タスク状態取得エラー:', error);
+        }
+      }
+
+      const task = await tasksService.updateTask(id, fields || {});
+      
+      // タスクが完了状態になった場合に通知を送信
+      if (Notification && previousStatus !== 'done' && task?.status === 'done') {
+        try {
+          const notification = new Notification('✅ タスク完了', {
+            body: `「${task.title || 'タスク'}」が完了しました`,
+            icon: undefined,
+          });
+          notification.onclick = () => {
+            // 通知クリック時の処理（必要に応じてウィンドウをアクティブ化など）
+          };
+        } catch (error) {
+          console.warn('[IPC] タスク完了通知の送信に失敗:', error);
+        }
+      }
+
+      return { success: true, task };
+    } catch (error) {
+      console.error('[IPC] tasks-update エラー:', error);
+      return { success: false, error: sanitizeErrorMessage(error) };
+    }
+  });
+
+  ipcMain.handle('tasks-delete', async (_event, id) => {
+    try {
+      // IDの検証
+      if (!Number.isFinite(Number(id))) {
+        return { success: false, error: 'タスク ID が不正です' };
+      }
+
+      const result = await tasksService.deleteTask(id);
+      return { success: true, result };
+    } catch (error) {
+      console.error('[IPC] tasks-delete エラー:', error);
+      return { success: false, error: sanitizeErrorMessage(error) };
+    }
+  });
+
+  ipcMain.handle('tasks-list', async (_event, filter = {}) => {
+    try {
+      // フィルタの検証
+      if (filter && typeof filter !== 'object') {
+        return { success: false, error: 'filter はオブジェクトである必要があります' };
+      }
+      if (filter.tags !== undefined && !Array.isArray(filter.tags)) {
+        return { success: false, error: 'filter.tags は配列である必要があります' };
+      }
+
+      const items = await tasksService.listTasks(filter || {});
+      console.info('[IPC] tasks-list result count', items.length);
+      return { success: true, items };
+    } catch (error) {
+      console.error('[IPC] tasks-list エラー:', error);
+      return { success: false, error: sanitizeErrorMessage(error) };
+    }
+  });
+
+  ipcMain.handle('tasks-reorder', async (_event, updates = []) => {
+    try {
+      if (!Array.isArray(updates)) {
+        return { success: false, error: 'updates は配列である必要があります' };
+      }
+      const invalid = updates.some((entry) => !entry || typeof entry !== 'object');
+      if (invalid) {
+        return { success: false, error: 'updates の各要素はオブジェクトである必要があります' };
+      }
+      const items = await tasksService.updateTaskOrders(updates);
+      return { success: true, items };
+    } catch (error) {
+      console.error('[IPC] tasks-reorder エラー:', error);
+      return { success: false, error: sanitizeErrorMessage(error) };
+    }
+  });
+
+  ipcMain.handle('tasks-tags-list', async () => {
+    try {
+      const items = await tasksService.listTags();
+      return { success: true, items };
+    } catch (error) {
+      console.error('[IPC] tasks-tags-list エラー:', error);
+      return { success: false, error: sanitizeErrorMessage(error) };
+    }
+  });
+
+  ipcMain.handle('tasks-bulk-delete', async (_event, criteria = {}) => {
+    try {
+      if (criteria && typeof criteria !== 'object') {
+        return { success: false, error: 'criteria はオブジェクトである必要があります' };
+      }
+      const result = await tasksService.bulkDeleteTasks(criteria || {});
+      return { success: true, result };
+    } catch (error) {
+      console.error('[IPC] tasks-bulk-delete エラー:', error);
+      return { success: false, error: sanitizeErrorMessage(error) };
+    }
+  });
+
+  ipcMain.handle('tasks-bulk-complete', async (_event, criteria = {}) => {
+    try {
+      if (criteria && typeof criteria !== 'object') {
+        return { success: false, error: 'criteria はオブジェクトである必要があります' };
+      }
+      const result = await tasksService.bulkUpdateStatus(criteria || {}, 'done');
+      return { success: true, result };
+    } catch (error) {
+      console.error('[IPC] tasks-bulk-complete エラー:', error);
+      return { success: false, error: sanitizeErrorMessage(error) };
+    }
+  });
+
+  ipcMain.handle('tasks-stats', async (_event, options = {}) => {
+    try {
+      const stats = await tasksService.getTaskStats(options || {});
+      return { success: true, data: stats };
+    } catch (error) {
+      console.error('[IPC] tasks-stats エラー:', error);
+      return { success: false, error: sanitizeErrorMessage(error) };
     }
   });
 

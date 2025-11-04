@@ -4,6 +4,7 @@
  * - 手動送信、履歴取得、設定更新を IPC 経由で提供する。
  */
 const { run, all } = require('../db');
+const schedulesService = require('./schedules');
 const {
   getDetectionStats,
   getAppUsageStats,
@@ -44,6 +45,18 @@ function formatDuration(seconds) {
     return `${hours}時間${minutes}分`;
   }
   return `${minutes}分`;
+}
+
+function startOfDay(ms) {
+  const d = new Date(ms);
+  d.setHours(0, 0, 0, 0);
+  return d.getTime();
+}
+
+function endOfDay(ms) {
+  const d = new Date(ms);
+  d.setHours(23, 59, 59, 999);
+  return d.getTime();
 }
 
 const REPEAT_TYPE_ALIASES = Object.freeze({
@@ -109,22 +122,26 @@ function getScheduleTitle(schedule) {
   return rawTitle || '予定';
 }
 
-function parseScheduleCache(configStore) {
-  const raw = configStore.get('scheduleCache', []);
-  if (!Array.isArray(raw)) {
+async function fetchScheduleSummaries() {
+  try {
+    const items = await schedulesService.listSchedules({ withoutMeta: true });
+    if (!Array.isArray(items)) {
+      return [];
+    }
+    return items
+      .map((item) => ({
+        id: item.id,
+        title: getScheduleTitle(item),
+        date: item.date || null,
+        time: typeof item.time === 'string' ? item.time : '',
+        description: typeof item.description === 'string' ? item.description : '',
+        repeat: normalizeRepeatConfig(item.repeat),
+      }))
+      .filter((item) => item.time);
+  } catch (error) {
+    console.warn('[SlackReporter] failed to load schedules:', error);
     return [];
   }
-
-  return raw
-    .map((item) => ({
-      id: item.id,
-      title: getScheduleTitle(item),
-      date: item.date || null,
-      time: typeof item.time === 'string' ? item.time : '',
-      description: typeof item.description === 'string' ? item.description : '',
-      repeat: normalizeRepeatConfig(item.repeat),
-    }))
-    .filter((item) => item.time);
 }
 
 function getNextOccurrence(schedule, referenceDate = new Date()) {
@@ -203,13 +220,13 @@ function formatRelativeMinutes(minutes) {
   return `あと${hours}時間${mins}分`;
 }
 
-function buildUpcomingScheduleLines(configStore, options = {}) {
+async function buildUpcomingScheduleLines(options = {}) {
   const now = options.now instanceof Date ? options.now : new Date();
   const limit = Number.isInteger(options.limit) ? options.limit : 5;
   const rangeHours = Number.isFinite(options.rangeHours) ? options.rangeHours : 24;
   const rangeMs = rangeHours * 60 * 60 * 1000;
 
-  const schedules = parseScheduleCache(configStore);
+  const schedules = await fetchScheduleSummaries();
   const upcoming = [];
 
   schedules.forEach((schedule) => {
@@ -476,8 +493,62 @@ function createSlackReporter({ configStore, absenceOverrideManager }, dependenci
       lines.push(`• システムイベント: ${summaryText}`);
     }
 
+    // タスク統計情報を追加
+    if (options.includeTasks !== false && dependencies.tasksService) {
+      try {
+        const taskStats = await dependencies.tasksService.getTaskStats({
+          start: startTimestamp,
+          end: endTimestamp,
+        });
+        const summary = taskStats?.summary || {};
+        if (summary.total > 0) {
+          lines.push(`• タスク統計:`);
+          lines.push(`  総タスク数: ${summary.total}`);
+          lines.push(`  完了率: ${summary.completionRate || 0}% (完了: ${summary.completedCount || 0}件)`);
+          lines.push(`  ステータス内訳: 未着手${summary.byStatus?.todo || 0} / 進行中${summary.byStatus?.in_progress || 0} / 完了${summary.byStatus?.done || 0}`);
+          if (summary.averageCompletionDays != null) {
+            lines.push(`  平均完了日数: ${summary.averageCompletionDays}日`);
+          }
+
+          // 期限切れタスクと今日開始予定タスクの情報
+          const todayTasks = await dependencies.tasksService.listTasks({
+            activeAt: now,
+          });
+          const overdueTasks = todayTasks.filter((task) => {
+            return task.status !== 'done' && task.endDate != null && task.endDate < now;
+          });
+          const startingTodayTasks = todayTasks.filter((task) => {
+            return task.status !== 'done' && task.startDate != null && 
+                   task.startDate >= startOfDay(now) && task.startDate < endOfDay(now);
+          });
+
+          if (overdueTasks.length > 0) {
+            lines.push(`  期限切れタスク: ${overdueTasks.length}件`);
+            overdueTasks.slice(0, 3).forEach((task) => {
+              lines.push(`    - ${task.title}`);
+            });
+            if (overdueTasks.length > 3) {
+              lines.push(`    ...他${overdueTasks.length - 3}件`);
+            }
+          }
+
+          if (startingTodayTasks.length > 0) {
+            lines.push(`  今日開始予定: ${startingTodayTasks.length}件`);
+            startingTodayTasks.slice(0, 3).forEach((task) => {
+              lines.push(`    - ${task.title}`);
+            });
+            if (startingTodayTasks.length > 3) {
+              lines.push(`    ...他${startingTodayTasks.length - 3}件`);
+            }
+          }
+        }
+      } catch (error) {
+        console.warn('[SlackReporter] タスク統計取得エラー:', error);
+      }
+    }
+
     if (options.includeSchedules !== false) {
-      const scheduleLines = buildUpcomingScheduleLines(configStore, { now, limit: 5, rangeHours: 24 });
+      const scheduleLines = await buildUpcomingScheduleLines({ now, limit: 5, rangeHours: 24 });
       if (scheduleLines.length > 0) {
         lines.push('• 直近の予定:');
         scheduleLines.forEach((entry) => {

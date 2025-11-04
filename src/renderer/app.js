@@ -41,6 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // UI初期化
 function initializeUI() {
   // ツールバーボタン
+  const tasksBtn = document.getElementById('tasksBtn');
   const scheduleBtn = document.getElementById('scheduleBtn');
   const settingsBtn = document.getElementById('settingsBtn');
   const logsBtn = document.getElementById('logsBtn');
@@ -48,6 +49,7 @@ function initializeUI() {
   const exitBtn = document.getElementById('exitBtn');
 
   // イベントリスナー設定
+  tasksBtn.addEventListener('click', () => toggleDialog('tasksDialog'));
   scheduleBtn.addEventListener('click', () => toggleDialog('scheduleDialog'));
   settingsBtn.addEventListener('click', () => toggleDrawer('settingsDrawer'));
   logsBtn.addEventListener('click', () => toggleDrawer('logsDrawer'));

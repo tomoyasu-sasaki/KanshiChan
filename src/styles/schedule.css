@@ -91,6 +91,78 @@
   background: var(--primary-end);
 }
 
+.schedule-linked-tasks {
+  margin-top: var(--space-4);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border-color, #e0e0e0);
+}
+
+.schedule-linked-tasks-header {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--text-secondary, #666);
+  margin-bottom: var(--space-2);
+}
+
+.schedule-linked-tasks-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.schedule-linked-task-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-secondary, #f8f9fa);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+}
+
+.schedule-linked-task-item.status-done {
+  opacity: 0.6;
+}
+
+.schedule-linked-task-title {
+  flex: 1;
+  color: var(--text-primary);
+}
+
+.schedule-linked-task-status {
+  font-size: var(--text-xs);
+  padding: var(--space-1) var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--bg-tertiary, #e9ecef);
+  color: var(--text-secondary);
+}
+
+.schedule-linked-task-item.status-todo .schedule-linked-task-status {
+  background: #fff3cd;
+  color: #856404;
+}
+
+.schedule-linked-task-item.status-in_progress .schedule-linked-task-status {
+  background: #cfe2ff;
+  color: #084298;
+}
+
+.schedule-linked-task-item.status-done .schedule-linked-task-status {
+  background: #d1e7dd;
+  color: #0f5132;
+}
+
+.schedule-linked-task-more {
+  font-size: var(--text-xs);
+  color: var(--text-secondary);
+  font-style: italic;
+  text-align: center;
+  padding: var(--space-1);
+}
+
 .schedule-actions .btn-delete {
   background: var(--error);
   color: white;

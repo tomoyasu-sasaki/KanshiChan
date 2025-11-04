@@ -144,6 +144,109 @@ ${SETTINGS_COMMAND_TARGETS.map((target) => `- ${target.key}: ${target.descriptio
 
 ユーザーの指示を正確に読み取り、可能な限り commands に反映してください。`;
 
+// タスク操作用プロンプト
+const TASKS_COMMAND_SYSTEM_PROMPT = `あなたはタスク管理アシスタントです。
+
+【目的】
+ユーザーの日本語発話から、タスクの作成・更新・削除やステータス/優先度/期間/スケジュール紐付けの変更を構造化 JSON で返します。
+
+【日付の解釈ルール】
+1. 相対日付の正規化:
+   - 「今日」「本日」→ 現在日付 (YYYY-MM-DD)
+   - 「明日」→ 現在日付 +1 日
+   - 「今週」→ 今週の月曜〜日曜の範囲（startDate=月曜, endDate=日曜）
+   - 「来週」→ 次週の月曜〜日曜
+   - 「今週末」→ 今週の土〜日
+   - 可能な限り 24 時間制のタイムゾーンはシステムのローカルを前提に計算
+2. 「〜まで」「〜から」の表現がある場合、startDate/endDate に反映
+3. 曖昧な場合は、無理に推測せず該当フィールドを省略
+4. ユーザーが「未定」「未設定」「なし/無し」等と述べた場合、startDate と endDate は null（または出力自体を省略）にする。決して本日などのデフォルト日付を補完しない。
+5. ユーザーが日付に一切言及していない場合も、startDate/endDate を出力しない（null または省略）。
+
+【追加コマンド】
+- サブタスク作成: action は "create" のまま、parentTitle (または parentId) に親タスク名を入れる
+- タグ操作: action "update" で tags に文字列配列、tagMode に set|add|remove を指定
+- 一括操作: 例「完了したタスクを全部削除」→ action "bulk_delete" + criteria.status="done"
+- 検索リクエスト: 例「来週のタスクを教えて」→ action "search" + criteria.timeframe=next_week
+  - timeframe は today/tomorrow/this_week/next_week/overdue を想定
+
+【出力仕様】
+- JSON オブジェクトに commands 配列を含める
+- 各要素は { "action": "create|update|delete|complete|start|bulk_delete|bulk_complete|search", "id": 任意, "title": 任意, "description": 任意, "priority": 任意, "status": 任意, "startDate": 任意, "endDate": 任意, "scheduleId": 任意, "parentTitle": 任意, "tags": 任意, "tagMode": 任意, "criteria": 任意 } の形式
+- priority は low|medium|high のいずれか
+- status は todo|in_progress|done のいずれか
+- startDate/endDate は、ユーザーが日付/期間を明示した場合のみ YYYY-MM-DD 形式（相対表現は正規化）。未定/未設定/言及なしの場合は null または省略。
+- id が未指定で update/delete/complete/start の場合、タイトル一致の補助に title を含められます（曖昧なら出力しない）`;
+
+function buildTasksCommandUserPrompt(transcribedText, options = {}) {
+  const tasks = Array.isArray(options.tasks) ? options.tasks : [];
+  const schedules = Array.isArray(options.schedules) ? options.schedules : [];
+  const tasksLine = tasks.map((t) => `${t.id}:${t.title}`).join(', ');
+  const schedulesLine = schedules.map((s) => `${s.id}:${s.title}`).join(', ');
+
+  const now = new Date();
+  const today = now.toLocaleDateString('ja-JP', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    weekday: 'long'
+  });
+  const todayISO = [
+    now.getFullYear(),
+    String(now.getMonth() + 1).padStart(2, '0'),
+    String(now.getDate()).padStart(2, '0'),
+  ].join('-');
+
+  return `【現在の日時情報】\n今日の日付: ${today} (${todayISO})\n\n【既存のタスク(一部)】\n${tasksLine}\n【既存のスケジュール(一部)】\n${schedulesLine}\n\n【音声入力テキスト】\n${transcribedText}\n\n相対日付が含まれる場合のみ YYYY-MM-DD に正規化してください。日付に言及がない、または「未定/未設定/なし/無し」の場合は startDate と endDate を出力しない（null または省略）。commands 配列のみを JSON で返してください。`;
+}
+
+const TASKS_COMMAND_JSON_SCHEMA = {
+  type: 'object',
+  properties: {
+    commands: {
+      type: 'array',
+      items: {
+        type: 'object',
+        properties: {
+          action: { type: 'string', enum: ['create', 'update', 'delete', 'complete', 'start', 'bulk_delete', 'bulk_complete', 'search'] },
+          id: { type: ['integer', 'null'] },
+          title: { type: ['string', 'null'] },
+          description: { type: ['string', 'null'] },
+          priority: { type: ['string', 'null'], enum: ['low', 'medium', 'high', null] },
+          status: { type: ['string', 'null'], enum: ['todo', 'in_progress', 'done', null] },
+          startDate: { type: ['string', 'null'] },
+          endDate: { type: ['string', 'null'] },
+          scheduleId: { type: ['integer', 'null'] },
+          parentId: { type: ['integer', 'null'] },
+          parentTitle: { type: ['string', 'null'] },
+          tags: {
+            type: ['array', 'null'],
+            items: { type: 'string' },
+          },
+          tagMode: { type: ['string', 'null'], enum: ['set', 'add', 'remove', null] },
+          criteria: {
+            type: ['object', 'null'],
+            properties: {
+              status: { type: ['string', 'null'], enum: ['todo', 'in_progress', 'done', null] },
+              timeframe: { type: ['string', 'null'], enum: ['today', 'tomorrow', 'this_week', 'next_week', 'overdue', null] },
+              tag: { type: ['string', 'null'] },
+              tags: {
+                type: ['array', 'null'],
+                items: { type: 'string' },
+              },
+            },
+            additionalProperties: false,
+          },
+        },
+        required: ['action'],
+        additionalProperties: false,
+      },
+    },
+  },
+  required: ['commands'],
+  additionalProperties: false,
+};
+
 /**
  * ユーザープロンプトテンプレート
  * @param {string} transcribedText 文字起こしされたテキスト
@@ -338,6 +441,9 @@ module.exports = {
   SETTINGS_COMMAND_SYSTEM_PROMPT,
   buildSettingsCommandUserPrompt,
   SETTINGS_COMMAND_JSON_SCHEMA,
+  TASKS_COMMAND_SYSTEM_PROMPT,
+  buildTasksCommandUserPrompt,
+  TASKS_COMMAND_JSON_SCHEMA,
   CHAT_ASSISTANT_SYSTEM_PROMPT,
   buildChatPrompt,
 };

@@ -47,6 +47,10 @@
       </div>
 
       <div class="toolbar-center">
+        <button class="tool-button" id="tasksBtn" title="タスク">
+          <span class="icon">📝</span>
+          <span class="label">タスク</span>
+        </button>
         <button class="tool-button" id="scheduleBtn" title="スケジュール">
           <span class="icon">📅</span>
           <span class="label">スケジュール</span>
@@ -201,6 +205,262 @@
       <div id="scheduleItems" class="schedule-items">
         <p class="empty-message">スケジュールはありません</p>
       </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- タスクダイアログ -->
+  <div class="dialog" id="tasksDialog">
+    <div class="dialog-content">
+      <div class="dialog-header">
+        <h2>✅ タスク管理</h2>
+        <button class="close-btn" data-dialog="tasksDialog">×</button>
+      </div>
+
+      <div class="dialog-body">
+        <section class="tasks-voice-section">
+          <h4>音声で操作</h4>
+          <p class="tasks-voice-helper">「新しいタスクを追加」「明日から来週までに変更」「優先度を高に」など</p>
+          <div id="tasksVoiceControl"></div>
+          <div id="tasksVoiceMessage" class="tasks-voice-message"></div>
+        </section>
+
+        <form id="taskForm" class="tasks-form">
+          <input type="hidden" id="taskId">
+          <div class="form-group">
+            <label for="taskTitle">タイトル</label>
+            <input type="text" id="taskTitle" placeholder="例: 週報を作成" required>
+          </div>
+          <div class="form-group">
+            <label for="taskDescription">説明</label>
+            <textarea id="taskDescription" rows="3" placeholder="補足 (任意)"></textarea>
+          </div>
+          <div class="tasks-form-row">
+            <div class="filter-group">
+              <label for="taskPriority">優先度</label>
+              <select id="taskPriority">
+                <option value="low">低</option>
+                <option value="medium" selected>中</option>
+                <option value="high">高</option>
+              </select>
+            </div>
+            <div class="filter-group">
+              <label for="taskStatus">ステータス</label>
+              <select id="taskStatus">
+                <option value="todo" selected>未着手</option>
+                <option value="in_progress">進行中</option>
+                <option value="done">完了</option>
+              </select>
+            </div>
+          </div>
+          <div class="tasks-form-row">
+            <div class="filter-group">
+              <label for="taskStartDate">開始日</label>
+              <input type="date" id="taskStartDate">
+            </div>
+            <div class="filter-group">
+              <label for="taskEndDate">終了日</label>
+              <input type="date" id="taskEndDate">
+            </div>
+          </div>
+          <div class="filter-group">
+            <label for="taskScheduleId">スケジュールに紐付け (任意)</label>
+            <select id="taskScheduleId">
+              <option value="">未指定</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="taskParentId">親タスク (任意)</label>
+            <select id="taskParentId">
+              <option value="">未指定</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="taskTagsInput">タグ (カンマ区切り)</label>
+            <input type="text" id="taskTagsInput" placeholder="例: 緊急, 共有事項">
+          </div>
+          <div class="tasks-repeat-section">
+            <label for="taskRepeatType">繰り返し設定</label>
+            <div class="tasks-repeat-controls">
+              <select id="taskRepeatType">
+                <option value="none" selected>繰り返しなし</option>
+                <option value="daily">毎日</option>
+                <option value="weekly">毎週</option>
+                <option value="monthly">毎月</option>
+              </select>
+              <label class="repeat-interval">
+                <span>間隔</span>
+                <input type="number" id="taskRepeatInterval" min="1" value="1">
+              </label>
+            </div>
+            <div class="tasks-repeat-weekdays" id="taskRepeatWeekdays">
+              <label><input type="checkbox" value="1">月</label>
+              <label><input type="checkbox" value="2">火</label>
+              <label><input type="checkbox" value="3">水</label>
+              <label><input type="checkbox" value="4">木</label>
+              <label><input type="checkbox" value="5">金</label>
+              <label><input type="checkbox" value="6">土</label>
+              <label><input type="checkbox" value="0">日</label>
+            </div>
+          </div>
+          <div class="tasks-form-actions">
+            <button type="submit" class="btn-primary" id="taskSubmitBtn">追加</button>
+            <button type="button" class="btn-secondary" id="taskCancelEditBtn" hidden>キャンセル</button>
+          </div>
+        </form>
+
+        <div class="tasks-list-container">
+          <h3>タスク一覧</h3>
+          <div class="tasks-filters">
+            <label>
+              <input type="checkbox" id="tasksShowOnlyActive">
+              期間中のみ
+            </label>
+            <label>
+              <input type="checkbox" id="tasksHideDone">
+              完了を隠す
+            </label>
+            <div class="tasks-tag-filters" id="tasksTagFilters"></div>
+          </div>
+          <div class="tasks-advanced-filters" id="tasksAdvancedFilters">
+            <button type="button" class="btn-secondary btn-compact" id="tasksAdvancedFiltersToggle">
+              <span>高度なフィルタ</span>
+              <span class="filter-icon">▼</span>
+            </button>
+            <div class="tasks-advanced-filters-panel" id="tasksAdvancedFiltersPanel" hidden>
+              <div class="filter-group">
+                <label for="tasksFilterStatus">ステータス</label>
+                <select id="tasksFilterStatus" multiple>
+                  <option value="todo">未着手</option>
+                  <option value="in_progress">進行中</option>
+                  <option value="done">完了</option>
+                </select>
+              </div>
+              <div class="filter-group">
+                <label for="tasksFilterPriority">優先度</label>
+                <select id="tasksFilterPriority" multiple>
+                  <option value="low">低</option>
+                  <option value="medium">中</option>
+                  <option value="high">高</option>
+                </select>
+              </div>
+              <div class="filter-group">
+                <label for="tasksFilterDateRange">日付範囲</label>
+                <select id="tasksFilterDateRange">
+                  <option value="">指定なし</option>
+                  <option value="today">今日</option>
+                  <option value="tomorrow">明日</option>
+                  <option value="this_week">今週</option>
+                  <option value="next_week">来週</option>
+                  <option value="this_month">今月</option>
+                  <option value="next_month">来月</option>
+                  <option value="this_quarter">今四半期</option>
+                  <option value="overdue">期限切れ</option>
+                  <option value="custom">カスタム</option>
+                </select>
+              </div>
+              <div class="filter-group" id="tasksFilterCustomDates" hidden>
+                <label>開始日</label>
+                <input type="date" id="tasksFilterStartDate">
+                <label>終了日</label>
+                <input type="date" id="tasksFilterEndDate">
+              </div>
+              <div class="filter-group">
+                <label for="tasksFilterConditionMode">条件の組み合わせ</label>
+                <select id="tasksFilterConditionMode">
+                  <option value="AND">すべて満たす (AND)</option>
+                  <option value="OR">いずれか満たす (OR)</option>
+                </select>
+              </div>
+              <div class="filter-group">
+                <button type="button" class="btn-secondary btn-compact" id="tasksSaveFilter">
+                  フィルタを保存
+                </button>
+                <button type="button" class="btn-secondary btn-compact" id="tasksLoadFilter">
+                  保存済みフィルタを読み込み
+                </button>
+                <button type="button" class="btn-secondary btn-compact" id="tasksClearFilter">
+                  フィルタをクリア
+                </button>
+              </div>
+              <select id="tasksSavedFilters" style="display: none;">
+                <option value="">保存済みフィルタを選択...</option>
+              </select>
+            </div>
+          </div>
+          <div class="tasks-sort-controls" id="tasksSortControls">
+            <div class="tasks-sort-group">
+              <label for="tasksSortBy1">ソート1</label>
+              <select id="tasksSortBy1">
+                <option value="displayOrder">表示順</option>
+                <option value="updatedAt">更新日時</option>
+                <option value="createdAt">作成日時</option>
+                <option value="title">タイトル</option>
+                <option value="priority">優先度</option>
+                <option value="status">ステータス</option>
+                <option value="startDate">開始日</option>
+                <option value="endDate">終了日</option>
+              </select>
+              <select id="tasksSortOrder1">
+                <option value="asc">昇順</option>
+                <option value="desc" selected>降順</option>
+              </select>
+            </div>
+            <div class="tasks-sort-group">
+              <label for="tasksSortBy2">ソート2</label>
+              <select id="tasksSortBy2">
+                <option value="">指定なし</option>
+                <option value="displayOrder">表示順</option>
+                <option value="updatedAt" selected>更新日時</option>
+                <option value="createdAt">作成日時</option>
+                <option value="title">タイトル</option>
+                <option value="priority">優先度</option>
+                <option value="status">ステータス</option>
+                <option value="startDate">開始日</option>
+                <option value="endDate">終了日</option>
+              </select>
+              <select id="tasksSortOrder2">
+                <option value="asc">昇順</option>
+                <option value="desc" selected>降順</option>
+              </select>
+            </div>
+            <div class="tasks-sort-group">
+              <label for="tasksGroupBy">グループ化</label>
+              <select id="tasksGroupBy">
+                <option value="">なし</option>
+                <option value="priority">優先度別</option>
+                <option value="status">ステータス別</option>
+                <option value="parentTaskId">親タスク別</option>
+              </select>
+            </div>
+            <div class="tasks-sort-group">
+              <button type="button" class="btn-secondary btn-compact" id="tasksSaveSort">ソートを保存</button>
+              <button type="button" class="btn-secondary btn-compact" id="tasksResetSort">リセット</button>
+            </div>
+          </div>
+          <div class="tasks-view-controls">
+            <label class="tasks-view-toggle">
+              <input type="radio" name="tasksView" value="list" checked>
+              <span>リスト</span>
+            </label>
+            <label class="tasks-view-toggle">
+              <input type="radio" name="tasksView" value="card">
+              <span>カード</span>
+            </label>
+            <label class="tasks-view-toggle">
+              <input type="radio" name="tasksView" value="kanban">
+              <span>カンバン</span>
+            </label>
+          </div>
+          <div id="tasksItems" class="tasks-items tasks-view-list">
+            <p class="empty-message">タスクはありません</p>
+          </div>
+        </div>
+
+        <div class="tasks-tools">
+          <div class="tasks-reading-settings" id="tasksReadingSettings"></div>
+          <span id="tasksAnnounceHint" class="help-text">毎朝9時に期間中のタスクを読み上げます（日付未設定は除外）</span>
         </div>
       </div>
     </div>
@@ -713,6 +973,15 @@
           </div>
         </section>
 
+        <section class="dashboard-section task-stats" id="dashboardTaskStats">
+          <div class="section-header">
+            <h3>📋 タスク統計</h3>
+          </div>
+          <div class="dashboard-section-empty">
+            <p>データを読み込み中...</p>
+          </div>
+        </section>
+
         <section class="dashboard-section chart">
           <div class="section-header">
             <h3>検知トレンド</h3>
@@ -820,6 +1089,7 @@
   <script type="module" src="../renderer/monitor.js"></script>
   <script type="module" src="../renderer/dashboard.js"></script>
   <script type="module" src="../renderer/chat.js"></script>
+  <script type="module" src="../renderer/tasks.js"></script>
   <script type="module" src="../renderer/app.js"></script>
 </body>
 </html>

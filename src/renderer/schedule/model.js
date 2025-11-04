@@ -15,9 +15,11 @@ import {
  * 他コンポーネントへスケジュール更新を通知する。
  * レンダラ自身が発火した場合は detail.source で識別する。
  */
-function notifyScheduleUpdate() {
+function notifyScheduleUpdate(reason = 'state-changed', source = 'schedule-renderer') {
   try {
-    window.dispatchEvent(new CustomEvent('schedules-updated', { detail: { source: 'schedule-renderer' } }));
+    const detail = { source, reason };
+    window.dispatchEvent(new CustomEvent('schedules-updated', { detail }));
+    window.dispatchEvent(new CustomEvent('schedule-renderer-updated', { detail }));
   } catch (error) {
     console.warn('[Schedule] スケジュール更新イベント送出に失敗:', error);
   }
@@ -27,24 +29,40 @@ function notifyScheduleUpdate() {
  * メインプロセスへ最新スケジュールを同期する。
  * エラー時はログのみ出し、UI を止めない。
  */
-function syncSchedulesWithMain() {
-  if (!window.electronAPI?.syncSchedules) {
+async function syncSchedulesWithMain() {
+  if (!window.electronAPI) {
     return;
   }
 
   const payload = getSerializableSchedules();
-  window.electronAPI.syncSchedules(payload).catch((error) => {
+  try {
+    if (typeof window.electronAPI.schedulesReplace === 'function') {
+      const response = await window.electronAPI.schedulesReplace(payload);
+      if (response?.success && Array.isArray(response.items)) {
+        const normalized = response.items.map(normalizeScheduleEntry).filter(Boolean);
+        setSchedules(normalized);
+        notifyScheduleUpdate('synced', 'schedule-model');
+        return;
+      }
+      if (response?.error) {
+        throw new Error(response.error);
+      }
+    }
+
+    if (typeof window.electronAPI.syncSchedules === 'function') {
+      await window.electronAPI.syncSchedules(payload);
+    }
+  } catch (error) {
     console.warn('[Schedule] スケジュール同期に失敗:', error);
-  });
+  }
 }
 
 /**
  * スケジュール配列を永続化し、メインプロセスと他ビューへ同期する。
  */
 export function saveSchedules() {
-  localStorage.setItem('schedules', JSON.stringify(scheduleState.schedules));
-  syncSchedulesWithMain();
-  notifyScheduleUpdate();
+  void syncSchedulesWithMain();
+  notifyScheduleUpdate('local-change');
 }
 
 /**
@@ -59,6 +77,14 @@ export function getSerializableSchedules() {
     time: schedule.time,
     description: schedule.description,
     repeat: schedule.repeat,
+    notified: Boolean(schedule.notified),
+    preNotified: Boolean(schedule.preNotified),
+    startNotified: Boolean(schedule.startNotified),
+    ttsMessage: schedule.ttsMessage,
+    ttsLeadMessage: schedule.ttsLeadMessage,
+    lastOccurrenceKey: schedule.lastOccurrenceKey,
+    createdAt: Number.isFinite(schedule.createdAt) ? schedule.createdAt : null,
+    updatedAt: Number.isFinite(schedule.updatedAt) ? schedule.updatedAt : null,
   }));
 }
 
@@ -73,19 +99,33 @@ export function normalizeScheduleEntry(entry) {
   }
 
   const repeat = normalizeRepeatConfig(entry.repeat);
+  const now = Date.now();
+  const numericId = Number(entry.id);
+  const normalizedId = Number.isFinite(numericId) ? numericId : now;
+  const title = typeof entry.title === 'string' ? entry.title.trim() : '';
+  const date = typeof entry.date === 'string' && entry.date.trim() ? entry.date.trim() : getTodayISODate();
+  const time = typeof entry.time === 'string' && entry.time.trim() ? entry.time.trim() : '00:00';
+  const description = typeof entry.description === 'string' ? entry.description : '';
+  const createdAtCandidate = Number(entry.createdAt);
+  const updatedAtCandidate = Number(entry.updatedAt);
+
   const normalized = {
-    id: entry.id ?? Date.now(),
-    title: entry.title ?? '',
-    date: entry.date ?? getTodayISODate(),
-    time: entry.time ?? '00:00',
-    description: entry.description || '',
-    notified: Boolean(entry.notified),
-    preNotified: Boolean(entry.preNotified),
-    startNotified: Boolean(entry.startNotified),
+    id: normalizedId,
+    title,
+    date,
+    time,
+    description,
+    notified: entry.notified === true || entry.notified === 1,
+    preNotified: entry.preNotified === true || entry.preNotified === 1,
+    startNotified: entry.startNotified === true || entry.startNotified === 1,
     ttsMessage: null,
     ttsLeadMessage: null,
     repeat,
-    lastOccurrenceKey: entry.lastOccurrenceKey || (repeat ? null : entry.date ?? getTodayISODate()),
+    createdAt: Number.isFinite(createdAtCandidate) ? createdAtCandidate : now,
+    updatedAt: Number.isFinite(updatedAtCandidate) ? updatedAtCandidate : now,
+    lastOccurrenceKey: typeof entry.lastOccurrenceKey === 'string' && entry.lastOccurrenceKey.trim()
+      ? entry.lastOccurrenceKey.trim()
+      : (repeat ? null : date),
   };
 
   const existingTtsMessage = typeof entry.ttsMessage === 'string' ? entry.ttsMessage.trim() : '';
@@ -97,14 +137,69 @@ export function normalizeScheduleEntry(entry) {
   return normalized;
 }
 
-/**
- * localStorage から起動時のスケジュールを読み込み、正規化する。
- */
-export function initializeSchedules() {
-  const stored = JSON.parse(localStorage.getItem('schedules')) || [];
-  const normalized = stored.map(normalizeScheduleEntry).filter(Boolean);
+async function fetchSchedulesFromMain() {
+  if (!window.electronAPI?.schedulesList) {
+    return null;
+  }
+  try {
+    const response = await window.electronAPI.schedulesList();
+    if (response?.success && Array.isArray(response.items)) {
+      return response.items;
+    }
+    if (response?.error) {
+      console.warn('[Schedule] schedulesList error:', response.error);
+    }
+  } catch (error) {
+    console.warn('[Schedule] schedulesList invocation failed:', error);
+  }
+  return null;
+}
+
+function readLegacySchedules() {
+  try {
+    const raw = localStorage.getItem('schedules');
+    if (!raw) {
+      return [];
+    }
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (error) {
+    console.warn('[Schedule] legacy schedule load failed:', error);
+    return [];
+  }
+}
+
+async function loadSchedules() {
+  const fromMain = await fetchSchedulesFromMain();
+  if (Array.isArray(fromMain) && fromMain.length > 0) {
+    const normalized = fromMain.map(normalizeScheduleEntry).filter(Boolean);
+    setSchedules(normalized);
+    ensureRepeatStateInitialization();
+    notifyScheduleUpdate('initial-load', 'schedule-model');
+    return;
+  }
+
+  const legacy = readLegacySchedules();
+  const normalized = legacy.map(normalizeScheduleEntry).filter(Boolean);
   setSchedules(normalized);
   ensureRepeatStateInitialization();
+
+  if (normalized.length > 0) {
+    await syncSchedulesWithMain();
+    try {
+      localStorage.removeItem('schedules');
+    } catch {
+      // noop
+    }
+  }
+  notifyScheduleUpdate('legacy-load', 'schedule-model');
+}
+
+/**
+ * 起動時にスケジュールを読み込み、必要に応じてメインプロセスへ同期する。
+ */
+export function initializeSchedules() {
+  void loadSchedules();
 }
 
 /**

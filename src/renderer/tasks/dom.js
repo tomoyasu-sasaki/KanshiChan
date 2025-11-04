@@ -1,0 +1,52 @@
+/**
+ * タスク機能で参照する主要DOMノードを定義する。
+ * - テストや再マウントで null になり得るため、利用側で存在チェックを行うこと。
+ */
+export function getEls() {
+  return {
+    form: document.getElementById('taskForm'),
+    id: document.getElementById('taskId'),
+    title: document.getElementById('taskTitle'),
+    description: document.getElementById('taskDescription'),
+    priority: document.getElementById('taskPriority'),
+    status: document.getElementById('taskStatus'),
+    startDate: document.getElementById('taskStartDate'),
+    endDate: document.getElementById('taskEndDate'),
+    scheduleId: document.getElementById('taskScheduleId'),
+    parentId: document.getElementById('taskParentId'),
+    tagsInput: document.getElementById('taskTagsInput'),
+    repeatType: document.getElementById('taskRepeatType'),
+    repeatInterval: document.getElementById('taskRepeatInterval'),
+    repeatWeekdayContainer: document.getElementById('taskRepeatWeekdays'),
+    repeatWeekdayInputs: document.querySelectorAll('#taskRepeatWeekdays input[type="checkbox"]'),
+    submitBtn: document.getElementById('taskSubmitBtn'),
+    cancelEditBtn: document.getElementById('taskCancelEditBtn'),
+    items: document.getElementById('tasksItems'),
+    showOnlyActive: document.getElementById('tasksShowOnlyActive'),
+    hideDone: document.getElementById('tasksHideDone'),
+    voiceMsg: document.getElementById('tasksVoiceMessage'),
+    tagFilterContainer: document.getElementById('tasksTagFilters'),
+    advancedFiltersToggle: document.getElementById('tasksAdvancedFiltersToggle'),
+    advancedFiltersPanel: document.getElementById('tasksAdvancedFiltersPanel'),
+    filterStatus: document.getElementById('tasksFilterStatus'),
+    filterPriority: document.getElementById('tasksFilterPriority'),
+    filterDateRange: document.getElementById('tasksFilterDateRange'),
+    filterCustomDates: document.getElementById('tasksFilterCustomDates'),
+    filterStartDate: document.getElementById('tasksFilterStartDate'),
+    filterEndDate: document.getElementById('tasksFilterEndDate'),
+    filterConditionMode: document.getElementById('tasksFilterConditionMode'),
+    saveFilterBtn: document.getElementById('tasksSaveFilter'),
+    loadFilterBtn: document.getElementById('tasksLoadFilter'),
+    clearFilterBtn: document.getElementById('tasksClearFilter'),
+    savedFilters: document.getElementById('tasksSavedFilters'),
+    sortBy1: document.getElementById('tasksSortBy1'),
+    sortOrder1: document.getElementById('tasksSortOrder1'),
+    sortBy2: document.getElementById('tasksSortBy2'),
+    sortOrder2: document.getElementById('tasksSortOrder2'),
+    groupBy: document.getElementById('tasksGroupBy'),
+    saveSortBtn: document.getElementById('tasksSaveSort'),
+    resetSortBtn: document.getElementById('tasksResetSort'),
+    viewToggles: document.querySelectorAll('input[name="tasksView"]'),
+  };
+}
+

@@ -5,18 +5,18 @@
   "graphRenderingMode": "multi-agent",
   "linkDisplayMode": "all",
   "graphStats": {
-    "totalNodes": 174,
-    "folders": 35,
-    "files": 139,
+    "totalNodes": 199,
+    "folders": 36,
+    "files": 163,
     "images": 19,
     "videos": 0,
     "audio": 0,
-    "code": 87,
-    "text": 12,
+    "code": 113,
+    "text": 9,
     "html": 2,
     "yaml": 0,
     "json": 2,
-    "other": 17,
+    "other": 18,
     "totalLines": 0,
     "maxLines": 0
   },
@@ -235,11 +235,6 @@
             ]
           },
           {
-            "name": "audio-input-architecture.md",
-            "type": "file",
-            "path": "docs/audio-input-architecture.md"
-          },
-          {
             "name": "comment-guidelines.md",
             "type": "file",
             "path": "docs/comment-guidelines.md"
@@ -260,19 +255,9 @@
             "path": "docs/index.html"
           },
           {
-            "name": "monitor-preview-toggle-plan.md",
-            "type": "file",
-            "path": "docs/monitor-preview-toggle-plan.md"
-          },
-          {
             "name": "README.md",
             "type": "file",
             "path": "docs/README.md"
-          },
-          {
-            "name": "release-notes.md",
-            "type": "file",
-            "path": "docs/release-notes.md"
           },
           {
             "name": "robots.txt",
@@ -280,14 +265,14 @@
             "path": "docs/robots.txt"
           },
           {
-            "name": "settings-voice-command-expansion-plan.md",
-            "type": "file",
-            "path": "docs/settings-voice-command-expansion-plan.md"
-          },
-          {
             "name": "sitemap.xml",
             "type": "file",
             "path": "docs/sitemap.xml"
+          },
+          {
+            "name": "tasks-implementation-plan.md",
+            "type": "file",
+            "path": "docs/tasks-implementation-plan.md"
           }
         ]
       },
@@ -382,6 +367,33 @@
                 "path": "src/main/db",
                 "children": [
                   {
+                    "name": "migrations",
+                    "type": "directory",
+                    "path": "src/main/db/migrations",
+                    "children": [
+                      {
+                        "name": "001_initial_schema.js",
+                        "type": "file",
+                        "path": "src/main/db/migrations/001_initial_schema.js"
+                      },
+                      {
+                        "name": "002_add_schedules.js",
+                        "type": "file",
+                        "path": "src/main/db/migrations/002_add_schedules.js"
+                      },
+                      {
+                        "name": "003_task_extensions.js",
+                        "type": "file",
+                        "path": "src/main/db/migrations/003_task_extensions.js"
+                      },
+                      {
+                        "name": "index.js",
+                        "type": "file",
+                        "path": "src/main/db/migrations/index.js"
+                      }
+                    ]
+                  },
+                  {
                     "name": "index.js",
                     "type": "file",
                     "path": "src/main/db/index.js"
@@ -431,6 +443,11 @@
                     "path": "src/main/services/llm.js"
                   },
                   {
+                    "name": "schedules.js",
+                    "type": "file",
+                    "path": "src/main/services/schedules.js"
+                  },
+                  {
                     "name": "slack-reporter.js",
                     "type": "file",
                     "path": "src/main/services/slack-reporter.js"
@@ -444,6 +461,11 @@
                     "name": "system-events.js",
                     "type": "file",
                     "path": "src/main/services/system-events.js"
+                  },
+                  {
+                    "name": "tasks.js",
+                    "type": "file",
+                    "path": "src/main/services/tasks.js"
                   },
                   {
                     "name": "typing-monitor.js",
@@ -474,12 +496,6 @@
             "type": "directory",
             "path": "src/pages",
             "children": [
-              {
-                "name": "variants",
-                "type": "directory",
-                "path": "src/pages/variants",
-                "children": []
-              },
               {
                 "name": "index.html",
                 "type": "file",
@@ -548,6 +564,11 @@
                     "name": "tables.js",
                     "type": "file",
                     "path": "src/renderer/dashboard/tables.js"
+                  },
+                  {
+                    "name": "tasks.js",
+                    "type": "file",
+                    "path": "src/renderer/dashboard/tasks.js"
                   },
                   {
                     "name": "typing.js",
@@ -809,6 +830,103 @@
                 ]
               },
               {
+                "name": "tasks",
+                "type": "directory",
+                "path": "src/renderer/tasks",
+                "children": [
+                  {
+                    "name": "announcement.js",
+                    "type": "file",
+                    "path": "src/renderer/tasks/announcement.js"
+                  },
+                  {
+                    "name": "constants.js",
+                    "type": "file",
+                    "path": "src/renderer/tasks/constants.js"
+                  },
+                  {
+                    "name": "dom.js",
+                    "type": "file",
+                    "path": "src/renderer/tasks/dom.js"
+                  },
+                  {
+                    "name": "drag.js",
+                    "type": "file",
+                    "path": "src/renderer/tasks/drag.js"
+                  },
+                  {
+                    "name": "filter-apply.js",
+                    "type": "file",
+                    "path": "src/renderer/tasks/filter-apply.js"
+                  },
+                  {
+                    "name": "filters.js",
+                    "type": "file",
+                    "path": "src/renderer/tasks/filters.js"
+                  },
+                  {
+                    "name": "form.js",
+                    "type": "file",
+                    "path": "src/renderer/tasks/form.js"
+                  },
+                  {
+                    "name": "model.js",
+                    "type": "file",
+                    "path": "src/renderer/tasks/model.js"
+                  },
+                  {
+                    "name": "notifications.js",
+                    "type": "file",
+                    "path": "src/renderer/tasks/notifications.js"
+                  },
+                  {
+                    "name": "reading-settings.js",
+                    "type": "file",
+                    "path": "src/renderer/tasks/reading-settings.js"
+                  },
+                  {
+                    "name": "render.js",
+                    "type": "file",
+                    "path": "src/renderer/tasks/render.js"
+                  },
+                  {
+                    "name": "repeat-controls.js",
+                    "type": "file",
+                    "path": "src/renderer/tasks/repeat-controls.js"
+                  },
+                  {
+                    "name": "sort.js",
+                    "type": "file",
+                    "path": "src/renderer/tasks/sort.js"
+                  },
+                  {
+                    "name": "state.js",
+                    "type": "file",
+                    "path": "src/renderer/tasks/state.js"
+                  },
+                  {
+                    "name": "utils.js",
+                    "type": "file",
+                    "path": "src/renderer/tasks/utils.js"
+                  },
+                  {
+                    "name": "view-toggle.js",
+                    "type": "file",
+                    "path": "src/renderer/tasks/view-toggle.js"
+                  },
+                  {
+                    "name": "voice-commands.js",
+                    "type": "file",
+                    "path": "src/renderer/tasks/voice-commands.js"
+                  },
+                  {
+                    "name": "voice.js",
+                    "type": "file",
+                    "path": "src/renderer/tasks/voice.js"
+                  }
+                ]
+              },
+              {
                 "name": "app.js",
                 "type": "file",
                 "path": "src/renderer/app.js"
@@ -837,6 +955,11 @@
                 "name": "settings.js",
                 "type": "file",
                 "path": "src/renderer/settings.js"
+              },
+              {
+                "name": "tasks.js",
+                "type": "file",
+                "path": "src/renderer/tasks.js"
               }
             ]
           },
@@ -884,6 +1007,11 @@
                 "name": "style.css",
                 "type": "file",
                 "path": "src/styles/style.css"
+              },
+              {
+                "name": "tasks.css",
+                "type": "file",
+                "path": "src/styles/tasks.css"
               },
               {
                 "name": "voice-input.css",
@@ -975,12 +1103,12 @@
         "highlighted": false,
         "parentPath": null,
         "childFileCount": 9,
-        "x": 202.8971969981892,
-        "y": -17.866251022400913,
-        "z": -14.92317275802891,
-        "vx": -1.4856571176171886e-9,
-        "vy": 9.107555460456903e-10,
-        "vz": 1.884233077683559e-9
+        "x": 212.57939970644614,
+        "y": -75.67832574153495,
+        "z": -31.75904632971266,
+        "vx": -0.3056881956767566,
+        "vy": -0.2166216859582654,
+        "vz": -0.04079328562817697
       },
       {
         "id": "kanshichan/.claude",
@@ -997,12 +1125,12 @@
         "highlighted": false,
         "parentPath": "kanshichan",
         "childFileCount": 0,
-        "x": 218.97674078642746,
-        "y": -58.697885027391166,
-        "z": -12.804834771827675,
-        "vx": -1.989001166390169e-9,
-        "vy": 2.4824794368124383e-10,
-        "vz": 1.4818721517049754e-9
+        "x": 199.75387866212455,
+        "y": -113.57396961372403,
+        "z": -18.678974664832385,
+        "vx": 0.22791461528789406,
+        "vy": -0.27701090717583915,
+        "vz": 0.022360221015038134
       },
       {
         "id": "kanshichan/.cursor",
@@ -1019,12 +1147,12 @@
         "highlighted": false,
         "parentPath": "kanshichan",
         "childFileCount": 0,
-        "x": 164.30649099266736,
-        "y": -7.848415356675799,
-        "z": -17.75034309111689,
-        "vx": -1.091283819000174e-9,
-        "vy": 2.1739021388271614e-9,
-        "vz": 2.60003535475478e-9
+        "x": 210.24288023946133,
+        "y": -35.799143943847554,
+        "z": -15.541527053066812,
+        "vx": 0.172533871364344,
+        "vy": -0.5252836970720552,
+        "vz": 0.057472937519980026
       },
       {
         "id": "kanshichan/.kamui",
@@ -1041,12 +1169,12 @@
         "highlighted": false,
         "parentPath": "kanshichan",
         "childFileCount": 0,
-        "x": 214.72298348045493,
-        "y": 17.723693041781313,
-        "z": 7.807189191450156,
-        "vx": -2.9019670859462993e-10,
-        "vy": -6.599044445343977e-10,
-        "vz": 3.832573706460977e-9
+        "x": 209.5268253412764,
+        "y": -62.82953639151672,
+        "z": -71.85115376789962,
+        "vx": 0.21467868058189524,
+        "vy": -0.3575348085162924,
+        "vz": 0.15959019686278492
       },
       {
         "id": "kanshichan/.worktrees",
@@ -1063,12 +1191,12 @@
         "highlighted": false,
         "parentPath": "kanshichan",
         "childFileCount": 0,
-        "x": 192.0674932469996,
-        "y": -55.779265033813296,
-        "z": -26.77770859705612,
-        "vx": -2.395669927489719e-9,
-        "vy": 1.3336599037367966e-9,
-        "vz": 1.6440196716542e-9
+        "x": 236.95687928555816,
+        "y": -110.88778827693092,
+        "z": -25.870962238582468,
+        "vx": 0.08176246674213081,
+        "vy": -0.08657504827389445,
+        "vz": -0.10450257622970284
       },
       {
         "id": "kanshichan/assets",
@@ -1085,12 +1213,12 @@
         "highlighted": false,
         "parentPath": "kanshichan",
         "childFileCount": 1,
-        "x": 232.05087688702167,
-        "y": 10.595296107394082,
-        "z": -68.09082195762242,
-        "vx": -2.2417680064273294e-9,
-        "vy": 1.3873408004480032e-9,
-        "vz": 2.0085416811102635e-9
+        "x": 248.17474617136853,
+        "y": -100.96189735367365,
+        "z": -85.15853935647036,
+        "vx": 1.8178131646561877,
+        "vy": -1.45102419327925,
+        "vz": -2.465182183405484
       },
       {
         "id": "kanshichan/assets/logo.png",
@@ -1107,12 +1235,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/assets",
         "childFileCount": 0,
-        "x": 249.93333601435793,
-        "y": 30.205292202577088,
-        "z": -104.86248453761294,
-        "vx": -1.6298060444573497e-9,
-        "vy": 2.2072372037279263e-9,
-        "vz": 1.0301273630720047e-10
+        "x": 264.4686226455568,
+        "y": -115.4367743384246,
+        "z": -112.80353002157534,
+        "vx": -2.6708476782924238,
+        "vy": 2.0502194914296306,
+        "vz": 4.549968356403171
       },
       {
         "id": "kanshichan/bin",
@@ -1129,12 +1257,12 @@
         "highlighted": false,
         "parentPath": "kanshichan",
         "childFileCount": 1,
-        "x": 230.17314484061754,
-        "y": -11.496264215751223,
-        "z": 47.72007180257507,
-        "vx": -2.5688867623178898e-9,
-        "vy": 4.778719872200219e-10,
-        "vz": 2.455982515890798e-9
+        "x": 247.92227183229207,
+        "y": -103.0598232184699,
+        "z": 21.101908438107586,
+        "vx": 1.6886389620559858,
+        "vy": -1.6348738028147558,
+        "vz": 2.3222391831058693
       },
       {
         "id": "kanshichan/bin/whisper-cli",
@@ -1151,12 +1279,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/bin",
         "childFileCount": 0,
-        "x": 245.53950698822652,
-        "y": -9.405008746070218,
-        "z": 90.00648037618002,
-        "vx": -2.4702850545651253e-9,
-        "vy": 3.45298790492945e-10,
-        "vz": 4.962391294109344e-9
+        "x": 266.647247775955,
+        "y": -117.52422773614529,
+        "z": 47.50504269900156,
+        "vx": -3.123480089593919,
+        "vy": 2.0850007303377085,
+        "vz": -4.500854093440329
       },
       {
         "id": "kanshichan/docs",
@@ -1172,13 +1300,13 @@
         "glowIntensity": 0,
         "highlighted": false,
         "parentPath": "kanshichan",
-        "childFileCount": 11,
-        "x": 446.16013526413985,
-        "y": 43.1393315235725,
-        "z": -3.225546999812858,
-        "vx": -3.782803234866484e-9,
-        "vy": -1.1306020725113823e-9,
-        "vz": 1.3728267989139837e-9
+        "childFileCount": 8,
+        "x": 453.69267742659815,
+        "y": -36.17562521576771,
+        "z": -36.87347210475666,
+        "vx": 0.3975050247719981,
+        "vy": -0.2607324265429599,
+        "vz": 0.056369612003776284
       },
       {
         "id": "kanshichan/docs/assets",
@@ -1195,12 +1323,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/docs",
         "childFileCount": 0,
-        "x": 583.6852540354907,
-        "y": 99.43901272226846,
-        "z": 16.69221448074781,
-        "vx": -3.943623959132685e-9,
-        "vy": -1.5648091739446963e-9,
-        "vz": 1.952568654913486e-11
+        "x": 595.2863618207564,
+        "y": 5.471654100240433,
+        "z": -12.49484064591464,
+        "vx": 2.0083405157418524,
+        "vy": 0.40551775227463377,
+        "vz": 0.44405707399966377
       },
       {
         "id": "kanshichan/docs/assets/css",
@@ -1217,12 +1345,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/docs/assets",
         "childFileCount": 2,
-        "x": 621.9532338462964,
-        "y": 80.6804242312089,
-        "z": 62.48405447388015,
-        "vx": -3.416421899807703e-10,
-        "vy": 1.601056553605151e-9,
-        "vz": 1.7612647836541442e-10
+        "x": 630.6520565086603,
+        "y": -21.074521510151406,
+        "z": 23.60015677529305,
+        "vx": -0.6399875470252535,
+        "vy": -0.9675227913711372,
+        "vz": 0.27630430842388237
       },
       {
         "id": "kanshichan/docs/assets/css/responsive.css",
@@ -1239,12 +1367,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/docs/assets/css",
         "childFileCount": 0,
-        "x": 648.9089609735138,
-        "y": 55.639891018588436,
-        "z": 76.29424999637146,
-        "vx": 5.110158394005026e-10,
-        "vy": 2.3120424376830215e-9,
-        "vz": 1.7360198177699883e-9
+        "x": 654.5235497542518,
+        "y": -46.58514611042569,
+        "z": 29.623633599222437,
+        "vx": -2.1313725029938766,
+        "vy": 1.5860473948280596,
+        "vz": -1.0360691727519806
       },
       {
         "id": "kanshichan/docs/assets/css/style.css",
@@ -1261,12 +1389,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/docs/assets/css",
         "childFileCount": 0,
-        "x": 635.9400254961458,
-        "y": 79.11017794816834,
-        "z": 99.09213122930595,
-        "vx": 4.0730486782516615e-10,
-        "vy": 2.765161631711098e-9,
-        "vz": 5.132860435359459e-10
+        "x": 644.9019869921024,
+        "y": -24.91455281792384,
+        "z": 56.77941678784256,
+        "vx": -0.8626205022864039,
+        "vy": -0.11366187216253859,
+        "vz": -1.7630549597383356
       },
       {
         "id": "kanshichan/docs/assets/images",
@@ -1283,12 +1411,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/docs/assets",
         "childFileCount": 1,
-        "x": 711.6757422323952,
-        "y": 163.35678708211992,
-        "z": 27.354181069516635,
-        "vx": -2.7448913927598987e-9,
-        "vy": -1.7339258119973388e-9,
-        "vz": -7.822918210945859e-10
+        "x": 725.8368927922257,
+        "y": 52.37928183228266,
+        "z": 6.720082088837237,
+        "vx": 1.6977880390138644,
+        "vy": 0.24452039698633285,
+        "vz": 0.346274339945754
       },
       {
         "id": "kanshichan/docs/assets/images/screenshots",
@@ -1305,12 +1433,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/docs/assets/images",
         "childFileCount": 17,
-        "x": 804.8441721761966,
-        "y": 207.5839190220723,
-        "z": 34.83053705003011,
-        "vx": -1.1385916447059804e-9,
-        "vy": -2.0006197401770387e-9,
-        "vz": -8.27529661903926e-10
+        "x": 820.3168634319965,
+        "y": 85.41865345469604,
+        "z": 20.11493397477005,
+        "vx": -0.03773544214355697,
+        "vy": -0.2770149852432059,
+        "vz": -0.12108737208018303
       },
       {
         "id": "kanshichan/docs/assets/images/screenshots/audio-input-01.jpeg",
@@ -1327,12 +1455,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/docs/assets/images/screenshots",
         "childFileCount": 0,
-        "x": 814.7231888910712,
-        "y": 167.83326814397998,
-        "z": 28.607013383115437,
-        "vx": 2.7029006212652394e-11,
-        "vy": -5.161234406524861e-10,
-        "vz": -1.5963880382300354e-9
+        "x": 826.5520613576438,
+        "y": 44.00837313720446,
+        "z": 21.187457232174737,
+        "vx": -0.6307171665677552,
+        "vy": -0.7289863514280622,
+        "vz": -0.3926313607280055
       },
       {
         "id": "kanshichan/docs/assets/images/screenshots/audio-input-02.jpeg",
@@ -1349,12 +1477,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/docs/assets/images/screenshots",
         "childFileCount": 0,
-        "x": 789.2916332400924,
-        "y": 210.18426470775086,
-        "z": -2.9948778930156,
-        "vx": -1.946281724329517e-10,
-        "vy": -1.2145999390581743e-9,
-        "vz": -9.54701989012006e-10
+        "x": 801.2753421913143,
+        "y": 116.09412628137432,
+        "z": -1.6517556930131323,
+        "vx": -0.8159695436642679,
+        "vy": -0.5015043279586608,
+        "vz": -0.2567046387583302
       },
       {
         "id": "kanshichan/docs/assets/images/screenshots/audio-input-03.jpeg",
@@ -1371,12 +1499,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/docs/assets/images/screenshots",
         "childFileCount": 0,
-        "x": 784.7612670601687,
-        "y": 211.69746226204026,
-        "z": 70.20767285058955,
-        "vx": 1.6229804219781336e-10,
-        "vy": -8.789544803106908e-10,
-        "vz": -1.8321569623433912e-10
+        "x": 811.7701625753564,
+        "y": 101.42398670094636,
+        "z": 58.360249232676246,
+        "vx": -0.6559154967551661,
+        "vy": -0.6478067406025076,
+        "vz": -0.6073007011264067
       },
       {
         "id": "kanshichan/docs/assets/images/screenshots/audio-input-04.jpeg",
@@ -1393,12 +1521,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/docs/assets/images/screenshots",
         "childFileCount": 0,
-        "x": 820.7000401012922,
-        "y": 191.2778125799192,
-        "z": -1.963939533338927,
-        "vx": -2.0087010843715553e-10,
-        "vy": -1.991393584297173e-9,
-        "vz": -4.5927145738392964e-10
+        "x": 813.1672150417728,
+        "y": 77.23869098036043,
+        "z": -19.179932304800957,
+        "vx": -0.3395782042196899,
+        "vy": -0.364258362571611,
+        "vz": -0.7465784688878754
       },
       {
         "id": "kanshichan/docs/assets/images/screenshots/dashboard-01.jpeg",
@@ -1415,12 +1543,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/docs/assets/images/screenshots",
         "childFileCount": 0,
-        "x": 843.618659072286,
-        "y": 186.6958266407467,
-        "z": 23.98392090708904,
-        "vx": 2.915383067648051e-10,
-        "vy": -7.196760396706568e-10,
-        "vz": 2.3116543285504234e-10
+        "x": 842.1190534602953,
+        "y": 59.204795409128344,
+        "z": -6.0964200040696825,
+        "vx": -0.985771417093554,
+        "vy": -0.19675766457854252,
+        "vz": 0.0012018314368680949
       },
       {
         "id": "kanshichan/docs/assets/images/screenshots/dashboard-02.jpeg",
@@ -1437,12 +1565,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/docs/assets/images/screenshots",
         "childFileCount": 0,
-        "x": 810.2802473257782,
-        "y": 178.74416424722628,
-        "z": 65.31296603305742,
-        "vx": -2.1014382857670903e-9,
-        "vy": -1.4093932844875218e-9,
-        "vz": -4.700952493358591e-10
+        "x": 807.6701939486826,
+        "y": 63.02592514582248,
+        "z": 52.66826936802952,
+        "vx": -0.73398223198229,
+        "vy": -0.6541480297377061,
+        "vz": 0.03705080890365659
       },
       {
         "id": "kanshichan/docs/assets/images/screenshots/dashboard-03.jpeg",
@@ -1459,12 +1587,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/docs/assets/images/screenshots",
         "childFileCount": 0,
-        "x": 803.2646127016645,
-        "y": 243.24707992988317,
-        "z": 8.618812297555747,
-        "vx": 3.0577503234334935e-11,
-        "vy": -1.1564372041110605e-9,
-        "vz": -4.4599882874073407e-10
+        "x": 835.2383949827965,
+        "y": 123.7065476034045,
+        "z": 4.731102838036326,
+        "vx": -1.2994948309129228,
+        "vy": -1.5836548696566348,
+        "vz": 0.04069616619794569
       },
       {
         "id": "kanshichan/docs/assets/images/screenshots/dashboard-04.jpeg",
@@ -1481,12 +1609,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/docs/assets/images/screenshots",
         "childFileCount": 0,
-        "x": 777.1345811796602,
-        "y": 238.09481457609007,
-        "z": 36.08941352003564,
-        "vx": -2.0110898896065295e-10,
-        "vy": -1.0648660357939375e-9,
-        "vz": -3.3728341752601677e-10
+        "x": 796.8046273808193,
+        "y": 117.45332820752749,
+        "z": 32.54981741533875,
+        "vx": -0.656607217643764,
+        "vy": -0.25730853794443814,
+        "vz": -0.22873868852924906
       },
       {
         "id": "kanshichan/docs/assets/images/screenshots/home_monitor.jpeg",
@@ -1503,12 +1631,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/docs/assets/images/screenshots",
         "childFileCount": 0,
-        "x": 826.029818013392,
-        "y": 223.59378868271705,
-        "z": -2.5431221058894,
-        "vx": -6.073047981100844e-10,
-        "vy": -1.952098530908833e-9,
-        "vz": -7.349807593019858e-10
+        "x": 833.0434285369578,
+        "y": 101.67651308714417,
+        "z": -18.558458306759757,
+        "vx": -0.825925504384279,
+        "vy": -0.5074036951564639,
+        "vz": -0.008895908728568979
       },
       {
         "id": "kanshichan/docs/assets/images/screenshots/logs.jpeg",
@@ -1525,12 +1653,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/docs/assets/images/screenshots",
         "childFileCount": 0,
-        "x": 840.4070132434854,
-        "y": 186.17212949330818,
-        "z": 54.87924283160464,
-        "vx": -1.3788607680782467e-9,
-        "vy": -2.5973543301470156e-9,
-        "vz": -3.531748910928335e-10
+        "x": 859.5242776961301,
+        "y": 65.68508616067739,
+        "z": 13.743304962829045,
+        "vx": -1.6263536275893653,
+        "vy": 0.06530258240015605,
+        "vz": -0.2542556636570991
       },
       {
         "id": "kanshichan/docs/assets/images/screenshots/schedule-01.jpeg",
@@ -1547,12 +1675,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/docs/assets/images/screenshots",
         "childFileCount": 0,
-        "x": 823.5087592107626,
-        "y": 208.1837754324962,
-        "z": 75.78883934601167,
-        "vx": 3.166669053067264e-10,
-        "vy": -1.881225966075527e-9,
-        "vz": -1.2143616338059173e-9
+        "x": 847.141046680645,
+        "y": 59.11473909461824,
+        "z": 42.443893130235196,
+        "vx": -1.2151336469320324,
+        "vy": -0.09016567469746,
+        "vz": -0.7295858241503238
       },
       {
         "id": "kanshichan/docs/assets/images/screenshots/schedule-02.jpeg",
@@ -1569,12 +1697,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/docs/assets/images/screenshots",
         "childFileCount": 0,
-        "x": 804.7239850342185,
-        "y": 237.49093283284384,
-        "z": 67.4532208723027,
-        "vx": -8.898933160425574e-11,
-        "vy": -1.8668796493140708e-9,
-        "vz": -3.7247705011679426e-10
+        "x": 840.2023792400037,
+        "y": 82.77571717119966,
+        "z": 59.068974769047855,
+        "vx": -0.7788538961591506,
+        "vy": -0.3964863897451962,
+        "vz": -0.9831746641525719
       },
       {
         "id": "kanshichan/docs/assets/images/screenshots/settings-01.jpeg",
@@ -1591,12 +1719,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/docs/assets/images/screenshots",
         "childFileCount": 0,
-        "x": 808.4396383591646,
-        "y": 253.16297723392427,
-        "z": 38.99240950460422,
-        "vx": -8.496113049302576e-10,
-        "vy": -1.7511668320613887e-9,
-        "vz": -1.6228119802266779e-10
+        "x": 830.4296355222539,
+        "y": 126.80840886781618,
+        "z": 32.55586542065491,
+        "vx": -0.5147131187136104,
+        "vy": -1.0731017287099178,
+        "vz": -0.5829020039836653
       },
       {
         "id": "kanshichan/docs/assets/images/screenshots/settings-02.jpeg",
@@ -1613,12 +1741,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/docs/assets/images/screenshots",
         "childFileCount": 0,
-        "x": 848.6562620874506,
-        "y": 214.36500304625605,
-        "z": 18.165217631295267,
-        "vx": -1.0095224216480547e-9,
-        "vy": -1.2482779494027435e-9,
-        "vz": -1.0732344390285063e-9
+        "x": 857.4573467161794,
+        "y": 90.22354489724441,
+        "z": -6.273659379770824,
+        "vx": -0.6326276476087084,
+        "vy": -0.39231383528010644,
+        "vz": 0.10787292876401915
       },
       {
         "id": "kanshichan/docs/assets/images/screenshots/settings-03.jpeg",
@@ -1635,12 +1763,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/docs/assets/images/screenshots",
         "childFileCount": 0,
-        "x": 833.6044627734586,
-        "y": 237.1540499350244,
-        "z": 56.984829676129436,
-        "vx": -6.867379874364728e-10,
-        "vy": -2.105750522024651e-9,
-        "vz": -7.25509572861343e-10
+        "x": 848.8511600661274,
+        "y": 107.81473096095812,
+        "z": 48.11416204255158,
+        "vx": -0.3586236154733731,
+        "vy": -0.49806041278443364,
+        "vz": -0.6114533059764565
       },
       {
         "id": "kanshichan/docs/assets/images/screenshots/settings-04.jpeg",
@@ -1657,12 +1785,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/docs/assets/images/screenshots",
         "childFileCount": 0,
-        "x": 849.3796667517264,
-        "y": 214.88823783036773,
-        "z": 50.322961706141115,
-        "vx": -9.726962843895013e-10,
-        "vy": -2.35914420640494e-9,
-        "vz": -9.940935023681597e-10
+        "x": 865.2808656334201,
+        "y": 88.20726898312446,
+        "z": 33.46352534388948,
+        "vx": -0.16403328072276196,
+        "vy": -0.34997985078183697,
+        "vz": -0.15094269058360427
       },
       {
         "id": "kanshichan/docs/assets/images/screenshots/slack.jpeg",
@@ -1679,12 +1807,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/docs/assets/images/screenshots",
         "childFileCount": 0,
-        "x": 836.2992019734587,
-        "y": 241.8111247888096,
-        "z": 25.296292426140013,
-        "vx": -1.5161702302185665e-9,
-        "vy": -1.744852472457588e-9,
-        "vz": -7.071881455712962e-10
+        "x": 860.1020408565287,
+        "y": 111.64503395655812,
+        "z": 18.795773414117384,
+        "vx": 0.3571034216785235,
+        "vy": -0.44001505698026394,
+        "vz": 0.1683339618009708
       },
       {
         "id": "kanshichan/docs/assets/images/logo.jpeg",
@@ -1701,12 +1829,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/docs/assets/images",
         "childFileCount": 0,
-        "x": 733.0446607470808,
-        "y": 135.6256844992368,
-        "z": 19.64594627735703,
-        "vx": -1.3568630973202568e-9,
-        "vy": -3.924624805613681e-10,
-        "vz": -1.1544946686451019e-9
+        "x": 736.4387480244409,
+        "y": 40.97314775343345,
+        "z": -25.746763944103876,
+        "vx": 0.3169368917718855,
+        "vy": -0.16018791466996887,
+        "vz": -0.021808749543709482
       },
       {
         "id": "kanshichan/docs/assets/js",
@@ -1723,12 +1851,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/docs/assets",
         "childFileCount": 1,
-        "x": 614.4694796397927,
-        "y": 121.13851009091445,
-        "z": -15.542998825241604,
-        "vx": -3.8939755851424685e-9,
-        "vy": 2.1052453981276958e-10,
-        "vz": -1.3816743385665987e-10
+        "x": 621.1797999968906,
+        "y": 33.13959067713562,
+        "z": -41.789289820630756,
+        "vx": 0.4944538086247799,
+        "vy": 0.20002710276139454,
+        "vz": -0.4690705958460323
       },
       {
         "id": "kanshichan/docs/assets/js/main.js",
@@ -1745,12 +1873,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/docs/assets/js",
         "childFileCount": 0,
-        "x": 636.1744441862784,
-        "y": 134.66444408546735,
-        "z": -45.5518014332264,
-        "vx": -3.0575099632191226e-9,
-        "vy": 1.826758654477527e-9,
-        "vz": -1.0136629587837325e-10
+        "x": 638.2317043197837,
+        "y": 52.95867881565402,
+        "z": -65.83899818906455,
+        "vx": -1.2749532625725026,
+        "vy": -1.7403433174096552,
+        "vz": 1.7723982643738838
       },
       {
         "id": "kanshichan/docs/testing",
@@ -1767,12 +1895,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/docs",
         "childFileCount": 1,
-        "x": 495.4724624902684,
-        "y": 13.029487387572964,
-        "z": -30.794326400156983,
-        "vx": -4.273192545300502e-9,
-        "vy": -1.9973603007639925e-10,
-        "vz": 2.248347488331508e-9
+        "x": 498.73184785122356,
+        "y": -62.240506608791435,
+        "z": -77.17852472646074,
+        "vx": 1.6371659489421002,
+        "vy": -1.2288809631695456,
+        "vz": -1.4864682268025151
       },
       {
         "id": "kanshichan/docs/testing/voice-command-expansion.md",
@@ -1789,34 +1917,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/docs/testing",
         "childFileCount": 0,
-        "x": 529.9828347967286,
-        "y": -6.817533615082473,
-        "z": -49.71804094517582,
-        "vx": -3.67360820798075e-9,
-        "vy": -3.5863183335858626e-10,
-        "vz": 1.6122599974570261e-9
-      },
-      {
-        "id": "kanshichan/docs/audio-input-architecture.md",
-        "name": "audio-input-architecture.md",
-        "path": "kanshichan/docs/audio-input-architecture.md",
-        "type": "file",
-        "lines": 0,
-        "val": 6,
-        "color": "#2c3038",
-        "baseColor": "#3498db",
-        "originalColor": "#3498db",
-        "defaultGlow": 0.18,
-        "glowIntensity": 0,
-        "highlighted": false,
-        "parentPath": "kanshichan/docs",
-        "childFileCount": 0,
-        "x": 471.77260434667295,
-        "y": 54.81599314485223,
-        "z": -34.545800325181595,
-        "vx": -3.3182413992554543e-9,
-        "vy": -6.651092179749943e-10,
-        "vz": 1.8236238292636439e-9
+        "x": 522.5838175961652,
+        "y": -77.09568426163307,
+        "z": -98.84193846768258,
+        "vx": -3.9895681281583104,
+        "vy": 2.2026285515846316,
+        "vz": 3.567459482269121
       },
       {
         "id": "kanshichan/docs/comment-guidelines.md",
@@ -1833,12 +1939,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/docs",
         "childFileCount": 0,
-        "x": 434.13638674987635,
-        "y": 42.62409497121565,
-        "z": 34.8550785898319,
-        "vx": -3.5826247056671468e-9,
-        "vy": -1.1941754665022395e-9,
-        "vz": 1.6869002132868567e-9
+        "x": 445.4354287807678,
+        "y": -18.044577080649436,
+        "z": -2.160179935712247,
+        "vx": 0.0705388513442938,
+        "vy": -0.3250207564753565,
+        "vz": -0.2547989517299839
       },
       {
         "id": "kanshichan/docs/DESIGN_SYSTEM.md",
@@ -1855,12 +1961,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/docs",
         "childFileCount": 0,
-        "x": 450.8187979558842,
-        "y": 3.6836983292177283,
-        "z": 3.322364672731099,
-        "vx": -3.043991211315523e-9,
-        "vy": -9.888303610907968e-10,
-        "vz": 1.882880077119199e-9
+        "x": 454.4210364938151,
+        "y": -74.05291322592468,
+        "z": -47.31582434285805,
+        "vx": 0.11234613581213439,
+        "vy": -0.06413467705525965,
+        "vz": 0.008681225944070153
       },
       {
         "id": "kanshichan/docs/development-guidelines.md",
@@ -1877,12 +1983,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/docs",
         "childFileCount": 0,
-        "x": 434.0698343308523,
-        "y": 55.22683747863935,
-        "z": -39.187001746891866,
-        "vx": -2.960637817541872e-9,
-        "vy": -2.3672951304483566e-10,
-        "vz": 1.3658213894920413e-9
+        "x": 441.45657715770545,
+        "y": -13.789211110618643,
+        "z": -68.2087227453693,
+        "vx": 0.03204462520533147,
+        "vy": -0.2449992239716823,
+        "vz": 0.0168434635133449
       },
       {
         "id": "kanshichan/docs/index.html",
@@ -1899,34 +2005,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/docs",
         "childFileCount": 0,
-        "x": 448.02645988014905,
-        "y": 81.4578785162612,
-        "z": -19.5716449113602,
-        "vx": -3.445352461156906e-9,
-        "vy": -6.315074564226243e-10,
-        "vz": 2.9566772155091515e-9
-      },
-      {
-        "id": "kanshichan/docs/monitor-preview-toggle-plan.md",
-        "name": "monitor-preview-toggle-plan.md",
-        "path": "kanshichan/docs/monitor-preview-toggle-plan.md",
-        "type": "file",
-        "lines": 0,
-        "val": 6,
-        "color": "#2c3038",
-        "baseColor": "#3498db",
-        "originalColor": "#3498db",
-        "defaultGlow": 0.18,
-        "glowIntensity": 0,
-        "highlighted": false,
-        "parentPath": "kanshichan/docs",
-        "childFileCount": 0,
-        "x": 486.5962461282044,
-        "y": 36.61639811113314,
-        "z": 5.537894316574613,
-        "vx": -3.625878854577607e-9,
-        "vy": -9.995879373771865e-10,
-        "vz": 2.109075002560223e-9
+        "x": 446.06404966915187,
+        "y": 4.124645531327851,
+        "z": -36.528241317666144,
+        "vx": -0.04034480410043022,
+        "vy": -0.18200163902460414,
+        "vz": -0.07731087680684517
       },
       {
         "id": "kanshichan/docs/README.md",
@@ -1943,34 +2027,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/docs",
         "childFileCount": 0,
-        "x": 465.09040699697647,
-        "y": 22.597752361360893,
-        "z": 28.194908624999126,
-        "vx": -3.998128107970051e-9,
-        "vy": -8.646174493158367e-10,
-        "vz": 1.958987156871277e-9
-      },
-      {
-        "id": "kanshichan/docs/release-notes.md",
-        "name": "release-notes.md",
-        "path": "kanshichan/docs/release-notes.md",
-        "type": "file",
-        "lines": 0,
-        "val": 6,
-        "color": "#2c3038",
-        "baseColor": "#3498db",
-        "originalColor": "#3498db",
-        "defaultGlow": 0.18,
-        "glowIntensity": 0,
-        "highlighted": false,
-        "parentPath": "kanshichan/docs",
-        "childFileCount": 0,
-        "x": 451.01522181265653,
-        "y": 18.29569424854839,
-        "z": -34.12172102767746,
-        "vx": -3.75982358532507e-9,
-        "vy": -1.266936058971981e-9,
-        "vz": 1.7487616948226319e-9
+        "x": 449.0255593641081,
+        "y": -60.45785084154841,
+        "z": -6.345058364047476,
+        "vx": 0.028849605640232045,
+        "vy": -0.09643608452594193,
+        "vz": -0.19153480536982348
       },
       {
         "id": "kanshichan/docs/robots.txt",
@@ -1987,34 +2049,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/docs",
         "childFileCount": 0,
-        "x": 476.9774956005919,
-        "y": 72.58149593301371,
-        "z": -2.4536959370041873,
-        "vx": -3.9489034674830745e-9,
-        "vy": -6.814799361823718e-10,
-        "vz": 2.0167999580971766e-9
-      },
-      {
-        "id": "kanshichan/docs/settings-voice-command-expansion-plan.md",
-        "name": "settings-voice-command-expansion-plan.md",
-        "path": "kanshichan/docs/settings-voice-command-expansion-plan.md",
-        "type": "file",
-        "lines": 0,
-        "val": 6,
-        "color": "#2c3038",
-        "baseColor": "#3498db",
-        "originalColor": "#3498db",
-        "defaultGlow": 0.18,
-        "glowIntensity": 0,
-        "highlighted": false,
-        "parentPath": "kanshichan/docs",
-        "childFileCount": 0,
-        "x": 465.75765850598657,
-        "y": 61.72813886136131,
-        "z": 29.558411633772703,
-        "vx": -3.758806516875764e-9,
-        "vy": -1.1800544765913363e-9,
-        "vz": 1.72666976910026e-9
+        "x": 494.23175041883997,
+        "y": -29.362139498279117,
+        "z": -40.25169393776839,
+        "vx": 0.037031033412054715,
+        "vy": -0.3024052427283674,
+        "vz": 0.022701386288433826
       },
       {
         "id": "kanshichan/docs/sitemap.xml",
@@ -2031,12 +2071,34 @@
         "highlighted": false,
         "parentPath": "kanshichan/docs",
         "childFileCount": 0,
-        "x": 436.9134137008951,
-        "y": 79.04957450621463,
-        "z": 13.686852246713654,
-        "vx": -3.8136375084646034e-9,
-        "vy": -2.6476786413685466e-9,
-        "vz": 4.0898902059430275e-9
+        "x": 476.633661146425,
+        "y": -3.628386013366647,
+        "z": -23.26383784825002,
+        "vx": 0.2611443064321677,
+        "vy": -0.11437811016330601,
+        "vz": 0.05857619139981691
+      },
+      {
+        "id": "kanshichan/docs/tasks-implementation-plan.md",
+        "name": "tasks-implementation-plan.md",
+        "path": "kanshichan/docs/tasks-implementation-plan.md",
+        "type": "file",
+        "lines": 0,
+        "val": 6,
+        "color": "#2c3038",
+        "baseColor": "#3498db",
+        "originalColor": "#3498db",
+        "defaultGlow": 0.18,
+        "glowIntensity": 0,
+        "highlighted": false,
+        "parentPath": "kanshichan/docs",
+        "childFileCount": 0,
+        "x": 451.07266012613997,
+        "y": -34.45608176967813,
+        "z": -41.58494319511718,
+        "vx": 0.3975050247719981,
+        "vy": -0.2607324265429599,
+        "vz": 0.056369612003776284
       },
       {
         "id": "kanshichan/models",
@@ -2053,12 +2115,12 @@
         "highlighted": false,
         "parentPath": "kanshichan",
         "childFileCount": 0,
-        "x": 238.64970683656932,
-        "y": 3.8036472651181503,
-        "z": -5.045803456863167,
-        "vx": -1.9444281883691515e-9,
-        "vy": -1.319494930664661e-9,
-        "vz": 2.6539047337029215e-9
+        "x": 259.0927385959477,
+        "y": -87.22350705378875,
+        "z": -31.048850664841034,
+        "vx": 4.360862736729256,
+        "vy": -1.1556965921266924,
+        "vz": -0.21026522011739363
       },
       {
         "id": "kanshichan/node_modules",
@@ -2075,12 +2137,12 @@
         "highlighted": false,
         "parentPath": "kanshichan",
         "childFileCount": 0,
-        "x": 234.0138549896231,
-        "y": -29.739081977474523,
-        "z": 12.921270569362703,
-        "vx": -1.0386385545507947e-9,
-        "vy": 6.573015890202744e-10,
-        "vz": 9.55473471878226e-10
+        "x": 253.5946422462062,
+        "y": -51.87065506111988,
+        "z": -31.03634975715029,
+        "vx": 3.5166432772068608,
+        "vy": 1.085873935887607,
+        "vz": 0.05690712363010958
       },
       {
         "id": "kanshichan/src",
@@ -2097,12 +2159,12 @@
         "highlighted": false,
         "parentPath": "kanshichan",
         "childFileCount": 1,
-        "x": -54.85475648119262,
-        "y": -89.1089923193512,
-        "z": -47.827359853815636,
-        "vx": 5.407318228787333e-10,
-        "vy": 5.112305153602574e-10,
-        "vz": 1.4668919574202544e-9
+        "x": -65.42499420022457,
+        "y": -75.66091249632477,
+        "z": -34.97597088745708,
+        "vx": -2.440708809469538,
+        "vy": 0.18071983328921484,
+        "vz": 0.8966450885559064
       },
       {
         "id": "kanshichan/src/constants",
@@ -2119,12 +2181,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src",
         "childFileCount": 11,
-        "x": -41.683074742798766,
-        "y": -49.90163991747295,
-        "z": -151.92651438525684,
-        "vx": -2.5663068212709943e-9,
-        "vy": -5.059574791536141e-10,
-        "vz": 1.9357285839387187e-9
+        "x": -46.58867184423331,
+        "y": -25.543435192776037,
+        "z": -118.79132121373848,
+        "vx": 0.11935796653436397,
+        "vy": 0.2929920188142883,
+        "vz": -0.08246813749445708
       },
       {
         "id": "kanshichan/src/constants/app.js",
@@ -2141,12 +2203,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/constants",
         "childFileCount": 0,
-        "x": -12.262622483528917,
-        "y": -23.020307752153908,
-        "z": -149.26137537649723,
-        "vx": -1.1645810370518586e-9,
-        "vy": -2.2245339137926577e-9,
-        "vz": 1.2377641350499627e-10
+        "x": -15.99425883151136,
+        "y": -1.2974716352987765,
+        "z": -108.20873103278879,
+        "vx": -0.2100690987346622,
+        "vy": -0.2825432238871123,
+        "vz": 0.6618854067021883
       },
       {
         "id": "kanshichan/src/constants/audioProfiles.js",
@@ -2159,16 +2221,16 @@
         "baseColor": "#f7df1e",
         "originalColor": "#f7df1e",
         "defaultGlow": 0.1,
-        "glowIntensity": 0,
-        "highlighted": false,
+        "glowIntensity": 2.4,
+        "highlighted": true,
         "parentPath": "kanshichan/src/constants",
         "childFileCount": 0,
-        "x": -21.76994792166413,
-        "y": -56.80449885418306,
-        "z": -190.01362899825193,
-        "vx": -2.2969846990920435e-9,
-        "vy": -1.830825733883799e-9,
-        "vz": 1.3683215477974833e-9
+        "x": -29.95067641680623,
+        "y": -40.22841102189006,
+        "z": -153.84809500740104,
+        "vx": -0.31763209474081333,
+        "vy": 0.1946850677698124,
+        "vz": 1.2220124623057778
       },
       {
         "id": "kanshichan/src/constants/llm-prompts.js",
@@ -2181,16 +2243,16 @@
         "baseColor": "#f7df1e",
         "originalColor": "#f7df1e",
         "defaultGlow": 0.1,
-        "glowIntensity": 0,
-        "highlighted": false,
+        "glowIntensity": 2.4,
+        "highlighted": true,
         "parentPath": "kanshichan/src/constants",
         "childFileCount": 0,
-        "x": -36.73098007551177,
-        "y": -80.81085027380814,
-        "z": -177.0932653581241,
-        "vx": -4.192938996558423e-9,
-        "vy": -1.351053859669743e-9,
-        "vz": 5.455127839649339e-10
+        "x": -48.21249825269035,
+        "y": -62.30229997564202,
+        "z": -132.80124445961312,
+        "vx": -0.039466589970485154,
+        "vy": -0.2734181798066424,
+        "vz": 0.36895739194415816
       },
       {
         "id": "kanshichan/src/constants/monitor.js",
@@ -2207,12 +2269,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/constants",
         "childFileCount": 0,
-        "x": -49.36955641881468,
-        "y": -13.803050182341863,
-        "z": -137.76759109990107,
-        "vx": -2.311390488612437e-9,
-        "vy": -2.406352064642175e-10,
-        "vz": 1.5062094589272606e-10
+        "x": -49.74490723576472,
+        "y": 10.882806911620294,
+        "z": -104.58718462541496,
+        "vx": 0.09675751034141244,
+        "vy": -0.7597653570357664,
+        "vz": 0.24936779032783268
       },
       {
         "id": "kanshichan/src/constants/schedule.js",
@@ -2229,12 +2291,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/constants",
         "childFileCount": 0,
-        "x": -80.34673538249505,
-        "y": -52.32852321563896,
-        "z": -162.2647163607167,
-        "vx": -2.9459583021025313e-9,
-        "vy": 6.650003604711638e-10,
-        "vz": 1.8148375226333723e-9
+        "x": -84.45897941600212,
+        "y": -22.572497112825086,
+        "z": -128.98179577091904,
+        "vx": 0.6557565433385703,
+        "vy": -0.14394844020447156,
+        "vz": 0.6339766586266878
       },
       {
         "id": "kanshichan/src/constants/settingsVoiceMap.js",
@@ -2251,12 +2313,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/constants",
         "childFileCount": 0,
-        "x": -2.8311842692241203,
-        "y": -53.150872286883995,
-        "z": -164.17742186385973,
-        "vx": -2.882167971327384e-9,
-        "vy": -2.8321283954034964e-9,
-        "vz": 5.970116561170767e-10
+        "x": -9.12195499921507,
+        "y": -38.76317088448667,
+        "z": -121.51439026403969,
+        "vx": 0.022991042333162782,
+        "vy": -0.1872730107527791,
+        "vz": 0.3198877251004713
       },
       {
         "id": "kanshichan/src/constants/voice-patterns.js",
@@ -2273,12 +2335,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/constants",
         "childFileCount": 0,
-        "x": -68.89467298722175,
-        "y": -23.629117495617205,
-        "z": -171.92320381485266,
-        "vx": -1.7109326450570489e-9,
-        "vy": -1.2116205632265266e-9,
-        "vz": -7.300831418194436e-10
+        "x": -67.40272524465685,
+        "y": 5.525007834134049,
+        "z": -135.95597887861345,
+        "vx": 0.4728653910168626,
+        "vy": -0.6819404508468363,
+        "vz": 0.8035543849914444
       },
       {
         "id": "kanshichan/src/constants/voicevox-config.js",
@@ -2295,12 +2357,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/constants",
         "childFileCount": 0,
-        "x": -61.261773973242235,
-        "y": -61.54563349438289,
-        "z": -187.99152841404373,
-        "vx": -3.6753402635400946e-9,
-        "vy": -2.3000168936634982e-9,
-        "vz": 2.6380194638414326e-9
+        "x": -67.36508454600184,
+        "y": -34.99267121888642,
+        "z": -153.54456792564065,
+        "vx": 0.10199750775907379,
+        "vy": 0.12575713591138524,
+        "vz": 0.7386109629133818
       },
       {
         "id": "kanshichan/src/constants/voicevox-speakers.js",
@@ -2317,12 +2379,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/constants",
         "childFileCount": 0,
-        "x": -42.31055298927672,
-        "y": -11.017238696203774,
-        "z": -171.3386484957054,
-        "vx": -2.075586366417296e-9,
-        "vy": -1.341458791134945e-9,
-        "vz": 8.81707747795196e-10
+        "x": -34.30766618345375,
+        "y": 11.440217267745524,
+        "z": -136.4927257563189,
+        "vx": -0.16069866435632083,
+        "vy": -0.2672980560383419,
+        "vz": 0.42408057618314743
       },
       {
         "id": "kanshichan/src/constants/whisper-config.js",
@@ -2339,12 +2401,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/constants",
         "childFileCount": 0,
-        "x": -19.439033745877772,
-        "y": -25.728434616172088,
-        "z": -181.92061435846855,
-        "vx": -2.4964945942680637e-9,
-        "vy": -1.5925438463297576e-9,
-        "vz": 1.2617229829477622e-9
+        "x": -17.494204269626405,
+        "y": -12.637196605040637,
+        "z": -148.44519191516662,
+        "vx": 0.038664245639798735,
+        "vy": 0.18176287734791582,
+        "vz": 0.17303560637948986
       },
       {
         "id": "kanshichan/src/constants/yolo-classes.js",
@@ -2361,12 +2423,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/constants",
         "childFileCount": 0,
-        "x": -45.6183587183357,
-        "y": -41.69761201075116,
-        "z": -195.67131158055375,
-        "vx": -2.112156763863589e-9,
-        "vy": -3.2041851797781e-9,
-        "vz": 1.4576565391611623e-9
+        "x": -48.56892540195517,
+        "y": -10.605699409030812,
+        "z": -160.78390105288847,
+        "vx": 0.010866031374562057,
+        "vy": 0.27258307720546426,
+        "vz": -0.27796125751712397
       },
       {
         "id": "kanshichan/src/main",
@@ -2383,12 +2445,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src",
         "childFileCount": 1,
-        "x": -35.780164261611986,
-        "y": -233.09674171024287,
-        "z": -197.254943068867,
-        "vx": -3.834250313160159e-9,
-        "vy": -1.976757591835141e-10,
-        "vz": 3.2017956584548514e-9
+        "x": -75.92638142593579,
+        "y": -221.65801259816786,
+        "z": -169.66181722746853,
+        "vx": 0.392421534445984,
+        "vy": -2.284313469970236,
+        "vz": -1.8343084937302918
       },
       {
         "id": "kanshichan/src/main/db",
@@ -2405,12 +2467,122 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/main",
         "childFileCount": 1,
-        "x": -71.33274698803828,
-        "y": -267.85808128804456,
-        "z": -219.91885207987997,
-        "vx": -2.982707748237014e-9,
-        "vy": -3.208167879395119e-9,
-        "vz": 8.136327219752197e-10
+        "x": -121.02553627187294,
+        "y": -228.82551493915437,
+        "z": -195.96232735265139,
+        "vx": -0.6391812065156104,
+        "vy": 1.198972192882461,
+        "vz": 0.8598240535995537
+      },
+      {
+        "id": "kanshichan/src/main/db/migrations",
+        "name": "migrations",
+        "path": "kanshichan/src/main/db/migrations",
+        "type": "directory",
+        "lines": 0,
+        "val": 14,
+        "color": "#2c3038",
+        "baseColor": "#4ec9b0",
+        "originalColor": "#4ec9b0",
+        "defaultGlow": 0.18,
+        "glowIntensity": 0,
+        "highlighted": false,
+        "parentPath": "kanshichan/src/main/db",
+        "childFileCount": 4,
+        "x": -121.13208243269348,
+        "y": -225.30205278057645,
+        "z": -192.9977801666169,
+        "vx": -0.6391812065156104,
+        "vy": 1.198972192882461,
+        "vz": 0.8598240535995537
+      },
+      {
+        "id": "kanshichan/src/main/db/migrations/001_initial_schema.js",
+        "name": "001_initial_schema.js",
+        "path": "kanshichan/src/main/db/migrations/001_initial_schema.js",
+        "type": "file",
+        "lines": 0,
+        "val": 6,
+        "color": "#2c3038",
+        "baseColor": "#f7df1e",
+        "originalColor": "#f7df1e",
+        "defaultGlow": 0.1,
+        "glowIntensity": 0,
+        "highlighted": false,
+        "parentPath": "kanshichan/src/main/db/migrations",
+        "childFileCount": 0,
+        "x": -118.96747028044263,
+        "y": -229.45722089146818,
+        "z": -190.64546602714148,
+        "vx": -0.6391812065156104,
+        "vy": 1.198972192882461,
+        "vz": 0.8598240535995537
+      },
+      {
+        "id": "kanshichan/src/main/db/migrations/002_add_schedules.js",
+        "name": "002_add_schedules.js",
+        "path": "kanshichan/src/main/db/migrations/002_add_schedules.js",
+        "type": "file",
+        "lines": 0,
+        "val": 6,
+        "color": "#2c3038",
+        "baseColor": "#f7df1e",
+        "originalColor": "#f7df1e",
+        "defaultGlow": 0.1,
+        "glowIntensity": 0,
+        "highlighted": false,
+        "parentPath": "kanshichan/src/main/db/migrations",
+        "childFileCount": 0,
+        "x": -117.7179517182049,
+        "y": -229.18970845024364,
+        "z": -193.73626544504887,
+        "vx": -0.6391812065156104,
+        "vy": 1.198972192882461,
+        "vz": 0.8598240535995537
+      },
+      {
+        "id": "kanshichan/src/main/db/migrations/003_task_extensions.js",
+        "name": "003_task_extensions.js",
+        "path": "kanshichan/src/main/db/migrations/003_task_extensions.js",
+        "type": "file",
+        "lines": 0,
+        "val": 6,
+        "color": "#2c3038",
+        "baseColor": "#f7df1e",
+        "originalColor": "#f7df1e",
+        "defaultGlow": 0.1,
+        "glowIntensity": 0,
+        "highlighted": false,
+        "parentPath": "kanshichan/src/main/db/migrations",
+        "childFileCount": 0,
+        "x": -119.14120902369349,
+        "y": -227.76483370910452,
+        "z": -189.12502432094732,
+        "vx": -0.6391812065156104,
+        "vy": 1.198972192882461,
+        "vz": 0.8598240535995537
+      },
+      {
+        "id": "kanshichan/src/main/db/migrations/index.js",
+        "name": "index.js",
+        "path": "kanshichan/src/main/db/migrations/index.js",
+        "type": "file",
+        "lines": 0,
+        "val": 6,
+        "color": "#2c3038",
+        "baseColor": "#f7df1e",
+        "originalColor": "#f7df1e",
+        "defaultGlow": 0.1,
+        "glowIntensity": 0,
+        "highlighted": false,
+        "parentPath": "kanshichan/src/main/db/migrations",
+        "childFileCount": 0,
+        "x": -118.06945392774578,
+        "y": -222.7906717349593,
+        "z": -194.20945028761633,
+        "vx": -0.6391812065156104,
+        "vy": 1.198972192882461,
+        "vz": 0.8598240535995537
       },
       {
         "id": "kanshichan/src/main/db/index.js",
@@ -2423,16 +2595,16 @@
         "baseColor": "#f7df1e",
         "originalColor": "#f7df1e",
         "defaultGlow": 0.1,
-        "glowIntensity": 0,
-        "highlighted": false,
+        "glowIntensity": 2.4,
+        "highlighted": true,
         "parentPath": "kanshichan/src/main/db",
         "childFileCount": 0,
-        "x": -98.93673229429793,
-        "y": -295.1243560841397,
-        "z": -234.90119935665305,
-        "vx": -3.5996330292708647e-9,
-        "vy": -4.2658160087026796e-9,
-        "vz": 2.4249646556985135e-10
+        "x": -150.82299848987395,
+        "y": -237.4330623174332,
+        "z": -215.99718497723882,
+        "vx": 3.6791296078325932,
+        "vy": 1.378790801083456,
+        "vz": 2.9937143400295154
       },
       {
         "id": "kanshichan/src/main/ipc",
@@ -2449,12 +2621,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/main",
         "childFileCount": 1,
-        "x": -7.508490697026943,
-        "y": -281.2492961057822,
-        "z": -196.80511630084584,
-        "vx": -3.3051979201171072e-9,
-        "vy": -1.972471834298023e-9,
-        "vz": 7.869811291782975e-10
+        "x": -77.63085770675195,
+        "y": -272.0237546500246,
+        "z": -155.60429080263214,
+        "vx": -0.19501341254310417,
+        "vy": 0.10637669928965172,
+        "vz": 1.3482432916161595
       },
       {
         "id": "kanshichan/src/main/ipc/register-handlers.js",
@@ -2467,16 +2639,16 @@
         "baseColor": "#f7df1e",
         "originalColor": "#f7df1e",
         "defaultGlow": 0.1,
-        "glowIntensity": 0,
-        "highlighted": false,
+        "glowIntensity": 2.4,
+        "highlighted": true,
         "parentPath": "kanshichan/src/main/ipc",
         "childFileCount": 0,
-        "x": 12.267444018090863,
-        "y": -317.8250127561365,
-        "z": -193.94793470543505,
-        "vx": -2.1404450271241626e-9,
-        "vy": -2.702116946153315e-9,
-        "vz": 8.106254030433654e-10
+        "x": -78.95125636682553,
+        "y": -308.01890958539366,
+        "z": -148.4202303113336,
+        "vx": -0.0325875412732985,
+        "vy": 4.56729612536912,
+        "vz": -0.3950719650038622
       },
       {
         "id": "kanshichan/src/main/services",
@@ -2492,13 +2664,13 @@
         "glowIntensity": 0,
         "highlighted": false,
         "parentPath": "kanshichan/src/main",
-        "childFileCount": 11,
-        "x": -18.964381167975638,
-        "y": -312.3381321733213,
-        "z": -308.2815880398727,
-        "vx": -3.6229540707667e-9,
-        "vy": 1.1063238202439194e-10,
-        "vz": 1.5226562541392133e-9
+        "childFileCount": 13,
+        "x": -74.04775954441703,
+        "y": -308.24551191052103,
+        "z": -265.1418579811453,
+        "vx": -5.32370481085074,
+        "vy": 2.666068670622874,
+        "vz": 3.5023651075808844
       },
       {
         "id": "kanshichan/src/main/services/absence-override.js",
@@ -2515,12 +2687,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/main/services",
         "childFileCount": 0,
-        "x": -51.576225808388436,
-        "y": -337.54491021705894,
-        "z": -311.37689303168895,
-        "vx": -3.904115081891486e-9,
-        "vy": 1.294988389796485e-10,
-        "vz": -3.4477480239609534e-10
+        "x": -101.22368687039678,
+        "y": -336.32617337502035,
+        "z": -269.11673382331844,
+        "vx": 0.22750874743725713,
+        "vy": 1.5678026587121354,
+        "vz": 1.2907798275895221
       },
       {
         "id": "kanshichan/src/main/services/active-window.js",
@@ -2537,12 +2709,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/main/services",
         "childFileCount": 0,
-        "x": -16.085903500659736,
-        "y": -354.323879702674,
-        "z": -301.90320801925225,
-        "vx": -3.363739526093993e-9,
-        "vy": -5.204056235669565e-10,
-        "vz": 1.5867983671120366e-10
+        "x": -74.2467517577324,
+        "y": -351.4131869460039,
+        "z": -259.06045791554567,
+        "vx": -0.11696132786898428,
+        "vy": 1.3586860756219294,
+        "vz": 1.2846964469797424
       },
       {
         "id": "kanshichan/src/main/services/audio.js",
@@ -2555,16 +2727,16 @@
         "baseColor": "#f7df1e",
         "originalColor": "#f7df1e",
         "defaultGlow": 0.1,
-        "glowIntensity": 0,
-        "highlighted": false,
+        "glowIntensity": 2.4,
+        "highlighted": true,
         "parentPath": "kanshichan/src/main/services",
         "childFileCount": 0,
-        "x": 11.862895635493405,
-        "y": -341.8681375851352,
-        "z": -308.54427665097865,
-        "vx": -3.3566384693285602e-9,
-        "vy": -3.3119691856086e-10,
-        "vz": 9.596722827581347e-11
+        "x": -38.80729901749325,
+        "y": -337.34661881677727,
+        "z": -259.2658289048062,
+        "vx": -0.32528564554420597,
+        "vy": 0.7724080678729794,
+        "vz": 0.9670790607649699
       },
       {
         "id": "kanshichan/src/main/services/config-store.js",
@@ -2581,12 +2753,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/main/services",
         "childFileCount": 0,
-        "x": -21.9336703307419,
-        "y": -286.85789765878803,
-        "z": -340.4964060485844,
-        "vx": -2.859067391946611e-9,
-        "vy": -1.1528855248320525e-9,
-        "vz": 4.2463790219856216e-10
+        "x": -56.59206253519736,
+        "y": -287.9084891428945,
+        "z": -298.521865790269,
+        "vx": -0.49347555014540523,
+        "vy": 0.16334759313821648,
+        "vz": 1.571110346112452
       },
       {
         "id": "kanshichan/src/main/services/llm.js",
@@ -2599,16 +2771,38 @@
         "baseColor": "#f7df1e",
         "originalColor": "#f7df1e",
         "defaultGlow": 0.1,
+        "glowIntensity": 2.4,
+        "highlighted": true,
+        "parentPath": "kanshichan/src/main/services",
+        "childFileCount": 0,
+        "x": -77.6779029400739,
+        "y": -307.53017349588276,
+        "z": -309.65448038032565,
+        "vx": -0.09544377449793912,
+        "vy": 0.6444479709570615,
+        "vz": 1.934417739606262
+      },
+      {
+        "id": "kanshichan/src/main/services/schedules.js",
+        "name": "schedules.js",
+        "path": "kanshichan/src/main/services/schedules.js",
+        "type": "file",
+        "lines": 0,
+        "val": 6,
+        "color": "#2c3038",
+        "baseColor": "#f7df1e",
+        "originalColor": "#f7df1e",
+        "defaultGlow": 0.1,
         "glowIntensity": 0,
         "highlighted": false,
         "parentPath": "kanshichan/src/main/services",
         "childFileCount": 0,
-        "x": -30.945373324749166,
-        "y": -317.8734094132943,
-        "z": -351.18586030708826,
-        "vx": -3.5614980292120045e-9,
-        "vy": 4.130988305006599e-10,
-        "vz": 5.649982758449982e-10
+        "x": -74.36250188705638,
+        "y": -306.7330061223965,
+        "z": -263.7405808591214,
+        "vx": -5.32370481085074,
+        "vy": 2.666068670622874,
+        "vz": 3.5023651075808844
       },
       {
         "id": "kanshichan/src/main/services/slack-reporter.js",
@@ -2625,12 +2819,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/main/services",
         "childFileCount": 0,
-        "x": -52.019417364118986,
-        "y": -315.09273658363924,
-        "z": -333.99926246115535,
-        "vx": -2.9153273211364396e-9,
-        "vy": 1.4295192043395996e-9,
-        "vz": 3.2731402006815673e-10
+        "x": -102.75030791455032,
+        "y": -313.5457257837022,
+        "z": -292.9769732048707,
+        "vx": -0.03270682078378397,
+        "vy": 0.6415995162300968,
+        "vz": 0.8530360094295323
       },
       {
         "id": "kanshichan/src/main/services/statistics.js",
@@ -2647,12 +2841,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/main/services",
         "childFileCount": 0,
-        "x": 0.5343165718316587,
-        "y": -305.38536244163106,
-        "z": -346.61835539200644,
-        "vx": -2.886174113268377e-9,
-        "vy": -7.768394257482869e-10,
-        "vz": 1.3513512533663108e-9
+        "x": -49.27447630205557,
+        "y": -320.38108325047426,
+        "z": -306.6237019399249,
+        "vx": -0.26603594633695293,
+        "vy": 0.7469081471455254,
+        "vz": 1.26449516910599
       },
       {
         "id": "kanshichan/src/main/services/system-events.js",
@@ -2669,12 +2863,34 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/main/services",
         "childFileCount": 0,
-        "x": 19.891787717057035,
-        "y": -314.129389627906,
-        "z": -323.68467521652735,
-        "vx": -3.1961983952121447e-9,
-        "vy": 4.3362232664858736e-10,
-        "vz": 2.059900512193335e-9
+        "x": -30.49203297338283,
+        "y": -317.2184566944279,
+        "z": -284.35998415897745,
+        "vx": 0.009116447974081598,
+        "vy": 0.5134432120167154,
+        "vz": 0.5223826852071712
+      },
+      {
+        "id": "kanshichan/src/main/services/tasks.js",
+        "name": "tasks.js",
+        "path": "kanshichan/src/main/services/tasks.js",
+        "type": "file",
+        "lines": 0,
+        "val": 6,
+        "color": "#2c3038",
+        "baseColor": "#f7df1e",
+        "originalColor": "#f7df1e",
+        "defaultGlow": 0.1,
+        "glowIntensity": 2.4,
+        "highlighted": true,
+        "parentPath": "kanshichan/src/main/services",
+        "childFileCount": 0,
+        "x": -51.42967818053652,
+        "y": -322.0461514635807,
+        "z": -280.78099724658284,
+        "vx": 12.876726580808077,
+        "vy": -9.016103523452191,
+        "vz": -9.245454825022515
       },
       {
         "id": "kanshichan/src/main/services/typing-monitor.js",
@@ -2691,12 +2907,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/main/services",
         "childFileCount": 0,
-        "x": -0.40711712407700057,
-        "y": -347.16252787852767,
-        "z": -330.61521426172806,
-        "vx": -4.386064572658284e-9,
-        "vy": -6.160149848590464e-10,
-        "vz": 1.2114638666985275e-9
+        "x": -51.46828921085919,
+        "y": -349.1384947995976,
+        "z": -282.319518114361,
+        "vx": -0.6604935251856122,
+        "vy": 1.10384144804069,
+        "vz": 0.7508223567446028
       },
       {
         "id": "kanshichan/src/main/services/voicevox.js",
@@ -2713,12 +2929,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/main/services",
         "childFileCount": 0,
-        "x": -34.08720664322562,
-        "y": -348.96450224936007,
-        "z": -329.79272156767325,
-        "vx": -3.94242733723515e-9,
-        "vy": 5.295124885708136e-10,
-        "vz": 8.585583423572931e-10
+        "x": -84.3599990432618,
+        "y": -347.6015783082489,
+        "z": -289.2472306165775,
+        "vx": -0.09342760236710841,
+        "vy": 0.6014064145165464,
+        "vz": 0.47433058312905396
       },
       {
         "id": "kanshichan/src/main/services/whisper.js",
@@ -2735,12 +2951,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/main/services",
         "childFileCount": 0,
-        "x": -10.321481912404936,
-        "y": -332.38624300914853,
-        "z": -348.93954401450264,
-        "vx": -3.918345128519419e-9,
-        "vy": 1.6814499305740304e-9,
-        "vz": 1.2445599004287478e-9
+        "x": -69.86094099473084,
+        "y": -334.77903506871075,
+        "z": -307.87598949462887,
+        "vx": -0.043230936536954354,
+        "vy": 0.2410236796245169,
+        "vz": 0.21905322088633217
       },
       {
         "id": "kanshichan/src/main/create-window.js",
@@ -2757,12 +2973,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/main",
         "childFileCount": 0,
-        "x": -21.971779760880896,
-        "y": -232.3364207048693,
-        "z": -231.6096532881371,
-        "vx": -3.372131677437831e-9,
-        "vy": -7.330256034303442e-10,
-        "vz": 3.2221386662526876e-9
+        "x": -56.03278558862332,
+        "y": -226.10798390010171,
+        "z": -198.67016454240766,
+        "vx": 0.6468605753505982,
+        "vy": -0.27961149757686843,
+        "vz": -0.9226638024245619
       },
       {
         "id": "kanshichan/src/pages",
@@ -2779,34 +2995,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src",
         "childFileCount": 1,
-        "x": -8.653540751085442,
-        "y": -111.2959425334233,
-        "z": -50.645363479847724,
-        "vx": -1.5634895031971705e-9,
-        "vy": 5.780088273545935e-10,
-        "vz": 4.854596637049613e-9
-      },
-      {
-        "id": "kanshichan/src/pages/variants",
-        "name": "variants",
-        "path": "kanshichan/src/pages/variants",
-        "type": "directory",
-        "lines": 0,
-        "val": 14,
-        "color": "#2c3038",
-        "baseColor": "#4ec9b0",
-        "originalColor": "#4ec9b0",
-        "defaultGlow": 0.18,
-        "glowIntensity": 0,
-        "highlighted": false,
-        "parentPath": "kanshichan/src/pages",
-        "childFileCount": 0,
-        "x": 14.70360276606508,
-        "y": -135.7327098117724,
-        "z": -68.94876412186349,
-        "vx": -2.3100971955899557e-9,
-        "vy": 7.684476029861666e-10,
-        "vz": 2.7033085919023508e-9
+        "x": -22.248834980790114,
+        "y": -92.92303212922148,
+        "z": -16.388896593428136,
+        "vx": 2.5561237298760555,
+        "vy": -0.8404637101845512,
+        "vz": 0.5958820540505131
       },
       {
         "id": "kanshichan/src/pages/index.html",
@@ -2819,16 +3013,16 @@
         "baseColor": "#e44d26",
         "originalColor": "#e44d26",
         "defaultGlow": 0.18,
-        "glowIntensity": 0,
-        "highlighted": false,
+        "glowIntensity": 2.4,
+        "highlighted": true,
         "parentPath": "kanshichan/src/pages",
         "childFileCount": 0,
-        "x": 26.013717509391565,
-        "y": -119.77976243511786,
-        "z": -37.772482377699205,
-        "vx": -1.3114697927046266e-9,
-        "vy": 7.020136464326514e-10,
-        "vz": 1.7674975867739375e-9
+        "x": 7.001298737814713,
+        "y": -106.71385105925354,
+        "z": -4.144571212407412,
+        "vx": -0.7032517272260378,
+        "vy": 0.5960148918549548,
+        "vz": -0.05036845572024039
       },
       {
         "id": "kanshichan/src/renderer",
@@ -2844,13 +3038,13 @@
         "glowIntensity": 0,
         "highlighted": false,
         "parentPath": "kanshichan/src",
-        "childFileCount": 6,
-        "x": -355.86853037458246,
-        "y": 29.547058463065603,
-        "z": 77.1105598406724,
-        "vx": 8.762633749839989e-10,
-        "vy": -1.334650039661416e-9,
-        "vz": 2.0677056225864217e-9
+        "childFileCount": 7,
+        "x": -338.1231549639074,
+        "y": 88.44322200509814,
+        "z": 77.50579210431387,
+        "vx": 3.0986009086799147,
+        "vy": -3.655729860467055,
+        "vz": -2.3359868504213455
       },
       {
         "id": "kanshichan/src/renderer/components",
@@ -2867,12 +3061,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer",
         "childFileCount": 1,
-        "x": -319.72213461027115,
-        "y": 32.82210225035714,
-        "z": 40.81215450541773,
-        "vx": -1.3528728198007734e-9,
-        "vy": 6.181200144111092e-11,
-        "vz": 1.7976745485866536e-9
+        "x": -309.4186678529312,
+        "y": 102.96418999564176,
+        "z": 34.50457605564118,
+        "vx": 2.535316895426491,
+        "vy": 0.09137651859160979,
+        "vz": -2.773339590493621
       },
       {
         "id": "kanshichan/src/renderer/components/audio-input-control.js",
@@ -2885,16 +3079,16 @@
         "baseColor": "#f7df1e",
         "originalColor": "#f7df1e",
         "defaultGlow": 0.1,
-        "glowIntensity": 0,
-        "highlighted": false,
+        "glowIntensity": 2.4,
+        "highlighted": true,
         "parentPath": "kanshichan/src/renderer/components",
         "childFileCount": 0,
-        "x": -296.2352243311469,
-        "y": 38.87551024963941,
-        "z": 10.435608721619191,
-        "vx": -8.932198830513386e-10,
-        "vy": -1.8470785855590393e-10,
-        "vz": 1.8819850771378237e-10
+        "x": -293.1142303400483,
+        "y": 112.34998670875454,
+        "z": 4.833326049086604,
+        "vx": -0.9589862165762774,
+        "vy": -0.42238414727322576,
+        "vz": 1.8855911801182514
       },
       {
         "id": "kanshichan/src/renderer/dashboard",
@@ -2910,13 +3104,13 @@
         "glowIntensity": 0,
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer",
-        "childFileCount": 11,
-        "x": -353.39682003206076,
-        "y": -13.82498001916156,
-        "z": 239.7521162025478,
-        "vx": -2.630792396289148e-9,
-        "vy": -3.050098937135688e-10,
-        "vz": 1.2695014394265291e-9
+        "childFileCount": 12,
+        "x": -349.24414319283636,
+        "y": 45.20470425401749,
+        "z": 232.52075728013742,
+        "vx": 0.02259934478845402,
+        "vy": -0.1905821214697009,
+        "vz": 0.465840277580147
       },
       {
         "id": "kanshichan/src/renderer/dashboard/charts.js",
@@ -2933,12 +3127,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer/dashboard",
         "childFileCount": 0,
-        "x": -389.7080718050748,
-        "y": -14.503053850773105,
-        "z": 260.95402954321554,
-        "vx": -1.961320047220771e-9,
-        "vy": -3.862193176907202e-10,
-        "vz": 3.6519240862586953e-9
+        "x": -387.61602302703284,
+        "y": 48.70319834981571,
+        "z": 244.92150228887402,
+        "vx": 0.8321976617903101,
+        "vy": 0.23630291651326976,
+        "vz": -1.4121773264197302
       },
       {
         "id": "kanshichan/src/renderer/dashboard/constants.js",
@@ -2955,12 +3149,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer/dashboard",
         "childFileCount": 0,
-        "x": -366.86625812970925,
-        "y": 17.264989683181277,
-        "z": 262.43347489980584,
-        "vx": -5.278518531733073e-9,
-        "vy": -1.4737980788701513e-9,
-        "vz": 1.1013627739547732e-9
+        "x": -362.81319510314836,
+        "y": 77.3889185277017,
+        "z": 253.4172522175137,
+        "vx": -0.0554035057906171,
+        "vy": -0.2942337875289211,
+        "vz": -1.124016132035635
       },
       {
         "id": "kanshichan/src/renderer/dashboard/data-loader.js",
@@ -2977,12 +3171,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer/dashboard",
         "childFileCount": 0,
-        "x": -383.13241847686226,
-        "y": -41.95184205010454,
-        "z": 252.41393371765588,
-        "vx": -4.52857240600601e-9,
-        "vy": 8.779264111308795e-10,
-        "vz": 3.733826230341725e-10
+        "x": -380.5097314897987,
+        "y": 19.33847141084272,
+        "z": 242.4483655010081,
+        "vx": 0.3520748245023038,
+        "vy": 0.9646044449799243,
+        "vz": -0.9981880970122228
       },
       {
         "id": "kanshichan/src/renderer/dashboard/dom.js",
@@ -2999,12 +3193,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer/dashboard",
         "childFileCount": 0,
-        "x": -326.6172360190948,
-        "y": -44.24535527151764,
-        "z": 243.01365649546125,
-        "vx": -3.2452011468654953e-9,
-        "vy": -1.4698394510618087e-9,
-        "vz": 2.162870121601713e-9
+        "x": -322.6728165345476,
+        "y": 17.03156316214605,
+        "z": 239.40740708239878,
+        "vx": -1.1717054537584455,
+        "vy": 0.9985720067099841,
+        "vz": -0.813423248043074
       },
       {
         "id": "kanshichan/src/renderer/dashboard/slack.js",
@@ -3021,12 +3215,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer/dashboard",
         "childFileCount": 0,
-        "x": -355.7132328370456,
-        "y": -54.92958655198842,
-        "z": 251.28490023538296,
-        "vx": -4.8660425878858166e-9,
-        "vy": -6.171880295070439e-10,
-        "vz": 9.355954634310911e-11
+        "x": -354.9261860030896,
+        "y": 4.391992781716551,
+        "z": 235.360867643263,
+        "vx": -0.27837444027149943,
+        "vy": 0.54467413484162,
+        "vz": -0.6228465361297996
       },
       {
         "id": "kanshichan/src/renderer/dashboard/state.js",
@@ -3043,12 +3237,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer/dashboard",
         "childFileCount": 0,
-        "x": -373.9174670454326,
-        "y": -14.8222125740317,
-        "z": 279.72837565127645,
-        "vx": -1.786742046341538e-9,
-        "vy": -4.18847572695976e-9,
-        "vz": 2.5843292120043508e-9
+        "x": -372.6563170426852,
+        "y": 44.7681092988797,
+        "z": 269.529185535693,
+        "vx": 0.15615252830942494,
+        "vy": -0.034960764768122266,
+        "vz": -1.4650720227231988
       },
       {
         "id": "kanshichan/src/renderer/dashboard/system-events.js",
@@ -3065,12 +3259,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer/dashboard",
         "childFileCount": 0,
-        "x": -338.94940751117997,
-        "y": 12.642318457715366,
-        "z": 270.2233842957441,
-        "vx": -3.227009533183645e-9,
-        "vy": -9.63011473788834e-10,
-        "vz": 2.9819747657045033e-9
+        "x": -335.223655956291,
+        "y": 70.51143886036995,
+        "z": 262.5240687846549,
+        "vx": -0.7412760643993703,
+        "vy": -0.4973794255978137,
+        "vz": -1.0551936722556423
       },
       {
         "id": "kanshichan/src/renderer/dashboard/tables.js",
@@ -3087,12 +3281,34 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer/dashboard",
         "childFileCount": 0,
-        "x": -317.4727935378842,
-        "y": -7.486781262996622,
-        "z": 259.46176813835484,
-        "vx": -2.1202941550659725e-9,
-        "vy": 2.031161270219471e-10,
-        "vz": 4.1496597971485476e-10
+        "x": -314.3820298742782,
+        "y": 52.76834214941451,
+        "z": 252.34543802710505,
+        "vx": -0.8139194804584322,
+        "vy": 0.0015610674012655544,
+        "vz": -0.5772486346605153
+      },
+      {
+        "id": "kanshichan/src/renderer/dashboard/tasks.js",
+        "name": "tasks.js",
+        "path": "kanshichan/src/renderer/dashboard/tasks.js",
+        "type": "file",
+        "lines": 0,
+        "val": 6,
+        "color": "#2c3038",
+        "baseColor": "#f7df1e",
+        "originalColor": "#f7df1e",
+        "defaultGlow": 0.1,
+        "glowIntensity": 0,
+        "highlighted": false,
+        "parentPath": "kanshichan/src/renderer/dashboard",
+        "childFileCount": 0,
+        "x": -352.4902433863659,
+        "y": 46.38740739442823,
+        "z": 231.79168265277826,
+        "vx": 0.02259934478845402,
+        "vy": -0.1905821214697009,
+        "vz": 0.465840277580147
       },
       {
         "id": "kanshichan/src/renderer/dashboard/typing.js",
@@ -3109,12 +3325,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer/dashboard",
         "childFileCount": 0,
-        "x": -331.65588369138396,
-        "y": -29.904197403903712,
-        "z": 275.8478943674966,
-        "vx": -4.0583076980538793e-10,
-        "vy": -8.451905231254783e-10,
-        "vz": 4.021058636947668e-10
+        "x": -331.2459611558543,
+        "y": 26.8099928522573,
+        "z": 268.31677512214543,
+        "vx": -0.42060018470532795,
+        "vy": 0.2460526903539083,
+        "vz": -0.478640748316893
       },
       {
         "id": "kanshichan/src/renderer/dashboard/upcoming.js",
@@ -3131,12 +3347,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer/dashboard",
         "childFileCount": 0,
-        "x": -349.21628470917113,
-        "y": -8.934951510823357,
-        "z": 285.32514764575126,
-        "vx": -1.331054613846918e-9,
-        "vy": 1.1415143093202236e-10,
-        "vz": -1.582875103423101e-10
+        "x": -346.15768400349685,
+        "y": 49.30058388302544,
+        "z": 277.79471326026663,
+        "vx": -0.08653561438831504,
+        "vy": 0.053781988674492895,
+        "vz": 0.02112890494295841
       },
       {
         "id": "kanshichan/src/renderer/dashboard/utils.js",
@@ -3153,12 +3369,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer/dashboard",
         "childFileCount": 0,
-        "x": -356.6677167965428,
-        "y": -41.2924112240249,
-        "z": 276.72440520281117,
-        "vx": 6.743381607501158e-10,
-        "vy": -1.1636199112696997e-9,
-        "vz": 6.360598262434731e-10
+        "x": -360.30083572885405,
+        "y": 17.16689592525889,
+        "z": 267.3814298857824,
+        "vx": -0.24516028829037886,
+        "vy": -0.05724739703176825,
+        "vz": 0.4429065899968674
       },
       {
         "id": "kanshichan/src/renderer/monitor",
@@ -3175,12 +3391,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer",
         "childFileCount": 8,
-        "x": -334.8541193343399,
-        "y": 157.88660598771733,
-        "z": 122.73493493089283,
-        "vx": -1.9077892690800858e-9,
-        "vy": -1.5647365925871416e-9,
-        "vz": 1.0534600770846927e-9
+        "x": -298.63532355854437,
+        "y": 221.0067468375827,
+        "z": 122.66912716013323,
+        "vx": 0.5629675189042287,
+        "vy": 1.068767307788753,
+        "vz": 0.6179761957887945
       },
       {
         "id": "kanshichan/src/renderer/monitor/active-window.js",
@@ -3197,12 +3413,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer/monitor",
         "childFileCount": 0,
-        "x": -332.91721386743893,
-        "y": 189.41055724421113,
-        "z": 95.86713927377181,
-        "vx": -2.2971045704987433e-9,
-        "vy": 7.246982009924544e-10,
-        "vz": 6.223711716297273e-10
+        "x": -285.1795494320199,
+        "y": 245.90394163349936,
+        "z": 96.24801997396148,
+        "vx": -0.9140702063074425,
+        "vy": -2.2506138306043653,
+        "vz": 0.7929608010316936
       },
       {
         "id": "kanshichan/src/renderer/monitor/alerts.js",
@@ -3219,12 +3435,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer/monitor",
         "childFileCount": 0,
-        "x": -327.1710737324094,
-        "y": 164.44158653985446,
-        "z": 163.08978786528667,
-        "vx": -1.5866068247353235e-9,
-        "vy": 4.2517195043096285e-10,
-        "vz": 1.783522593908479e-9
+        "x": -284.75066223817777,
+        "y": 222.2971122508124,
+        "z": 158.21324538493488,
+        "vx": -0.8451320013414816,
+        "vy": -1.1460152816830482,
+        "vz": -1.5633969130766259
       },
       {
         "id": "kanshichan/src/renderer/monitor/context.js",
@@ -3241,12 +3457,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer/monitor",
         "childFileCount": 0,
-        "x": -299.28776685614287,
-        "y": 177.9771352758912,
-        "z": 116.47178704189719,
-        "vx": -1.78537698233698e-9,
-        "vy": 2.362248892899919e-10,
-        "vz": -2.6645003683292077e-11
+        "x": -261.4192535908759,
+        "y": 228.0918213318009,
+        "z": 131.92014318018312,
+        "vx": -0.9959185404279987,
+        "vy": -1.055108919935388,
+        "vz": -0.19029716967953852
       },
       {
         "id": "kanshichan/src/renderer/monitor/detection.js",
@@ -3263,12 +3479,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer/monitor",
         "childFileCount": 0,
-        "x": -359.6486530553634,
-        "y": 192.40081457138984,
-        "z": 119.0749258633333,
-        "vx": -2.232951841975199e-9,
-        "vy": -7.163946090264029e-11,
-        "vz": 1.0336961517266716e-9
+        "x": -313.3380972896217,
+        "y": 254.26894634794456,
+        "z": 108.56782330979773,
+        "vx": 0.5786243000747492,
+        "vy": -2.233498242448958,
+        "vz": 0.4522587118464887
       },
       {
         "id": "kanshichan/src/renderer/monitor/logs.js",
@@ -3285,12 +3501,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer/monitor",
         "childFileCount": 0,
-        "x": -358.4285589779714,
-        "y": 176.5403022150893,
-        "z": 150.8387847418931,
-        "vx": -2.320418402736547e-9,
-        "vy": -5.15822988908048e-10,
-        "vz": 1.7933800115720718e-9
+        "x": -318.3862691239657,
+        "y": 246.92952326847254,
+        "z": 144.52871271391336,
+        "vx": 0.5292797042485708,
+        "vy": -1.5222179810980052,
+        "vz": -0.7703769414142888
       },
       {
         "id": "kanshichan/src/renderer/monitor/override.js",
@@ -3307,12 +3523,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer/monitor",
         "childFileCount": 0,
-        "x": -306.67991758293874,
-        "y": 180.03206313506826,
-        "z": 146.9542746953311,
-        "vx": -2.0825683062665048e-10,
-        "vy": -1.4094580398802995e-9,
-        "vz": 1.3310570352964808e-9
+        "x": -289.9484142068295,
+        "y": 247.88430493251806,
+        "z": 153.26822909345785,
+        "vx": -0.251565833279856,
+        "vy": -1.1865537564127282,
+        "vz": -0.6164574821150514
       },
       {
         "id": "kanshichan/src/renderer/monitor/render.js",
@@ -3329,12 +3545,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer/monitor",
         "childFileCount": 0,
-        "x": -323.8412966604455,
-        "y": 201.30346720890338,
-        "z": 122.15716255724337,
-        "vx": -1.6993338708208107e-9,
-        "vy": -2.548191434646796e-10,
-        "vz": -1.3662950334089698e-10
+        "x": -272.32300285411566,
+        "y": 254.11416041931872,
+        "z": 123.25862556461128,
+        "vx": -0.37256750918479165,
+        "vy": -0.6138347849605692,
+        "vz": 0.25354259448798233
       },
       {
         "id": "kanshichan/src/renderer/monitor/settings.js",
@@ -3351,12 +3567,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer/monitor",
         "childFileCount": 0,
-        "x": -336.2136151891523,
-        "y": 196.4533451530542,
-        "z": 146.31373505372386,
-        "vx": -3.1668853357692974e-9,
-        "vy": -8.504382777747758e-10,
-        "vz": 2.2019093842850777e-9
+        "x": -294.81203121457133,
+        "y": 263.0669300799049,
+        "z": 133.01114067884302,
+        "vx": -0.027939975954963756,
+        "vy": -0.12274219934013156,
+        "vz": 0.324888728121539
       },
       {
         "id": "kanshichan/src/renderer/schedule",
@@ -3373,12 +3589,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer",
         "childFileCount": 13,
-        "x": -469.48424417093327,
-        "y": 118.25353640323594,
-        "z": -54.381640923160695,
-        "vx": 2.3710198251847358e-9,
-        "vy": -2.719524782557752e-9,
-        "vz": 1.1986567372363979e-9
+        "x": -451.50597397181946,
+        "y": 185.11159884683553,
+        "z": -40.812227272904956,
+        "vx": -0.15559343980744153,
+        "vy": 0.2520522588796353,
+        "vz": -0.15251919272655096
       },
       {
         "id": "kanshichan/src/renderer/schedule/bulk.js",
@@ -3395,12 +3611,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer/schedule",
         "childFileCount": 0,
-        "x": -459.0731289538819,
-        "y": 104.46241889365687,
-        "z": -92.56428979197818,
-        "vx": 1.285012430712307e-9,
-        "vy": -3.183511872067453e-9,
-        "vz": 8.408127894394573e-10
+        "x": -449.92496745067996,
+        "y": 169.04790094500854,
+        "z": -78.93700368088615,
+        "vx": 0.7836933520869269,
+        "vy": 0.019858793839661427,
+        "vz": 1.4929489895447385
       },
       {
         "id": "kanshichan/src/renderer/schedule/constants.js",
@@ -3417,12 +3633,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer/schedule",
         "childFileCount": 0,
-        "x": -487.9622651981019,
-        "y": 99.25224340517748,
-        "z": -90.30485009583518,
-        "vx": -3.1655979791455533e-10,
-        "vy": 1.0378790009494185e-9,
-        "vz": -4.2867855893331023e-10
+        "x": -471.00661350354926,
+        "y": 158.03147876114204,
+        "z": -65.77450269496195,
+        "vx": 0.9736696812158425,
+        "vy": -0.1850753363040004,
+        "vz": 0.9563912178675861
       },
       {
         "id": "kanshichan/src/renderer/schedule/csv.js",
@@ -3439,12 +3655,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer/schedule",
         "childFileCount": 0,
-        "x": -454.1123987711501,
-        "y": 156.69370624911588,
-        "z": -50.954654461298595,
-        "vx": 1.0313526860899282e-9,
-        "vy": -2.3279558587261733e-9,
-        "vz": 2.8531227966327386e-9
+        "x": -434.87345461976855,
+        "y": 221.0476526779662,
+        "z": -33.66639723434129,
+        "vx": 0.18257541040084022,
+        "vy": -1.2819039930168745,
+        "vz": 0.37520916163899404
       },
       {
         "id": "kanshichan/src/renderer/schedule/dom.js",
@@ -3461,12 +3677,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer/schedule",
         "childFileCount": 0,
-        "x": -497.6364303786942,
-        "y": 89.32940045770401,
-        "z": -64.75690782363279,
-        "vx": 3.431801624017717e-9,
-        "vy": -3.6833181856265866e-9,
-        "vz": -5.053502407489278e-10
+        "x": -487.04342821617473,
+        "y": 167.56801598170065,
+        "z": -31.684219537163145,
+        "vx": 1.0942291206496022,
+        "vy": -0.28981184466849114,
+        "vz": 0.35681755843423074
       },
       {
         "id": "kanshichan/src/renderer/schedule/form.js",
@@ -3483,12 +3699,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer/schedule",
         "childFileCount": 0,
-        "x": -448.05368263481273,
-        "y": 140.10252886859953,
-        "z": -83.98637376556516,
-        "vx": 3.466295309543902e-9,
-        "vy": -1.6110853454496071e-9,
-        "vz": 4.836621569829602e-10
+        "x": -423.7192750311188,
+        "y": 194.15798847108198,
+        "z": -68.7225478529819,
+        "vx": 0.2764176441274924,
+        "vy": -0.5322274440792265,
+        "vz": 0.6894663868979988
       },
       {
         "id": "kanshichan/src/renderer/schedule/model.js",
@@ -3505,12 +3721,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer/schedule",
         "childFileCount": 0,
-        "x": -470.0389804765596,
-        "y": 158.54603363478785,
-        "z": -76.51463949264955,
-        "vx": 1.8658025126164315e-9,
-        "vy": -1.9680714063300553e-9,
-        "vz": 1.4500413318427063e-9
+        "x": -446.4952703873385,
+        "y": 223.4168907414092,
+        "z": -61.1430119590564,
+        "vx": 0.917615232929956,
+        "vy": -1.502517145594345,
+        "vz": 0.9037768467419911
       },
       {
         "id": "kanshichan/src/renderer/schedule/notifications.js",
@@ -3527,12 +3743,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer/schedule",
         "childFileCount": 0,
-        "x": -505.6960656029186,
-        "y": 119.3048443730352,
-        "z": -34.22923859934106,
-        "vx": 2.6816874125776473e-9,
-        "vy": -2.3918189043811453e-9,
-        "vz": 2.2279693018670334e-9
+        "x": -479.36138574977423,
+        "y": 204.8664578648733,
+        "z": -19.376621484549045,
+        "vx": 1.3075736597267384,
+        "vy": -0.6597929208960179,
+        "vz": -0.09178661970791648
       },
       {
         "id": "kanshichan/src/renderer/schedule/render.js",
@@ -3549,12 +3765,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer/schedule",
         "childFileCount": 0,
-        "x": -486.04892347486344,
-        "y": 157.72844735668033,
-        "z": -44.01999104393243,
-        "vx": 1.414059614812142e-9,
-        "vy": -1.8633109877996325e-9,
-        "vz": -6.063924162193967e-10
+        "x": -467.3880578390738,
+        "y": 225.71933391753726,
+        "z": -37.28659498282499,
+        "vx": 0.6878659155142895,
+        "vy": -0.9105050347322885,
+        "vz": 0.1587428669497872
       },
       {
         "id": "kanshichan/src/renderer/schedule/repeat-controls.js",
@@ -3571,12 +3787,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer/schedule",
         "childFileCount": 0,
-        "x": -473.1265407415419,
-        "y": 131.59794857588759,
-        "z": -98.79137662875544,
-        "vx": 2.872243304087097e-9,
-        "vy": -2.0325872233012765e-9,
-        "vz": 1.218146683774142e-9
+        "x": -448.3570578856895,
+        "y": 202.1894412473996,
+        "z": -82.21343757770829,
+        "vx": 0.5192639433432641,
+        "vy": -0.26092089117790396,
+        "vz": 0.8598499782188236
       },
       {
         "id": "kanshichan/src/renderer/schedule/state.js",
@@ -3593,12 +3809,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer/schedule",
         "childFileCount": 0,
-        "x": -514.0369719728111,
-        "y": 114.66755777676497,
-        "z": -65.74922166044583,
-        "vx": 1.8384443178357637e-9,
-        "vy": -3.493153426177754e-9,
-        "vz": 3.3892546003174255e-9
+        "x": -491.58317549730117,
+        "y": 179.42919793027335,
+        "z": -60.238795077295904,
+        "vx": 1.038120712197981,
+        "vy": -0.10159479719724554,
+        "vz": 0.48172978721869153
       },
       {
         "id": "kanshichan/src/renderer/schedule/tabs.js",
@@ -3615,12 +3831,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer/schedule",
         "childFileCount": 0,
-        "x": -508.6427717380953,
-        "y": 142.5912787463176,
-        "z": -52.30192505141024,
-        "vx": 2.1824341581395664e-9,
-        "vy": -2.8578557952800576e-9,
-        "vz": 2.1052560494083498e-9
+        "x": -493.6259545405093,
+        "y": 201.6106380704124,
+        "z": -45.37373761182606,
+        "vx": 0.4367244952897901,
+        "vy": -0.06110372903449782,
+        "vz": 0.4024347615322497
       },
       {
         "id": "kanshichan/src/renderer/schedule/tts.js",
@@ -3637,12 +3853,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer/schedule",
         "childFileCount": 0,
-        "x": -500.3830591159018,
-        "y": 125.76234288526075,
-        "z": -89.85478418348835,
-        "vx": 1.5846284370814367e-9,
-        "vy": -2.1066558314162317e-9,
-        "vz": 2.1466530022850004e-9
+        "x": -475.2981009835289,
+        "y": 193.17513634586032,
+        "z": -80.64799357445237,
+        "vx": -0.03199878083925741,
+        "vy": -0.028938438620899454,
+        "vz": 0.02324707482239208
       },
       {
         "id": "kanshichan/src/renderer/schedule/utils.js",
@@ -3659,12 +3875,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer/schedule",
         "childFileCount": 0,
-        "x": -496.4460017276882,
-        "y": 151.0682958243608,
-        "z": -75.94510050082039,
-        "vx": 2.082323976767717e-9,
-        "vy": -3.457190680196127e-9,
-        "vz": 9.549014668390534e-10
+        "x": -476.60646514746657,
+        "y": 218.74836689379987,
+        "z": -63.24043640843904,
+        "vx": -0.33475576017709835,
+        "vy": 0.36622973202497633,
+        "vz": -0.39458526208837236
       },
       {
         "id": "kanshichan/src/renderer/services",
@@ -3681,12 +3897,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer",
         "childFileCount": 6,
-        "x": -506.48562794072177,
-        "y": 97.0148665320543,
-        "z": 171.97979489235163,
-        "vx": -4.600579078667829e-10,
-        "vy": -1.8764037215313333e-9,
-        "vz": 2.4455909441727338e-9
+        "x": -477.5724485160861,
+        "y": 185.5698566705651,
+        "z": 169.67651075958597,
+        "vx": -0.5366085110844316,
+        "vy": 0.45661600133945024,
+        "vz": 0.539847583909292
       },
       {
         "id": "kanshichan/src/renderer/services/audio-input",
@@ -3703,12 +3919,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer/services",
         "childFileCount": 3,
-        "x": -592.1952128182145,
-        "y": 134.81010181155852,
-        "z": 225.45890178364002,
-        "vx": -6.352085467059966e-10,
-        "vy": -1.2524531702754021e-9,
-        "vz": 2.559070761656465e-9
+        "x": -559.2217954456966,
+        "y": 237.8277995801064,
+        "z": 220.5619200394994,
+        "vx": -1.6223713931256565,
+        "vy": 1.0352022812812103,
+        "vz": 1.1082714308498995
       },
       {
         "id": "kanshichan/src/renderer/services/audio-input/pipeline.js",
@@ -3725,12 +3941,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer/services/audio-input",
         "childFileCount": 0,
-        "x": -633.2870639621784,
-        "y": 135.73551306101174,
-        "z": 236.2345065179809,
-        "vx": -1.770489090438921e-9,
-        "vy": -1.6247041506248182e-9,
-        "vz": 2.0530234157778563e-9
+        "x": -583.1053013503958,
+        "y": 237.85201197940088,
+        "z": 245.3136870376722,
+        "vx": 4.699901442165488,
+        "vy": -1.5812670325118805,
+        "vz": -3.7004834857149813
       },
       {
         "id": "kanshichan/src/renderer/services/audio-input/playback.js",
@@ -3747,12 +3963,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer/services/audio-input",
         "childFileCount": 0,
-        "x": -620.0153072541412,
-        "y": 165.28566481148806,
-        "z": 235.1469373884939,
-        "vx": -1.920747718734972e-9,
-        "vy": -7.982716055447484e-10,
-        "vz": 3.1392520500405187e-9
+        "x": -592.0965514137245,
+        "y": 252.96100507751564,
+        "z": 220.9129422661182,
+        "vx": 3.6646274252470605,
+        "vy": -2.201448292753387,
+        "vz": -0.6615079888194829
       },
       {
         "id": "kanshichan/src/renderer/services/audio-input/recorder.js",
@@ -3769,12 +3985,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer/services/audio-input",
         "childFileCount": 0,
-        "x": -614.4026723764091,
-        "y": 144.80266370087037,
-        "z": 260.1250416078613,
-        "vx": -1.4272616350392866e-9,
-        "vy": -7.015344895314009e-10,
-        "vz": 3.1024940291589096e-9
+        "x": -573.0262231901185,
+        "y": 266.69355371340527,
+        "z": 240.66174822983615,
+        "vx": 1.2562447802519932,
+        "vy": -1.9496834870820994,
+        "vz": -1.3491708091291112
       },
       {
         "id": "kanshichan/src/renderer/services/absence-override.js",
@@ -3791,12 +4007,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer/services",
         "childFileCount": 0,
-        "x": -508.42829272933955,
-        "y": 127.80630538186536,
-        "z": 199.18421898061123,
-        "vx": -2.012406094478194e-9,
-        "vy": -1.660904434649022e-9,
-        "vz": 3.2135652437560936e-9
+        "x": -492.9839992920915,
+        "y": 219.92952593025498,
+        "z": 161.05563393835484,
+        "vx": 1.2574221097383376,
+        "vy": -1.6441203141082659,
+        "vz": -0.06619529047818488
       },
       {
         "id": "kanshichan/src/renderer/services/audio-input-manager.js",
@@ -3813,12 +4029,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer/services",
         "childFileCount": 0,
-        "x": -516.5787807788527,
-        "y": 93.89936759397494,
-        "z": 211.64005255666888,
-        "vx": -1.8504353878935738e-9,
-        "vy": -2.078407414864268e-9,
-        "vz": 2.6658387396998816e-9
+        "x": -473.3350703242463,
+        "y": 218.650703263925,
+        "z": 190.52283099619206,
+        "vx": 0.4381957661961563,
+        "vy": -0.9599585048429127,
+        "vz": -0.8890742289007415
       },
       {
         "id": "kanshichan/src/renderer/services/llm-client.js",
@@ -3831,16 +4047,16 @@
         "baseColor": "#f7df1e",
         "originalColor": "#f7df1e",
         "defaultGlow": 0.1,
-        "glowIntensity": 0,
-        "highlighted": false,
+        "glowIntensity": 2.4,
+        "highlighted": true,
         "parentPath": "kanshichan/src/renderer/services",
         "childFileCount": 0,
-        "x": -539.3910161151127,
-        "y": 76.5595221536812,
-        "z": 185.76285090842006,
-        "vx": -1.2576943641061688e-9,
-        "vy": -1.5492967363425047e-9,
-        "vz": 2.537029430647858e-9
+        "x": -483.37431308824114,
+        "y": 188.78223429008943,
+        "z": 208.25516882113914,
+        "vx": 0.6855094387676222,
+        "vy": -0.030108666007407785,
+        "vz": -1.1927356182411462
       },
       {
         "id": "kanshichan/src/renderer/services/stt-client.js",
@@ -3857,12 +4073,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer/services",
         "childFileCount": 0,
-        "x": -545.2022078632813,
-        "y": 103.37214910956253,
-        "z": 159.4156412401861,
-        "vx": -1.2754540457464737e-9,
-        "vy": -2.307333084453455e-9,
-        "vz": 2.7904404316653637e-9
+        "x": -508.31884288756055,
+        "y": 170.6464733722012,
+        "z": 188.86579942947873,
+        "vx": 1.2359889940104234,
+        "vy": 0.4328181359438555,
+        "vz": -0.4742103004168943
       },
       {
         "id": "kanshichan/src/renderer/services/tts-adapter.js",
@@ -3879,12 +4095,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer/services",
         "childFileCount": 0,
-        "x": -526.1933860554353,
-        "y": 133.22655026560122,
-        "z": 169.19528756101695,
-        "vx": -1.3122043357953572e-9,
-        "vy": -1.8810975981144146e-9,
-        "vz": 2.1482870357371655e-9
+        "x": -515.9030900096783,
+        "y": 190.84205692241707,
+        "z": 160.84776311799135,
+        "vx": 0.9441417759925333,
+        "vy": -0.1233691133720521,
+        "vz": 0.26509254948866395
       },
       {
         "id": "kanshichan/src/renderer/services/voicevox-preferences.js",
@@ -3901,12 +4117,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer/services",
         "childFileCount": 0,
-        "x": -540.5976469660661,
-        "y": 110.48136947144859,
-        "z": 193.1881873423906,
-        "vx": -7.320623684893876e-10,
-        "vy": -1.4631908955025097e-9,
-        "vz": 2.3416967964783337e-9
+        "x": -506.60842841431366,
+        "y": 206.26685149298902,
+        "z": 190.58763342257498,
+        "vx": 0.23552338266504547,
+        "vy": -0.11324549760248166,
+        "vz": -0.06500317813359703
       },
       {
         "id": "kanshichan/src/renderer/settings",
@@ -3923,12 +4139,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer",
         "childFileCount": 9,
-        "x": -468.087026593294,
-        "y": -72.87030276850219,
-        "z": 51.65617757264826,
-        "vx": 9.054233873446063e-10,
-        "vy": -1.397464614384641e-9,
-        "vz": 2.666322336928714e-9
+        "x": -468.3010833489808,
+        "y": 12.853343837461916,
+        "z": 52.11979490934221,
+        "vx": -0.9269041821057206,
+        "vy": -0.5328179973355652,
+        "vz": -0.18043021816987737
       },
       {
         "id": "kanshichan/src/renderer/settings/absence-override.js",
@@ -3945,12 +4161,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer/settings",
         "childFileCount": 0,
-        "x": -470.1496217403314,
-        "y": -102.14474578018344,
-        "z": 80.86105457670531,
-        "vx": -6.069718301283433e-11,
-        "vy": -2.7691371569691184e-9,
-        "vz": 2.0150409264367064e-9
+        "x": -477.38384536121305,
+        "y": -8.607418330232028,
+        "z": 83.6274761473336,
+        "vx": 1.2636113600165253,
+        "vy": 1.21647308670677,
+        "vz": -0.6227541491922476
       },
       {
         "id": "kanshichan/src/renderer/settings/core.js",
@@ -3967,12 +4183,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer/settings",
         "childFileCount": 0,
-        "x": -497.9165612469343,
-        "y": -82.02222647876665,
-        "z": 79.97294098659162,
-        "vx": 8.348613105810505e-11,
-        "vy": -2.426835502802162e-9,
-        "vz": 2.329783126985108e-9
+        "x": -500.6012844840395,
+        "y": 15.107637814205711,
+        "z": 75.22993677312633,
+        "vx": 1.9398443219954948,
+        "vy": 0.44235322431538804,
+        "vz": -0.22971745673246066
       },
       {
         "id": "kanshichan/src/renderer/settings/slack.js",
@@ -3989,12 +4205,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer/settings",
         "childFileCount": 0,
-        "x": -471.96134715943367,
-        "y": -86.3247854402113,
-        "z": 12.82723822390297,
-        "vx": 7.887160224065611e-10,
-        "vy": -1.6734460311741572e-9,
-        "vz": 2.120618772345474e-9
+        "x": -472.0530765870385,
+        "y": 5.328021614026999,
+        "z": 14.788926606624822,
+        "vx": 0.8050510444578841,
+        "vy": 0.628434148205387,
+        "vz": 1.9885008076462132
       },
       {
         "id": "kanshichan/src/renderer/settings/state.js",
@@ -4011,12 +4227,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer/settings",
         "childFileCount": 0,
-        "x": -459.3470773059449,
-        "y": -112.12947045763882,
-        "z": 39.95107747907386,
-        "vx": -4.727871164719422e-10,
-        "vy": -2.218969455493528e-9,
-        "vz": 2.3713591740060785e-9
+        "x": -461.67042999916555,
+        "y": -24.210467817911518,
+        "z": 40.82484838340086,
+        "vx": 0.359200520066061,
+        "vy": 1.2736733093577002,
+        "vz": 0.5202793295629319
       },
       {
         "id": "kanshichan/src/renderer/settings/typing.js",
@@ -4033,12 +4249,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer/settings",
         "childFileCount": 0,
-        "x": -508.65538537916717,
-        "y": -62.634916434049536,
-        "z": 51.812137670724006,
-        "vx": 3.752831781033908e-10,
-        "vy": -1.1411775349783972e-9,
-        "vz": 3.0576544299178975e-9
+        "x": -503.23652179564874,
+        "y": 29.67099281474386,
+        "z": 45.09766761259687,
+        "vx": 1.5707414888548852,
+        "vy": -0.47125087552080125,
+        "vz": 0.28600128520957085
       },
       {
         "id": "kanshichan/src/renderer/settings/utils.js",
@@ -4055,12 +4271,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer/settings",
         "childFileCount": 0,
-        "x": -486.7500636442745,
-        "y": -113.07868692024005,
-        "z": 59.7125586670708,
-        "vx": -5.485371423481693e-10,
-        "vy": -1.5605081703448596e-9,
-        "vz": 2.0030578721259958e-9
+        "x": -486.72833953872197,
+        "y": -23.68292060824585,
+        "z": 61.36756222199529,
+        "vx": 0.7147377910139943,
+        "vy": 1.1683997658970493,
+        "vz": 0.12507428878153368
       },
       {
         "id": "kanshichan/src/renderer/settings/voice-commands.js",
@@ -4077,12 +4293,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer/settings",
         "childFileCount": 0,
-        "x": -500.8092800113303,
-        "y": -71.33037317812779,
-        "z": 23.6878726317321,
-        "vx": 4.849169444065747e-10,
-        "vy": -6.65731934184784e-10,
-        "vz": 2.5314398893720833e-9
+        "x": -499.193087652971,
+        "y": 13.046201347628129,
+        "z": 24.666885393573466,
+        "vx": 0.8942887570598236,
+        "vy": 0.04511087139410151,
+        "vz": 0.7821600647034669
       },
       {
         "id": "kanshichan/src/renderer/settings/voice-dictionary-store.js",
@@ -4099,12 +4315,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer/settings",
         "childFileCount": 0,
-        "x": -490.7262919215847,
-        "y": -104.79064617303892,
-        "z": 29.1962401484897,
-        "vx": 3.312361540196195e-10,
-        "vy": -1.0442433277148886e-9,
-        "vz": 2.1831285512643448e-9
+        "x": -491.4378564385811,
+        "y": -17.07640729682038,
+        "z": 30.888455476787755,
+        "vx": 0.2058295436912093,
+        "vy": 0.2024990034176331,
+        "vz": 0.45104381948685446
       },
       {
         "id": "kanshichan/src/renderer/settings/voice-dictionary.js",
@@ -4121,12 +4337,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer/settings",
         "childFileCount": 0,
-        "x": -507.99543057258217,
-        "y": -94.66158547803558,
-        "z": 50.34458086832237,
-        "vx": 3.9703386241896346e-10,
-        "vy": -5.128336671266301e-10,
-        "vz": 1.982242103147312e-9
+        "x": -509.1529993412312,
+        "y": -3.985620923033768,
+        "z": 52.0485407160625,
+        "vx": -0.12461189775051949,
+        "vy": 0.0924781393908306,
+        "vz": -0.13163388583201188
       },
       {
         "id": "kanshichan/src/renderer/stores",
@@ -4143,12 +4359,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer",
         "childFileCount": 1,
-        "x": -405.61711332982264,
-        "y": 44.36263484978544,
-        "z": 87.4333088329748,
-        "vx": 6.508157984059876e-10,
-        "vy": -2.307827806507625e-9,
-        "vz": 2.1019083176091864e-9
+        "x": -382.33920497188507,
+        "y": 110.57401880802355,
+        "z": 108.02493363706212,
+        "vx": -2.148761009539952,
+        "vy": 0.7080227423311624,
+        "vz": 1.6088372359470087
       },
       {
         "id": "kanshichan/src/renderer/stores/audio-input-store.js",
@@ -4165,12 +4381,430 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer/stores",
         "childFileCount": 0,
-        "x": -444.45333935640195,
-        "y": 56.496737695096535,
-        "z": 94.1067715351832,
-        "vx": -8.24787314728166e-10,
-        "vy": -1.4053594154721712e-9,
-        "vz": 2.6861015401985414e-9
+        "x": -409.0806713614602,
+        "y": 120.10008005024078,
+        "z": 126.17724815569765,
+        "vx": 2.058020438270218,
+        "vy": -0.9642051509728797,
+        "vz": -1.3339324475865195
+      },
+      {
+        "id": "kanshichan/src/renderer/tasks",
+        "name": "tasks",
+        "path": "kanshichan/src/renderer/tasks",
+        "type": "directory",
+        "lines": 0,
+        "val": 14,
+        "color": "#2c3038",
+        "baseColor": "#4ec9b0",
+        "originalColor": "#4ec9b0",
+        "defaultGlow": 0.18,
+        "glowIntensity": 0,
+        "highlighted": false,
+        "parentPath": "kanshichan/src/renderer",
+        "childFileCount": 18,
+        "x": -340.97646648778425,
+        "y": 85.24259445660391,
+        "z": 79.83450222949295,
+        "vx": 3.0986009086799147,
+        "vy": -3.655729860467055,
+        "vz": -2.3359868504213455
+      },
+      {
+        "id": "kanshichan/src/renderer/tasks/announcement.js",
+        "name": "announcement.js",
+        "path": "kanshichan/src/renderer/tasks/announcement.js",
+        "type": "file",
+        "lines": 0,
+        "val": 6,
+        "color": "#2c3038",
+        "baseColor": "#f7df1e",
+        "originalColor": "#f7df1e",
+        "defaultGlow": 0.1,
+        "glowIntensity": 0,
+        "highlighted": false,
+        "parentPath": "kanshichan/src/renderer/tasks",
+        "childFileCount": 0,
+        "x": -344.3482917915374,
+        "y": 80.44908688185497,
+        "z": 84.53718452212556,
+        "vx": 3.0986009086799147,
+        "vy": -3.655729860467055,
+        "vz": -2.3359868504213455
+      },
+      {
+        "id": "kanshichan/src/renderer/tasks/constants.js",
+        "name": "constants.js",
+        "path": "kanshichan/src/renderer/tasks/constants.js",
+        "type": "file",
+        "lines": 0,
+        "val": 6,
+        "color": "#2c3038",
+        "baseColor": "#f7df1e",
+        "originalColor": "#f7df1e",
+        "defaultGlow": 0.1,
+        "glowIntensity": 0,
+        "highlighted": false,
+        "parentPath": "kanshichan/src/renderer/tasks",
+        "childFileCount": 0,
+        "x": -337.59083527410905,
+        "y": 84.66465247177028,
+        "z": 79.46110871767118,
+        "vx": 3.0986009086799147,
+        "vy": -3.655729860467055,
+        "vz": -2.3359868504213455
+      },
+      {
+        "id": "kanshichan/src/renderer/tasks/dom.js",
+        "name": "dom.js",
+        "path": "kanshichan/src/renderer/tasks/dom.js",
+        "type": "file",
+        "lines": 0,
+        "val": 6,
+        "color": "#2c3038",
+        "baseColor": "#f7df1e",
+        "originalColor": "#f7df1e",
+        "defaultGlow": 0.1,
+        "glowIntensity": 0,
+        "highlighted": false,
+        "parentPath": "kanshichan/src/renderer/tasks",
+        "childFileCount": 0,
+        "x": -340.0727867993546,
+        "y": 89.20733932534384,
+        "z": 76.9487198286942,
+        "vx": 3.0986009086799147,
+        "vy": -3.655729860467055,
+        "vz": -2.3359868504213455
+      },
+      {
+        "id": "kanshichan/src/renderer/tasks/drag.js",
+        "name": "drag.js",
+        "path": "kanshichan/src/renderer/tasks/drag.js",
+        "type": "file",
+        "lines": 0,
+        "val": 6,
+        "color": "#2c3038",
+        "baseColor": "#f7df1e",
+        "originalColor": "#f7df1e",
+        "defaultGlow": 0.1,
+        "glowIntensity": 0,
+        "highlighted": false,
+        "parentPath": "kanshichan/src/renderer/tasks",
+        "childFileCount": 0,
+        "x": -344.28418903404616,
+        "y": 83.67558197434545,
+        "z": 76.257304853143,
+        "vx": 3.0986009086799147,
+        "vy": -3.655729860467055,
+        "vz": -2.3359868504213455
+      },
+      {
+        "id": "kanshichan/src/renderer/tasks/filter-apply.js",
+        "name": "filter-apply.js",
+        "path": "kanshichan/src/renderer/tasks/filter-apply.js",
+        "type": "file",
+        "lines": 0,
+        "val": 6,
+        "color": "#2c3038",
+        "baseColor": "#f7df1e",
+        "originalColor": "#f7df1e",
+        "defaultGlow": 0.1,
+        "glowIntensity": 0,
+        "highlighted": false,
+        "parentPath": "kanshichan/src/renderer/tasks",
+        "childFileCount": 0,
+        "x": -341.28429830099674,
+        "y": 81.72323792344038,
+        "z": 80.48160220412187,
+        "vx": 3.0986009086799147,
+        "vy": -3.655729860467055,
+        "vz": -2.3359868504213455
+      },
+      {
+        "id": "kanshichan/src/renderer/tasks/filters.js",
+        "name": "filters.js",
+        "path": "kanshichan/src/renderer/tasks/filters.js",
+        "type": "file",
+        "lines": 0,
+        "val": 6,
+        "color": "#2c3038",
+        "baseColor": "#f7df1e",
+        "originalColor": "#f7df1e",
+        "defaultGlow": 0.1,
+        "glowIntensity": 0,
+        "highlighted": false,
+        "parentPath": "kanshichan/src/renderer/tasks",
+        "childFileCount": 0,
+        "x": -340.5899744498785,
+        "y": 81.57318531756096,
+        "z": 84.10495243526552,
+        "vx": 3.0986009086799147,
+        "vy": -3.655729860467055,
+        "vz": -2.3359868504213455
+      },
+      {
+        "id": "kanshichan/src/renderer/tasks/form.js",
+        "name": "form.js",
+        "path": "kanshichan/src/renderer/tasks/form.js",
+        "type": "file",
+        "lines": 0,
+        "val": 6,
+        "color": "#2c3038",
+        "baseColor": "#f7df1e",
+        "originalColor": "#f7df1e",
+        "defaultGlow": 0.1,
+        "glowIntensity": 0,
+        "highlighted": false,
+        "parentPath": "kanshichan/src/renderer/tasks",
+        "childFileCount": 0,
+        "x": -339.2700598354449,
+        "y": 85.84865271026774,
+        "z": 77.06175389496163,
+        "vx": 3.0986009086799147,
+        "vy": -3.655729860467055,
+        "vz": -2.3359868504213455
+      },
+      {
+        "id": "kanshichan/src/renderer/tasks/model.js",
+        "name": "model.js",
+        "path": "kanshichan/src/renderer/tasks/model.js",
+        "type": "file",
+        "lines": 0,
+        "val": 6,
+        "color": "#2c3038",
+        "baseColor": "#f7df1e",
+        "originalColor": "#f7df1e",
+        "defaultGlow": 0.1,
+        "glowIntensity": 0,
+        "highlighted": false,
+        "parentPath": "kanshichan/src/renderer/tasks",
+        "childFileCount": 0,
+        "x": -338.9998300586422,
+        "y": 89.91215975202957,
+        "z": 84.19966587374091,
+        "vx": 3.0986009086799147,
+        "vy": -3.655729860467055,
+        "vz": -2.3359868504213455
+      },
+      {
+        "id": "kanshichan/src/renderer/tasks/notifications.js",
+        "name": "notifications.js",
+        "path": "kanshichan/src/renderer/tasks/notifications.js",
+        "type": "file",
+        "lines": 0,
+        "val": 6,
+        "color": "#2c3038",
+        "baseColor": "#f7df1e",
+        "originalColor": "#f7df1e",
+        "defaultGlow": 0.1,
+        "glowIntensity": 0,
+        "highlighted": false,
+        "parentPath": "kanshichan/src/renderer/tasks",
+        "childFileCount": 0,
+        "x": -336.47386045196544,
+        "y": 87.24973654556352,
+        "z": 81.37388504906855,
+        "vx": 3.0986009086799147,
+        "vy": -3.655729860467055,
+        "vz": -2.3359868504213455
+      },
+      {
+        "id": "kanshichan/src/renderer/tasks/reading-settings.js",
+        "name": "reading-settings.js",
+        "path": "kanshichan/src/renderer/tasks/reading-settings.js",
+        "type": "file",
+        "lines": 0,
+        "val": 6,
+        "color": "#2c3038",
+        "baseColor": "#f7df1e",
+        "originalColor": "#f7df1e",
+        "defaultGlow": 0.1,
+        "glowIntensity": 0,
+        "highlighted": false,
+        "parentPath": "kanshichan/src/renderer/tasks",
+        "childFileCount": 0,
+        "x": -337.61625328635364,
+        "y": 81.07228450744108,
+        "z": 78.10911056272553,
+        "vx": 3.0986009086799147,
+        "vy": -3.655729860467055,
+        "vz": -2.3359868504213455
+      },
+      {
+        "id": "kanshichan/src/renderer/tasks/render.js",
+        "name": "render.js",
+        "path": "kanshichan/src/renderer/tasks/render.js",
+        "type": "file",
+        "lines": 0,
+        "val": 6,
+        "color": "#2c3038",
+        "baseColor": "#f7df1e",
+        "originalColor": "#f7df1e",
+        "defaultGlow": 0.1,
+        "glowIntensity": 0,
+        "highlighted": false,
+        "parentPath": "kanshichan/src/renderer/tasks",
+        "childFileCount": 0,
+        "x": -343.7846596583649,
+        "y": 80.64584667665721,
+        "z": 76.13144336219347,
+        "vx": 3.0986009086799147,
+        "vy": -3.655729860467055,
+        "vz": -2.3359868504213455
+      },
+      {
+        "id": "kanshichan/src/renderer/tasks/repeat-controls.js",
+        "name": "repeat-controls.js",
+        "path": "kanshichan/src/renderer/tasks/repeat-controls.js",
+        "type": "file",
+        "lines": 0,
+        "val": 6,
+        "color": "#2c3038",
+        "baseColor": "#f7df1e",
+        "originalColor": "#f7df1e",
+        "defaultGlow": 0.1,
+        "glowIntensity": 0,
+        "highlighted": false,
+        "parentPath": "kanshichan/src/renderer/tasks",
+        "childFileCount": 0,
+        "x": -343.20265725111847,
+        "y": 81.46706755335347,
+        "z": 83.79708546016752,
+        "vx": 3.0986009086799147,
+        "vy": -3.655729860467055,
+        "vz": -2.3359868504213455
+      },
+      {
+        "id": "kanshichan/src/renderer/tasks/sort.js",
+        "name": "sort.js",
+        "path": "kanshichan/src/renderer/tasks/sort.js",
+        "type": "file",
+        "lines": 0,
+        "val": 6,
+        "color": "#2c3038",
+        "baseColor": "#f7df1e",
+        "originalColor": "#f7df1e",
+        "defaultGlow": 0.1,
+        "glowIntensity": 0,
+        "highlighted": false,
+        "parentPath": "kanshichan/src/renderer/tasks",
+        "childFileCount": 0,
+        "x": -336.21501568339187,
+        "y": 87.58872246155957,
+        "z": 76.90566402551372,
+        "vx": 3.0986009086799147,
+        "vy": -3.655729860467055,
+        "vz": -2.3359868504213455
+      },
+      {
+        "id": "kanshichan/src/renderer/tasks/state.js",
+        "name": "state.js",
+        "path": "kanshichan/src/renderer/tasks/state.js",
+        "type": "file",
+        "lines": 0,
+        "val": 6,
+        "color": "#2c3038",
+        "baseColor": "#f7df1e",
+        "originalColor": "#f7df1e",
+        "defaultGlow": 0.1,
+        "glowIntensity": 0,
+        "highlighted": false,
+        "parentPath": "kanshichan/src/renderer/tasks",
+        "childFileCount": 0,
+        "x": -336.1669085414838,
+        "y": 89.40222573312339,
+        "z": 79.7886572410189,
+        "vx": 3.0986009086799147,
+        "vy": -3.655729860467055,
+        "vz": -2.3359868504213455
+      },
+      {
+        "id": "kanshichan/src/renderer/tasks/utils.js",
+        "name": "utils.js",
+        "path": "kanshichan/src/renderer/tasks/utils.js",
+        "type": "file",
+        "lines": 0,
+        "val": 6,
+        "color": "#2c3038",
+        "baseColor": "#f7df1e",
+        "originalColor": "#f7df1e",
+        "defaultGlow": 0.1,
+        "glowIntensity": 0,
+        "highlighted": false,
+        "parentPath": "kanshichan/src/renderer/tasks",
+        "childFileCount": 0,
+        "x": -342.26966789994697,
+        "y": 86.93174143762093,
+        "z": 84.55693776554453,
+        "vx": 3.0986009086799147,
+        "vy": -3.655729860467055,
+        "vz": -2.3359868504213455
+      },
+      {
+        "id": "kanshichan/src/renderer/tasks/view-toggle.js",
+        "name": "view-toggle.js",
+        "path": "kanshichan/src/renderer/tasks/view-toggle.js",
+        "type": "file",
+        "lines": 0,
+        "val": 6,
+        "color": "#2c3038",
+        "baseColor": "#f7df1e",
+        "originalColor": "#f7df1e",
+        "defaultGlow": 0.1,
+        "glowIntensity": 0,
+        "highlighted": false,
+        "parentPath": "kanshichan/src/renderer/tasks",
+        "childFileCount": 0,
+        "x": -341.7437569702743,
+        "y": 86.96047122703256,
+        "z": 76.3692668514561,
+        "vx": 3.0986009086799147,
+        "vy": -3.655729860467055,
+        "vz": -2.3359868504213455
+      },
+      {
+        "id": "kanshichan/src/renderer/tasks/voice-commands.js",
+        "name": "voice-commands.js",
+        "path": "kanshichan/src/renderer/tasks/voice-commands.js",
+        "type": "file",
+        "lines": 0,
+        "val": 6,
+        "color": "#2c3038",
+        "baseColor": "#f7df1e",
+        "originalColor": "#f7df1e",
+        "defaultGlow": 0.1,
+        "glowIntensity": 0,
+        "highlighted": false,
+        "parentPath": "kanshichan/src/renderer/tasks",
+        "childFileCount": 0,
+        "x": -338.1924987535189,
+        "y": 82.05627624922401,
+        "z": 78.42050088246107,
+        "vx": 3.0986009086799147,
+        "vy": -3.655729860467055,
+        "vz": -2.3359868504213455
+      },
+      {
+        "id": "kanshichan/src/renderer/tasks/voice.js",
+        "name": "voice.js",
+        "path": "kanshichan/src/renderer/tasks/voice.js",
+        "type": "file",
+        "lines": 0,
+        "val": 6,
+        "color": "#2c3038",
+        "baseColor": "#f7df1e",
+        "originalColor": "#f7df1e",
+        "defaultGlow": 0.1,
+        "glowIntensity": 0,
+        "highlighted": false,
+        "parentPath": "kanshichan/src/renderer/tasks",
+        "childFileCount": 0,
+        "x": -340.82584264504953,
+        "y": 84.99418144034951,
+        "z": 80.65525393884971,
+        "vx": 3.0986009086799147,
+        "vy": -3.655729860467055,
+        "vz": -2.3359868504213455
       },
       {
         "id": "kanshichan/src/renderer/app.js",
@@ -4183,16 +4817,16 @@
         "baseColor": "#f7df1e",
         "originalColor": "#f7df1e",
         "defaultGlow": 0.1,
-        "glowIntensity": 0,
-        "highlighted": false,
+        "glowIntensity": 2.4,
+        "highlighted": true,
         "parentPath": "kanshichan/src/renderer",
         "childFileCount": 0,
-        "x": -370.0599796365038,
-        "y": 2.85371302311714,
-        "z": 53.41249407868784,
-        "vx": 1.5665033511185775e-9,
-        "vy": -2.1513009228437574e-9,
-        "vz": 2.764414593182001e-9
+        "x": -346.8864976316681,
+        "y": 60.26648876919722,
+        "z": 58.11144452771054,
+        "vx": 0.04037989007916371,
+        "vy": -0.7104002593982115,
+        "vz": -0.13613355150978862
       },
       {
         "id": "kanshichan/src/renderer/chat.js",
@@ -4209,12 +4843,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer",
         "childFileCount": 0,
-        "x": -368.96673982447106,
-        "y": 46.297860995634906,
-        "z": 45.59897428078664,
-        "vx": -1.0878199150720679e-10,
-        "vy": -1.7538917663923256e-9,
-        "vz": 2.363981083232946e-9
+        "x": -369.7971057323419,
+        "y": 95.72390473168778,
+        "z": 52.9730309441672,
+        "vx": -1.2176604414915138,
+        "vy": -0.09394277914970278,
+        "vz": -1.0142213487909149
       },
       {
         "id": "kanshichan/src/renderer/dashboard.js",
@@ -4231,12 +4865,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer",
         "childFileCount": 0,
-        "x": -339.6511856845242,
-        "y": -5.277392730657579,
-        "z": 81.30318920308287,
-        "vx": 1.6187591137281573e-9,
-        "vy": -9.916984768045858e-10,
-        "vz": 2.513642161337203e-9
+        "x": -307.1865244903598,
+        "y": 77.36679347619825,
+        "z": 87.64258415398425,
+        "vx": -0.00021839957739246962,
+        "vy": -0.3116606356958575,
+        "vz": 0.10279174949956339
       },
       {
         "id": "kanshichan/src/renderer/monitor.js",
@@ -4253,12 +4887,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer",
         "childFileCount": 0,
-        "x": -370.98131784420815,
-        "y": 8.471081007253405,
-        "z": 105.27196550123112,
-        "vx": 1.274105546525165e-9,
-        "vy": -1.3549690035544402e-9,
-        "vz": 2.402603818542414e-9
+        "x": -352.389337342648,
+        "y": 61.02464853476852,
+        "z": 100.77710781457472,
+        "vx": -0.13702704734211962,
+        "vy": -0.9965962116037073,
+        "vz": 0.6189571352346438
       },
       {
         "id": "kanshichan/src/renderer/schedule.js",
@@ -4275,12 +4909,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer",
         "childFileCount": 0,
-        "x": -331.1113752334102,
-        "y": 32.40463913737855,
-        "z": 106.13124485214739,
-        "vx": 1.2410314235004254e-9,
-        "vy": -1.4408768282756688e-9,
-        "vz": 2.3251014647403194e-9
+        "x": -322.2814661884934,
+        "y": 108.44227275672469,
+        "z": 108.48553093817551,
+        "vx": 0.43057938131901624,
+        "vy": -0.11711171187146942,
+        "vz": 0.8085500063617258
       },
       {
         "id": "kanshichan/src/renderer/settings.js",
@@ -4297,12 +4931,34 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/renderer",
         "childFileCount": 0,
-        "x": -346.2585185606765,
-        "y": 65.07752577800038,
-        "z": 80.24934321891644,
-        "vx": 2.059397105407531e-9,
-        "vy": -1.8911741336812174e-9,
-        "vz": 2.423687988389331e-9
+        "x": -342.0742555180775,
+        "y": 127.36311374470216,
+        "z": 65.11058868681015,
+        "vx": -0.057234319284716846,
+        "vy": 0.8297531637847683,
+        "vz": -0.2981318415090191
+      },
+      {
+        "id": "kanshichan/src/renderer/tasks.js",
+        "name": "tasks.js",
+        "path": "kanshichan/src/renderer/tasks.js",
+        "type": "file",
+        "lines": 0,
+        "val": 6,
+        "color": "#2c3038",
+        "baseColor": "#f7df1e",
+        "originalColor": "#f7df1e",
+        "defaultGlow": 0.1,
+        "glowIntensity": 2.4,
+        "highlighted": true,
+        "parentPath": "kanshichan/src/renderer",
+        "childFileCount": 0,
+        "x": -356.37544697388194,
+        "y": 108.57895450428121,
+        "z": 92.54605835067534,
+        "vx": -10.699276308444025,
+        "vy": 12.038592572178763,
+        "vz": 9.541613981745462
       },
       {
         "id": "kanshichan/src/styles",
@@ -4318,13 +4974,13 @@
         "glowIntensity": 0,
         "highlighted": false,
         "parentPath": "kanshichan/src",
-        "childFileCount": 9,
-        "x": -51.12352813493271,
-        "y": -202.286650389802,
-        "z": 9.161968719978203,
-        "vx": 1.2838023033081684e-9,
-        "vy": 5.94611403992869e-10,
-        "vz": 1.5537446113663592e-9
+        "childFileCount": 10,
+        "x": -79.23318750374314,
+        "y": -182.4524834356244,
+        "z": 22.35130410405462,
+        "vx": -2.2997734034258674,
+        "vy": -9.521443897458441,
+        "vz": 0.6517375798922677
       },
       {
         "id": "kanshichan/src/styles/base.css",
@@ -4341,12 +4997,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/styles",
         "childFileCount": 0,
-        "x": -74.63794433440697,
-        "y": -229.36502388347503,
-        "z": -9.88384530211135,
-        "vx": 9.456555894211423e-10,
-        "vy": -1.548465605746361e-10,
-        "vz": 2.2597555181223053e-9
+        "x": -113.95175796196695,
+        "y": -187.438410965507,
+        "z": 20.136961694673126,
+        "vx": 0.8840978014236015,
+        "vy": 1.0036898782924133,
+        "vz": -0.42216955637598
       },
       {
         "id": "kanshichan/src/styles/chat.css",
@@ -4363,12 +5019,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/styles",
         "childFileCount": 0,
-        "x": -13.530454311207459,
-        "y": -218.6552169540905,
-        "z": 11.999967884277236,
-        "vx": 1.3157918640519633e-9,
-        "vy": -5.209331787945068e-10,
-        "vz": 1.7208846943371085e-9
+        "x": -49.44071198392841,
+        "y": -199.7153569238152,
+        "z": 12.637721023337281,
+        "vx": -0.7143886310343833,
+        "vy": 1.3847262022234101,
+        "vz": -0.09356123225896065
       },
       {
         "id": "kanshichan/src/styles/dashboard.css",
@@ -4385,12 +5041,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/styles",
         "childFileCount": 0,
-        "x": -28.76243260279225,
-        "y": -205.20169581274448,
-        "z": 44.2362431561542,
-        "vx": 1.301894978401918e-9,
-        "vy": -3.0601166118455734e-10,
-        "vz": 2.0023336687244677e-9
+        "x": -44.71770007518981,
+        "y": -184.28121080676016,
+        "z": 43.149282760811104,
+        "vx": -0.6172559018574023,
+        "vy": 0.8158086261999091,
+        "vz": -0.7749320347863109
       },
       {
         "id": "kanshichan/src/styles/drawer.css",
@@ -4407,12 +5063,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/styles",
         "childFileCount": 0,
-        "x": -34.74068033744877,
-        "y": -237.9004845236125,
-        "z": -6.023326658794004,
-        "vx": 8.001679596937594e-10,
-        "vy": -1.2329436722701195e-11,
-        "vz": 1.557110721659382e-9
+        "x": -87.12930906873777,
+        "y": -204.36342805326058,
+        "z": -0.35572458602929646,
+        "vx": 0.32933687647424037,
+        "vy": 0.9020021921978489,
+        "vz": 0.10743196173177871
       },
       {
         "id": "kanshichan/src/styles/monitor.css",
@@ -4429,12 +5085,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/styles",
         "childFileCount": 0,
-        "x": -62.890506814245434,
-        "y": -198.27905419378652,
-        "z": 47.79647415356845,
-        "vx": 1.3364665380555858e-9,
-        "vy": 2.9296570598531016e-10,
-        "vz": 1.9690418015303923e-9
+        "x": -71.62718923273594,
+        "y": -165.50645416193478,
+        "z": 60.3472976835565,
+        "vx": 0.009678173032847836,
+        "vy": 0.32802671620703094,
+        "vz": -1.0999313456062376
       },
       {
         "id": "kanshichan/src/styles/schedule.css",
@@ -4451,12 +5107,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/styles",
         "childFileCount": 0,
-        "x": -86.61788359556999,
-        "y": -219.79503554541637,
-        "z": 21.303192884764503,
-        "vx": 1.0367498890706372e-9,
-        "vy": 6.959501652347136e-10,
-        "vz": 2.081246297832853e-9
+        "x": -102.65093321938858,
+        "y": -180.8421469044356,
+        "z": 52.80783185700976,
+        "vx": 0.6602643901829003,
+        "vy": 0.49643674064854465,
+        "vz": -0.7338295415316854
       },
       {
         "id": "kanshichan/src/styles/settings.css",
@@ -4473,12 +5129,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/styles",
         "childFileCount": 0,
-        "x": -61.38811508244282,
-        "y": -230.20210638134182,
-        "z": 41.019629818344235,
-        "vx": 1.1880156957406248e-9,
-        "vy": 2.2057667939355517e-10,
-        "vz": 1.6652793111915598e-9
+        "x": -74.48946474480051,
+        "y": -197.8907784903349,
+        "z": 56.816891099924895,
+        "vx": 0.008217518616389308,
+        "vy": 0.7446331527260832,
+        "vz": -0.4189945808001832
       },
       {
         "id": "kanshichan/src/styles/style.css",
@@ -4491,16 +5147,38 @@
         "baseColor": "#1572b6",
         "originalColor": "#1572b6",
         "defaultGlow": 0.18,
-        "glowIntensity": 0,
-        "highlighted": false,
+        "glowIntensity": 2.4,
+        "highlighted": true,
         "parentPath": "kanshichan/src/styles",
         "childFileCount": 0,
-        "x": -58.937463245845265,
-        "y": -245.93909235704444,
-        "z": 11.686309190877335,
-        "vx": 1.1170545793476237e-9,
-        "vy": 4.506334775220444e-10,
-        "vz": 1.6652246888268401e-9
+        "x": -96.51131693542538,
+        "y": -210.20059372699373,
+        "z": 31.748068678471142,
+        "vx": 0.20455245406215275,
+        "vy": 0.49100095856948783,
+        "vz": -0.05376294577186103
+      },
+      {
+        "id": "kanshichan/src/styles/tasks.css",
+        "name": "tasks.css",
+        "path": "kanshichan/src/styles/tasks.css",
+        "type": "file",
+        "lines": 0,
+        "val": 6,
+        "color": "#2c3038",
+        "baseColor": "#1572b6",
+        "originalColor": "#1572b6",
+        "defaultGlow": 0.18,
+        "glowIntensity": 2.4,
+        "highlighted": true,
+        "parentPath": "kanshichan/src/styles",
+        "childFileCount": 0,
+        "x": -70.72383154563063,
+        "y": -146.57314492570396,
+        "z": 17.94734924306895,
+        "vx": 5.327335717636154,
+        "vy": 22.403136325003313,
+        "vz": -3.6152601862613896
       },
       {
         "id": "kanshichan/src/styles/voice-input.css",
@@ -4517,12 +5195,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/styles",
         "childFileCount": 0,
-        "x": -32.84464281677572,
-        "y": -236.83529667147587,
-        "z": 30.484924913243695,
-        "vx": 1.3008892883258886e-9,
-        "vy": 6.075481351163332e-10,
-        "vz": 1.4524457896718808e-9
+        "x": -66.39942836836431,
+        "y": -215.09676358561313,
+        "z": 33.97592057176551,
+        "vx": 0.0845086662755438,
+        "vy": -0.8855218372312978,
+        "vz": 0.4574206072545671
       },
       {
         "id": "kanshichan/src/utils",
@@ -4539,12 +5217,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src",
         "childFileCount": 1,
-        "x": -96.67902997796732,
-        "y": -107.64749415092983,
-        "z": -57.94025942492398,
-        "vx": -2.0933194800687442e-10,
-        "vy": 6.319679116395084e-10,
-        "vz": 3.1368853468367233e-9
+        "x": -111.209428117258,
+        "y": -78.28078229119905,
+        "z": -32.46805325850429,
+        "vx": -1.6096135558040405,
+        "vy": -0.1941094584317812,
+        "vz": 0.03575438193932358
       },
       {
         "id": "kanshichan/src/utils/yolo-detector.js",
@@ -4561,12 +5239,12 @@
         "highlighted": false,
         "parentPath": "kanshichan/src/utils",
         "childFileCount": 0,
-        "x": -128.13674713612625,
-        "y": -123.63335884057356,
-        "z": -75.91726965724902,
-        "vx": -1.4939629898594192e-9,
-        "vy": 2.081342316062149e-10,
-        "vz": 3.771451346428091e-9
+        "x": -145.48683440381438,
+        "y": -81.53315052313849,
+        "z": -35.55321985694861,
+        "vx": 2.1355454625451396,
+        "vy": 0.04354435818392123,
+        "vz": 0.10271486542363169
       },
       {
         "id": "kanshichan/src/preload.js",
@@ -4579,16 +5257,16 @@
         "baseColor": "#f7df1e",
         "originalColor": "#f7df1e",
         "defaultGlow": 0.1,
-        "glowIntensity": 0,
-        "highlighted": false,
+        "glowIntensity": 2.4,
+        "highlighted": true,
         "parentPath": "kanshichan/src",
         "childFileCount": 0,
-        "x": -64.45209392032142,
-        "y": -62.4311771668272,
-        "z": -25.577165426840637,
-        "vx": 6.884313246843127e-10,
-        "vy": 1.377854534421912e-9,
-        "vz": 8.893958007077783e-10
+        "x": -67.16299132454488,
+        "y": -58.23358589644075,
+        "z": -3.031201795764873,
+        "vx": -0.22260440992296718,
+        "vy": 0.29498643296596466,
+        "vz": 0.6270135916539373
       },
       {
         "id": "kanshichan/.DS_Store",
@@ -4605,12 +5283,12 @@
         "highlighted": false,
         "parentPath": "kanshichan",
         "childFileCount": 0,
-        "x": 235.95621859597165,
-        "y": -19.826791800924887,
-        "z": -40.61331815282882,
-        "vx": -2.805953306242047e-9,
-        "vy": 6.956560870214472e-10,
-        "vz": 3.4952363311674705e-10
+        "x": 206.50864143510913,
+        "y": -93.83251530643102,
+        "z": 5.533437547411177,
+        "vx": -0.028961005475555822,
+        "vy": -0.31361559151266666,
+        "vz": -0.07774586761064656
       },
       {
         "id": "kanshichan/.env",
@@ -4627,12 +5305,12 @@
         "highlighted": false,
         "parentPath": "kanshichan",
         "childFileCount": 0,
-        "x": 216.0321501644415,
-        "y": 17.313372293328285,
-        "z": -33.90050529236906,
-        "vx": 4.5655817697428275e-10,
-        "vy": 1.3162952039185028e-9,
-        "vz": 3.7106729463276346e-9
+        "x": 187.67998928086146,
+        "y": -47.00747931475963,
+        "z": -46.282618517448306,
+        "vx": 0.056233240620198785,
+        "vy": -0.3306473445904315,
+        "vz": 0.014832891591909921
       },
       {
         "id": "kanshichan/.gitignore",
@@ -4649,12 +5327,12 @@
         "highlighted": false,
         "parentPath": "kanshichan",
         "childFileCount": 0,
-        "x": 185.630142959576,
-        "y": 8.89250601178708,
-        "z": 13.102638470568456,
-        "vx": -9.609178511556019e-10,
-        "vy": 9.669002103974356e-10,
-        "vz": 2.3267475479917454e-9
+        "x": 209.4431231961132,
+        "y": -59.50242129526014,
+        "z": 8.08102688056771,
+        "vx": 0.15151822493027903,
+        "vy": -0.2853687292717573,
+        "vz": 0.04538501466257928
       },
       {
         "id": "kanshichan/AGENTS.md",
@@ -4671,12 +5349,12 @@
         "highlighted": false,
         "parentPath": "kanshichan",
         "childFileCount": 0,
-        "x": 202.17807323523468,
-        "y": -48.20328998839403,
-        "z": 15.082873816215274,
-        "vx": -2.5023937060294986e-9,
-        "vy": 4.0187155220049906e-10,
-        "vz": 1.3369888412878463e-9
+        "x": 197.0052905913611,
+        "y": -96.13368564353026,
+        "z": -62.89686837672831,
+        "vx": 0.14921280218108945,
+        "vy": -0.1501296937430238,
+        "vz": -0.022213646057293552
       },
       {
         "id": "kanshichan/LICENSE",
@@ -4693,12 +5371,12 @@
         "highlighted": false,
         "parentPath": "kanshichan",
         "childFileCount": 0,
-        "x": 184.27202209467237,
-        "y": -23.3306727022599,
-        "z": 22.079016531210662,
-        "vx": -2.0420365733063554e-9,
-        "vy": 7.24082038837084e-10,
-        "vz": 1.515923563157629e-9
+        "x": 179.24694523982328,
+        "y": -69.76595509303652,
+        "z": -8.358558100454568,
+        "vx": -0.4474723959161373,
+        "vy": -0.21223662635563503,
+        "vz": 0.2595012404626889
       },
       {
         "id": "kanshichan/main.js",
@@ -4715,12 +5393,12 @@
         "highlighted": false,
         "parentPath": "kanshichan",
         "childFileCount": 0,
-        "x": 239.5546863084526,
-        "y": -40.84695382799275,
-        "z": -14.420908158147641,
-        "vx": -1.7024262697679508e-9,
-        "vy": 7.365802585541188e-10,
-        "vz": 1.3644631524659636e-9
+        "x": 238.30869428631922,
+        "y": -55.56772291345295,
+        "z": -3.6849051860293174,
+        "vx": -0.30223314975755367,
+        "vy": -0.4870985402263362,
+        "vz": -0.07598549886889062
       },
       {
         "id": "kanshichan/package-lock.json",
@@ -4737,12 +5415,12 @@
         "highlighted": false,
         "parentPath": "kanshichan",
         "childFileCount": 0,
-        "x": 187.3171317647405,
-        "y": -14.038296327848196,
-        "z": -53.120682400123115,
-        "vx": -2.407615190776375e-9,
-        "vy": 1.899492628861622e-9,
-        "vz": 2.1138318821586747e-9
+        "x": 217.32967689196624,
+        "y": -114.52813596887583,
+        "z": -47.913937749365935,
+        "vx": -0.21840974170703656,
+        "vy": -0.02466116310358424,
+        "vz": 0.33631072735192435
       },
       {
         "id": "kanshichan/package.json",
@@ -4759,12 +5437,12 @@
         "highlighted": false,
         "parentPath": "kanshichan",
         "childFileCount": 0,
-        "x": 188.90326188466244,
-        "y": 22.16641087673716,
-        "z": -18.734073316123666,
-        "vx": -1.354805163507562e-9,
-        "vy": 1.046748801168978e-9,
-        "vz": 1.5476236187367702e-9
+        "x": 239.385077327835,
+        "y": -61.82403579236232,
+        "z": -61.759142709412195,
+        "vx": -0.4253928926846881,
+        "vy": -0.37142617732009314,
+        "vz": 0.4701399715184131
       },
       {
         "id": "kanshichan/README.md",
@@ -4781,12 +5459,12 @@
         "highlighted": false,
         "parentPath": "kanshichan",
         "childFileCount": 0,
-        "x": 213.07928203331093,
-        "y": -41.29873947992367,
-        "z": -49.16889266104388,
-        "vx": -2.4671407712422013e-9,
-        "vy": 8.632967670659134e-10,
-        "vz": 1.6090137442675752e-9
+        "x": 224.93946900804457,
+        "y": -35.88872761314257,
+        "z": -44.72730380205888,
+        "vx": 0.022352097831985263,
+        "vy": -0.43772996222656174,
+        "vz": 0.032422458243573093
       }
     ],
     "links": [
@@ -4977,11 +5655,6 @@
       },
       {
         "source": "kanshichan/docs",
-        "target": "kanshichan/docs/audio-input-architecture.md",
-        "type": "tree"
-      },
-      {
-        "source": "kanshichan/docs",
         "target": "kanshichan/docs/comment-guidelines.md",
         "type": "tree"
       },
@@ -5002,17 +5675,7 @@
       },
       {
         "source": "kanshichan/docs",
-        "target": "kanshichan/docs/monitor-preview-toggle-plan.md",
-        "type": "tree"
-      },
-      {
-        "source": "kanshichan/docs",
         "target": "kanshichan/docs/README.md",
-        "type": "tree"
-      },
-      {
-        "source": "kanshichan/docs",
-        "target": "kanshichan/docs/release-notes.md",
         "type": "tree"
       },
       {
@@ -5022,12 +5685,12 @@
       },
       {
         "source": "kanshichan/docs",
-        "target": "kanshichan/docs/settings-voice-command-expansion-plan.md",
+        "target": "kanshichan/docs/sitemap.xml",
         "type": "tree"
       },
       {
         "source": "kanshichan/docs",
-        "target": "kanshichan/docs/sitemap.xml",
+        "target": "kanshichan/docs/tasks-implementation-plan.md",
         "type": "tree"
       },
       {
@@ -5117,6 +5780,31 @@
       },
       {
         "source": "kanshichan/src/main/db",
+        "target": "kanshichan/src/main/db/migrations",
+        "type": "tree"
+      },
+      {
+        "source": "kanshichan/src/main/db/migrations",
+        "target": "kanshichan/src/main/db/migrations/001_initial_schema.js",
+        "type": "tree"
+      },
+      {
+        "source": "kanshichan/src/main/db/migrations",
+        "target": "kanshichan/src/main/db/migrations/002_add_schedules.js",
+        "type": "tree"
+      },
+      {
+        "source": "kanshichan/src/main/db/migrations",
+        "target": "kanshichan/src/main/db/migrations/003_task_extensions.js",
+        "type": "tree"
+      },
+      {
+        "source": "kanshichan/src/main/db/migrations",
+        "target": "kanshichan/src/main/db/migrations/index.js",
+        "type": "tree"
+      },
+      {
+        "source": "kanshichan/src/main/db",
         "target": "kanshichan/src/main/db/index.js",
         "type": "tree"
       },
@@ -5162,6 +5850,11 @@
       },
       {
         "source": "kanshichan/src/main/services",
+        "target": "kanshichan/src/main/services/schedules.js",
+        "type": "tree"
+      },
+      {
+        "source": "kanshichan/src/main/services",
         "target": "kanshichan/src/main/services/slack-reporter.js",
         "type": "tree"
       },
@@ -5173,6 +5866,11 @@
       {
         "source": "kanshichan/src/main/services",
         "target": "kanshichan/src/main/services/system-events.js",
+        "type": "tree"
+      },
+      {
+        "source": "kanshichan/src/main/services",
+        "target": "kanshichan/src/main/services/tasks.js",
         "type": "tree"
       },
       {
@@ -5198,11 +5896,6 @@
       {
         "source": "kanshichan/src",
         "target": "kanshichan/src/pages",
-        "type": "tree"
-      },
-      {
-        "source": "kanshichan/src/pages",
-        "target": "kanshichan/src/pages/variants",
         "type": "tree"
       },
       {
@@ -5268,6 +5961,11 @@
       {
         "source": "kanshichan/src/renderer/dashboard",
         "target": "kanshichan/src/renderer/dashboard/tables.js",
+        "type": "tree"
+      },
+      {
+        "source": "kanshichan/src/renderer/dashboard",
+        "target": "kanshichan/src/renderer/dashboard/tasks.js",
         "type": "tree"
       },
       {
@@ -5517,6 +6215,101 @@
       },
       {
         "source": "kanshichan/src/renderer",
+        "target": "kanshichan/src/renderer/tasks",
+        "type": "tree"
+      },
+      {
+        "source": "kanshichan/src/renderer/tasks",
+        "target": "kanshichan/src/renderer/tasks/announcement.js",
+        "type": "tree"
+      },
+      {
+        "source": "kanshichan/src/renderer/tasks",
+        "target": "kanshichan/src/renderer/tasks/constants.js",
+        "type": "tree"
+      },
+      {
+        "source": "kanshichan/src/renderer/tasks",
+        "target": "kanshichan/src/renderer/tasks/dom.js",
+        "type": "tree"
+      },
+      {
+        "source": "kanshichan/src/renderer/tasks",
+        "target": "kanshichan/src/renderer/tasks/drag.js",
+        "type": "tree"
+      },
+      {
+        "source": "kanshichan/src/renderer/tasks",
+        "target": "kanshichan/src/renderer/tasks/filter-apply.js",
+        "type": "tree"
+      },
+      {
+        "source": "kanshichan/src/renderer/tasks",
+        "target": "kanshichan/src/renderer/tasks/filters.js",
+        "type": "tree"
+      },
+      {
+        "source": "kanshichan/src/renderer/tasks",
+        "target": "kanshichan/src/renderer/tasks/form.js",
+        "type": "tree"
+      },
+      {
+        "source": "kanshichan/src/renderer/tasks",
+        "target": "kanshichan/src/renderer/tasks/model.js",
+        "type": "tree"
+      },
+      {
+        "source": "kanshichan/src/renderer/tasks",
+        "target": "kanshichan/src/renderer/tasks/notifications.js",
+        "type": "tree"
+      },
+      {
+        "source": "kanshichan/src/renderer/tasks",
+        "target": "kanshichan/src/renderer/tasks/reading-settings.js",
+        "type": "tree"
+      },
+      {
+        "source": "kanshichan/src/renderer/tasks",
+        "target": "kanshichan/src/renderer/tasks/render.js",
+        "type": "tree"
+      },
+      {
+        "source": "kanshichan/src/renderer/tasks",
+        "target": "kanshichan/src/renderer/tasks/repeat-controls.js",
+        "type": "tree"
+      },
+      {
+        "source": "kanshichan/src/renderer/tasks",
+        "target": "kanshichan/src/renderer/tasks/sort.js",
+        "type": "tree"
+      },
+      {
+        "source": "kanshichan/src/renderer/tasks",
+        "target": "kanshichan/src/renderer/tasks/state.js",
+        "type": "tree"
+      },
+      {
+        "source": "kanshichan/src/renderer/tasks",
+        "target": "kanshichan/src/renderer/tasks/utils.js",
+        "type": "tree"
+      },
+      {
+        "source": "kanshichan/src/renderer/tasks",
+        "target": "kanshichan/src/renderer/tasks/view-toggle.js",
+        "type": "tree"
+      },
+      {
+        "source": "kanshichan/src/renderer/tasks",
+        "target": "kanshichan/src/renderer/tasks/voice-commands.js",
+        "type": "tree"
+      },
+      {
+        "source": "kanshichan/src/renderer/tasks",
+        "target": "kanshichan/src/renderer/tasks/voice.js",
+        "type": "tree"
+      },
+      {
+        "source": "kanshichan/src/renderer",
         "target": "kanshichan/src/renderer/app.js",
         "type": "tree"
       },
@@ -5543,6 +6336,11 @@
       {
         "source": "kanshichan/src/renderer",
         "target": "kanshichan/src/renderer/settings.js",
+        "type": "tree"
+      },
+      {
+        "source": "kanshichan/src/renderer",
+        "target": "kanshichan/src/renderer/tasks.js",
         "type": "tree"
       },
       {
@@ -5588,6 +6386,11 @@
       {
         "source": "kanshichan/src/styles",
         "target": "kanshichan/src/styles/style.css",
+        "type": "tree"
+      },
+      {
+        "source": "kanshichan/src/styles",
+        "target": "kanshichan/src/styles/tasks.css",
         "type": "tree"
       },
       {
@@ -5661,6 +6464,11 @@
     ".claude/settings.local.json",
     ".cursor/rules/v5.mdc",
     ".gitignore",
+    ".kamui/model-versions-cache.json",
+    ".kamui/prompt/merge-prompt.txt",
+    ".kamui/prompt/restart-prompt.txt",
+    ".kamui/system-graph-state.json",
+    ".kamui/tasks-state.json",
     "AGENTS.md",
     "LICENSE",
     "README.md",
@@ -5689,15 +6497,12 @@
     "docs/assets/images/screenshots/settings-04.jpeg",
     "docs/assets/images/screenshots/slack.jpeg",
     "docs/assets/js/main.js",
-    "docs/audio-input-architecture.md",
     "docs/comment-guidelines.md",
     "docs/development-guidelines.md",
     "docs/index.html",
-    "docs/monitor-preview-toggle-plan.md",
-    "docs/release-notes.md",
     "docs/robots.txt",
-    "docs/settings-voice-command-expansion-plan.md",
     "docs/sitemap.xml",
+    "docs/tasks-implementation-plan.md",
     "docs/testing/voice-command-expansion.md",
     "main.js",
     "models/yolo11n.onnx",
@@ -5716,15 +6521,21 @@
     "src/constants/yolo-classes.js",
     "src/main/create-window.js",
     "src/main/db/index.js",
+    "src/main/db/migrations/001_initial_schema.js",
+    "src/main/db/migrations/002_add_schedules.js",
+    "src/main/db/migrations/003_task_extensions.js",
+    "src/main/db/migrations/index.js",
     "src/main/ipc/register-handlers.js",
     "src/main/services/absence-override.js",
     "src/main/services/active-window.js",
     "src/main/services/audio.js",
     "src/main/services/config-store.js",
     "src/main/services/llm.js",
+    "src/main/services/schedules.js",
     "src/main/services/slack-reporter.js",
     "src/main/services/statistics.js",
     "src/main/services/system-events.js",
+    "src/main/services/tasks.js",
     "src/main/services/typing-monitor.js",
     "src/main/services/voicevox.js",
     "src/main/services/whisper.js",
@@ -5742,6 +6553,7 @@
     "src/renderer/dashboard/state.js",
     "src/renderer/dashboard/system-events.js",
     "src/renderer/dashboard/tables.js",
+    "src/renderer/dashboard/tasks.js",
     "src/renderer/dashboard/typing.js",
     "src/renderer/dashboard/upcoming.js",
     "src/renderer/dashboard/utils.js",
@@ -5788,6 +6600,7 @@
     "src/renderer/settings/voice-dictionary-store.js",
     "src/renderer/settings/voice-dictionary.js",
     "src/renderer/stores/audio-input-store.js",
+    "src/renderer/tasks.js",
     "src/styles/base.css",
     "src/styles/chat.css",
     "src/styles/dashboard.css",
@@ -5796,6 +6609,7 @@
     "src/styles/schedule.css",
     "src/styles/settings.css",
     "src/styles/style.css",
+    "src/styles/tasks.css",
     "src/styles/voice-input.css",
     "src/utils/yolo-detector.js"
   ],
@@ -5805,10 +6619,28 @@
       "kanshichan/kanshichan",
       "kanshichan/.kamui",
       "kanshichan/kanshichan/.kamui",
-      "kanshichan/.kamui/prompt",
-      "kanshichan/kanshichan/.kamui/prompt",
-      "task-1762065398891-c05a99",
-      "task-1762065401082-315008"
+      "kanshichan/src",
+      "kanshichan/kanshichan/src",
+      "kanshichan/src/constants",
+      "kanshichan/kanshichan/src/constants",
+      "kanshichan/src/main",
+      "kanshichan/kanshichan/src/main",
+      "kanshichan/src/main/db",
+      "kanshichan/kanshichan/src/main/db",
+      "kanshichan/src/main/ipc",
+      "kanshichan/kanshichan/src/main/ipc",
+      "kanshichan/src/main/services",
+      "kanshichan/kanshichan/src/main/services",
+      "kanshichan/src/pages",
+      "kanshichan/kanshichan/src/pages",
+      "kanshichan/src/renderer",
+      "kanshichan/kanshichan/src/renderer",
+      "kanshichan/src/renderer/components",
+      "kanshichan/kanshichan/src/renderer/components",
+      "kanshichan/src/renderer/services",
+      "kanshichan/kanshichan/src/renderer/services",
+      "kanshichan/src/styles",
+      "kanshichan/kanshichan/src/styles"
     ],
     "selectedPath": null
   },
@@ -5819,35 +6651,9 @@
     "isPartial": false
   },
   "gitHistoryMeta": {
-    "mode": "full",
-    "isPartial": false,
-    "branchPulse": {
-      "generatedAt": 1762067655023,
-      "targets": [
-        "main",
-        "master",
-        "tomoyasu-sasaki/develop"
-      ],
-      "statsByBranch": {
-        "main": {
-          "branch": "main",
-          "head": "7bc0076b41c761fc760851ef185010f8b8889c0c",
-          "baseRef": "origin/main",
-          "baseHead": "7bc0076b41c761fc760851ef185010f8b8889c0c",
-          "mergeBase": "7bc0076b41c761fc760851ef185010f8b8889c0c",
-          "divergence": {
-            "aheadCount": 0,
-            "fileCount": 0
-          },
-          "baseline": {
-            "aheadCount": 0,
-            "behindCount": 0,
-            "fileCount": 0
-          },
-          "upstream": null
-        }
-      }
-    }
+    "mode": "summary",
+    "isPartial": true,
+    "heavyComputationSkipped": true
   },
   "gitHistoryState": {
     "selectedTimelineIndex": 1,
@@ -5857,37 +6663,578 @@
         "type": "live",
         "label": "現在のコードベース",
         "files": [],
-        "branch": "main",
-        "targetCommitHash": "7bc0076b41c761fc760851ef185010f8b8889c0c",
+        "branch": "feature/tasks-management",
+        "targetCommitHash": "bb7d1a9cc8f6e0de4878bc803ffa05e3d0b5a6c4",
         "worktreePath": "/Users/tmys-sasaki/Projects/Public/kanshichan",
-        "timestamp": 1762067655055,
-        "lane": 0,
-        "branchLabel": "main",
+        "timestamp": 1762213951407,
+        "lane": 1,
+        "branchLabel": "feature/tasks-management",
         "branchTags": [
-          "main"
+          "feature/tasks-management"
         ],
         "isDefaultWorktree": true,
-        "branchColor": "#4f85e8",
+        "branchColor": "#e8a84f",
         "index": 0
       },
       {
         "type": "unstaged",
-        "label": "未ステージ (5)",
+        "label": "未ステージ (20)",
         "files": [
-          ".kamui/model-versions-cache.json",
-          ".kamui/prompt/merge-prompt.txt",
-          ".kamui/prompt/restart-prompt.txt",
           ".kamui/system-graph-state.json",
-          ".kamui/tasks-state.json"
+          "src/renderer/tasks.js",
+          "src/renderer/tasks/announcement.js",
+          "src/renderer/tasks/constants.js",
+          "src/renderer/tasks/dom.js",
+          "src/renderer/tasks/drag.js",
+          "src/renderer/tasks/filter-apply.js",
+          "src/renderer/tasks/filters.js",
+          "src/renderer/tasks/form.js",
+          "src/renderer/tasks/model.js",
+          "src/renderer/tasks/notifications.js",
+          "src/renderer/tasks/reading-settings.js",
+          "src/renderer/tasks/render.js",
+          "src/renderer/tasks/repeat-controls.js",
+          "src/renderer/tasks/sort.js",
+          "src/renderer/tasks/state.js",
+          "src/renderer/tasks/utils.js",
+          "src/renderer/tasks/view-toggle.js",
+          "src/renderer/tasks/voice-commands.js",
+          "src/renderer/tasks/voice.js"
         ],
-        "branch": "main",
-        "targetCommitHash": "7bc0076b41c761fc760851ef185010f8b8889c0c",
+        "branch": "feature/tasks-management",
+        "targetCommitHash": "bb7d1a9cc8f6e0de4878bc803ffa05e3d0b5a6c4",
         "worktreePath": "/Users/tmys-sasaki/Projects/Public/kanshichan",
-        "timestamp": 1762067655055,
+        "timestamp": 1762213951407,
         "sortOrder": 0,
-        "lane": 0,
-        "branchColor": "#4f85e8",
+        "lane": 1,
+        "branchColor": "#e8a84f",
         "index": 1
+      },
+      {
+        "type": "staged",
+        "label": "ステージ済み (1)",
+        "files": [
+          "kamui/model-versions-cache.json"
+        ],
+        "branch": "feature/tasks-management",
+        "targetCommitHash": "bb7d1a9cc8f6e0de4878bc803ffa05e3d0b5a6c4",
+        "worktreePath": "/Users/tmys-sasaki/Projects/Public/kanshichan",
+        "timestamp": 1762213951407,
+        "sortOrder": 1,
+        "lane": 1,
+        "branchColor": "#e8a84f",
+        "index": 2
+      },
+      {
+        "type": "commit",
+        "label": "docs: Phase 3.2フロントエンドUI実装完了を反映",
+        "commit": {
+          "hash": "bb7d1a9cc8f6e0de4878bc803ffa05e3d0b5a6c4",
+          "subject": "docs: Phase 3.2フロントエンドUI実装完了を反映",
+          "author": "tomoyasu-sasaki",
+          "timestamp": 1762213456,
+          "parents": [
+            "c57171c80d284ec35fab1e31ffe11ee94c84ceae"
+          ],
+          "parent": "c57171c80d284ec35fab1e31ffe11ee94c84ceae",
+          "refs": "HEAD -> feature/tasks-management, origin/feature/tasks-management",
+          "branches": [
+            "HEAD -> feature/tasks-management",
+            "origin/feature/tasks-management",
+            "feature/tasks-management"
+          ]
+        },
+        "commitHash": "bb7d1a9cc8f6e0de4878bc803ffa05e3d0b5a6c4",
+        "lane": 1,
+        "parentLinks": [
+          {
+            "hash": "c57171c80d284ec35fab1e31ffe11ee94c84ceae",
+            "lane": 0
+          }
+        ],
+        "primaryBranchName": "feature/tasks-management",
+        "branchColor": "#e8a84f",
+        "branchTags": [
+          "feature/tasks-management"
+        ],
+        "worktrees": [
+          {
+            "path": "/Users/tmys-sasaki/Projects/Public/kanshichan",
+            "head": "bb7d1a9cc8f6e0de4878bc803ffa05e3d0b5a6c4",
+            "branch": "feature/tasks-management",
+            "normalizedPath": "/Users/tmys-sasaki/Projects/Public/kanshichan",
+            "lane": 1
+          }
+        ],
+        "index": 3
+      },
+      {
+        "type": "commit",
+        "label": "feat: Phase 3.2 ダッシュボード統合のフロントエンドUI実装",
+        "commit": {
+          "hash": "c57171c80d284ec35fab1e31ffe11ee94c84ceae",
+          "subject": "feat: Phase 3.2 ダッシュボード統合のフロントエンドUI実装",
+          "author": "tomoyasu-sasaki",
+          "timestamp": 1762213449,
+          "parents": [
+            "630268b34cb90d84d7e0ab14ab70280bb157a8bb"
+          ],
+          "parent": "630268b34cb90d84d7e0ab14ab70280bb157a8bb",
+          "refs": "",
+          "branches": []
+        },
+        "commitHash": "c57171c80d284ec35fab1e31ffe11ee94c84ceae",
+        "lane": 0,
+        "parentLinks": [
+          {
+            "hash": "630268b34cb90d84d7e0ab14ab70280bb157a8bb",
+            "lane": 0
+          }
+        ],
+        "branchColor": "#4f85e8",
+        "branchTags": [],
+        "index": 4
+      },
+      {
+        "type": "commit",
+        "label": "feat: Phase 3.3 Slack連携実装完了",
+        "commit": {
+          "hash": "630268b34cb90d84d7e0ab14ab70280bb157a8bb",
+          "subject": "feat: Phase 3.3 Slack連携実装完了",
+          "author": "tomoyasu-sasaki",
+          "timestamp": 1762213076,
+          "parents": [
+            "b2990af2fab268cff1b1661818edf767896c492d"
+          ],
+          "parent": "b2990af2fab268cff1b1661818edf767896c492d",
+          "refs": "",
+          "branches": []
+        },
+        "commitHash": "630268b34cb90d84d7e0ab14ab70280bb157a8bb",
+        "lane": 0,
+        "parentLinks": [
+          {
+            "hash": "b2990af2fab268cff1b1661818edf767896c492d",
+            "lane": 0
+          }
+        ],
+        "branchColor": "#4f85e8",
+        "branchTags": [],
+        "index": 5
+      },
+      {
+        "type": "commit",
+        "label": "feat: タスク統計API追加",
+        "commit": {
+          "hash": "b2990af2fab268cff1b1661818edf767896c492d",
+          "subject": "feat: タスク統計API追加",
+          "author": "tomoyasu-sasaki",
+          "timestamp": 1762213035,
+          "parents": [
+            "bf96f4e3390d0effa568252b714d3065da45e362"
+          ],
+          "parent": "bf96f4e3390d0effa568252b714d3065da45e362",
+          "refs": "",
+          "branches": []
+        },
+        "commitHash": "b2990af2fab268cff1b1661818edf767896c492d",
+        "lane": 0,
+        "parentLinks": [
+          {
+            "hash": "bf96f4e3390d0effa568252b714d3065da45e362",
+            "lane": 0
+          }
+        ],
+        "branchColor": "#4f85e8",
+        "branchTags": [],
+        "index": 6
+      },
+      {
+        "type": "commit",
+        "label": "feat: Phase 2完了通知とPhase 3.1スケジュール連携の実装",
+        "commit": {
+          "hash": "bf96f4e3390d0effa568252b714d3065da45e362",
+          "subject": "feat: Phase 2完了通知とPhase 3.1スケジュール連携の実装",
+          "author": "tomoyasu-sasaki",
+          "timestamp": 1762213029,
+          "parents": [
+            "41b6beac08b555db54ff64398eb596b244fc17f9"
+          ],
+          "parent": "41b6beac08b555db54ff64398eb596b244fc17f9",
+          "refs": "",
+          "branches": []
+        },
+        "commitHash": "bf96f4e3390d0effa568252b714d3065da45e362",
+        "lane": 0,
+        "parentLinks": [
+          {
+            "hash": "41b6beac08b555db54ff64398eb596b244fc17f9",
+            "lane": 0
+          }
+        ],
+        "branchColor": "#4f85e8",
+        "branchTags": [],
+        "index": 7
+      },
+      {
+        "type": "commit",
+        "label": "fix: タスク削除後のUI反映問題を修正",
+        "commit": {
+          "hash": "41b6beac08b555db54ff64398eb596b244fc17f9",
+          "subject": "fix: タスク削除後のUI反映問題を修正",
+          "author": "tomoyasu-sasaki",
+          "timestamp": 1762212756,
+          "parents": [
+            "f7b0dc767b033d900e6c18e2015050b7d0cde855"
+          ],
+          "parent": "f7b0dc767b033d900e6c18e2015050b7d0cde855",
+          "refs": "",
+          "branches": []
+        },
+        "commitHash": "41b6beac08b555db54ff64398eb596b244fc17f9",
+        "lane": 0,
+        "parentLinks": [
+          {
+            "hash": "f7b0dc767b033d900e6c18e2015050b7d0cde855",
+            "lane": 0
+          }
+        ],
+        "branchColor": "#4f85e8",
+        "branchTags": [],
+        "index": 8
+      },
+      {
+        "type": "commit",
+        "label": "fix: タスクCRUD操作後のUI反映問題を修正",
+        "commit": {
+          "hash": "f7b0dc767b033d900e6c18e2015050b7d0cde855",
+          "subject": "fix: タスクCRUD操作後のUI反映問題を修正",
+          "author": "tomoyasu-sasaki",
+          "timestamp": 1762212330,
+          "parents": [
+            "67d9f9c4d62ea128d0ae33330f26aa287302c914"
+          ],
+          "parent": "67d9f9c4d62ea128d0ae33330f26aa287302c914",
+          "refs": "",
+          "branches": []
+        },
+        "commitHash": "f7b0dc767b033d900e6c18e2015050b7d0cde855",
+        "lane": 0,
+        "parentLinks": [
+          {
+            "hash": "67d9f9c4d62ea128d0ae33330f26aa287302c914",
+            "lane": 0
+          }
+        ],
+        "branchColor": "#4f85e8",
+        "branchTags": [],
+        "index": 9
+      },
+      {
+        "type": "commit",
+        "label": "docs: Phase 2 の実装完了をマーク",
+        "commit": {
+          "hash": "67d9f9c4d62ea128d0ae33330f26aa287302c914",
+          "subject": "docs: Phase 2 の実装完了をマーク",
+          "author": "tomoyasu-sasaki",
+          "timestamp": 1762211850,
+          "parents": [
+            "851e55e6ecdbea9240c6a8578bc2e579f0b0c0ff"
+          ],
+          "parent": "851e55e6ecdbea9240c6a8578bc2e579f0b0c0ff",
+          "refs": "",
+          "branches": []
+        },
+        "commitHash": "67d9f9c4d62ea128d0ae33330f26aa287302c914",
+        "lane": 0,
+        "parentLinks": [
+          {
+            "hash": "851e55e6ecdbea9240c6a8578bc2e579f0b0c0ff",
+            "lane": 0
+          }
+        ],
+        "branchColor": "#4f85e8",
+        "branchTags": [],
+        "index": 10
+      },
+      {
+        "type": "commit",
+        "label": "feat: Phase 2.4 タスク管理の通知・リマインダー機能を実装",
+        "commit": {
+          "hash": "851e55e6ecdbea9240c6a8578bc2e579f0b0c0ff",
+          "subject": "feat: Phase 2.4 タスク管理の通知・リマインダー機能を実装",
+          "author": "tomoyasu-sasaki",
+          "timestamp": 1762211846,
+          "parents": [
+            "2ede3a44d12fe8af8ef7c6aedc9a3b834afc2abb"
+          ],
+          "parent": "2ede3a44d12fe8af8ef7c6aedc9a3b834afc2abb",
+          "refs": "",
+          "branches": []
+        },
+        "commitHash": "851e55e6ecdbea9240c6a8578bc2e579f0b0c0ff",
+        "lane": 0,
+        "parentLinks": [
+          {
+            "hash": "2ede3a44d12fe8af8ef7c6aedc9a3b834afc2abb",
+            "lane": 0
+          }
+        ],
+        "branchColor": "#4f85e8",
+        "branchTags": [],
+        "index": 11
+      },
+      {
+        "type": "commit",
+        "label": "feat: Phase 2.3 タスク管理のビュー切り替え機能を実装",
+        "commit": {
+          "hash": "2ede3a44d12fe8af8ef7c6aedc9a3b834afc2abb",
+          "subject": "feat: Phase 2.3 タスク管理のビュー切り替え機能を実装",
+          "author": "tomoyasu-sasaki",
+          "timestamp": 1762211827,
+          "parents": [
+            "f3841f8b7685d4032039600c3c50c766d64d1bfe"
+          ],
+          "parent": "f3841f8b7685d4032039600c3c50c766d64d1bfe",
+          "refs": "",
+          "branches": []
+        },
+        "commitHash": "2ede3a44d12fe8af8ef7c6aedc9a3b834afc2abb",
+        "lane": 0,
+        "parentLinks": [
+          {
+            "hash": "f3841f8b7685d4032039600c3c50c766d64d1bfe",
+            "lane": 0
+          }
+        ],
+        "branchColor": "#4f85e8",
+        "branchTags": [],
+        "index": 12
+      },
+      {
+        "type": "commit",
+        "label": "feat: Phase 2.1-2.2 タスク管理の高度なフィルタリングとソート機能を実装",
+        "commit": {
+          "hash": "f3841f8b7685d4032039600c3c50c766d64d1bfe",
+          "subject": "feat: Phase 2.1-2.2 タスク管理の高度なフィルタリングとソート機能を実装",
+          "author": "tomoyasu-sasaki",
+          "timestamp": 1762211796,
+          "parents": [
+            "de0665788f7dda1a2e9f1e7d495fcf859aaccb13"
+          ],
+          "parent": "de0665788f7dda1a2e9f1e7d495fcf859aaccb13",
+          "refs": "",
+          "branches": []
+        },
+        "commitHash": "f3841f8b7685d4032039600c3c50c766d64d1bfe",
+        "lane": 0,
+        "parentLinks": [
+          {
+            "hash": "de0665788f7dda1a2e9f1e7d495fcf859aaccb13",
+            "lane": 0
+          }
+        ],
+        "branchColor": "#4f85e8",
+        "branchTags": [],
+        "index": 13
+      },
+      {
+        "type": "commit",
+        "label": "ドキュメント更新",
+        "commit": {
+          "hash": "de0665788f7dda1a2e9f1e7d495fcf859aaccb13",
+          "subject": "ドキュメント更新",
+          "author": "tomoyasu-sasaki",
+          "timestamp": 1762211652,
+          "parents": [
+            "309704267e93f874c2c96340e4b459f63b38380f"
+          ],
+          "parent": "309704267e93f874c2c96340e4b459f63b38380f",
+          "refs": "",
+          "branches": []
+        },
+        "commitHash": "de0665788f7dda1a2e9f1e7d495fcf859aaccb13",
+        "lane": 0,
+        "parentLinks": [
+          {
+            "hash": "309704267e93f874c2c96340e4b459f63b38380f",
+            "lane": 0
+          }
+        ],
+        "branchColor": "#4f85e8",
+        "branchTags": [],
+        "index": 14
+      },
+      {
+        "type": "commit",
+        "label": "docs: コードレビュー修正報告書を追加",
+        "commit": {
+          "hash": "309704267e93f874c2c96340e4b459f63b38380f",
+          "subject": "docs: コードレビュー修正報告書を追加",
+          "author": "tomoyasu-sasaki",
+          "timestamp": 1762211059,
+          "parents": [
+            "9fd821505dad611f15b4dee37fb657a5bd86c5f0"
+          ],
+          "parent": "9fd821505dad611f15b4dee37fb657a5bd86c5f0",
+          "refs": "",
+          "branches": []
+        },
+        "commitHash": "309704267e93f874c2c96340e4b459f63b38380f",
+        "lane": 0,
+        "parentLinks": [
+          {
+            "hash": "9fd821505dad611f15b4dee37fb657a5bd86c5f0",
+            "lane": 0
+          }
+        ],
+        "branchColor": "#4f85e8",
+        "branchTags": [],
+        "index": 15
+      },
+      {
+        "type": "commit",
+        "label": "fix: タスク管理機能のコードレビュー指摘事項を修正",
+        "commit": {
+          "hash": "9fd821505dad611f15b4dee37fb657a5bd86c5f0",
+          "subject": "fix: タスク管理機能のコードレビュー指摘事項を修正",
+          "author": "tomoyasu-sasaki",
+          "timestamp": 1762210997,
+          "parents": [
+            "bd14e6c4871422ad6b0747d107c1d1fa0a687f3e"
+          ],
+          "parent": "bd14e6c4871422ad6b0747d107c1d1fa0a687f3e",
+          "refs": "",
+          "branches": []
+        },
+        "commitHash": "9fd821505dad611f15b4dee37fb657a5bd86c5f0",
+        "lane": 0,
+        "parentLinks": [
+          {
+            "hash": "bd14e6c4871422ad6b0747d107c1d1fa0a687f3e",
+            "lane": 0
+          }
+        ],
+        "branchColor": "#4f85e8",
+        "branchTags": [],
+        "index": 16
+      },
+      {
+        "type": "commit",
+        "label": "タスク機能実装",
+        "commit": {
+          "hash": "bd14e6c4871422ad6b0747d107c1d1fa0a687f3e",
+          "subject": "タスク機能実装",
+          "author": "tomoyasu-sasaki",
+          "timestamp": 1762210454,
+          "parents": [
+            "445239ab3419cc3107df25c553aa89fe639d91e8"
+          ],
+          "parent": "445239ab3419cc3107df25c553aa89fe639d91e8",
+          "refs": "",
+          "branches": []
+        },
+        "commitHash": "bd14e6c4871422ad6b0747d107c1d1fa0a687f3e",
+        "lane": 0,
+        "parentLinks": [
+          {
+            "hash": "445239ab3419cc3107df25c553aa89fe639d91e8",
+            "lane": 0
+          }
+        ],
+        "branchColor": "#4f85e8",
+        "branchTags": [],
+        "index": 17
+      },
+      {
+        "type": "commit",
+        "label": "fix: セキュリティ・データ整合性の強化",
+        "commit": {
+          "hash": "445239ab3419cc3107df25c553aa89fe639d91e8",
+          "subject": "fix: セキュリティ・データ整合性の強化",
+          "author": "tomoyasu-sasaki",
+          "timestamp": 1762087654,
+          "parents": [
+            "c28caf61ad1a4d097e3db809b8c9e89c2a4107a1"
+          ],
+          "parent": "c28caf61ad1a4d097e3db809b8c9e89c2a4107a1",
+          "refs": "",
+          "branches": []
+        },
+        "commitHash": "445239ab3419cc3107df25c553aa89fe639d91e8",
+        "lane": 0,
+        "parentLinks": [
+          {
+            "hash": "c28caf61ad1a4d097e3db809b8c9e89c2a4107a1",
+            "lane": 0
+          }
+        ],
+        "branchColor": "#4f85e8",
+        "branchTags": [],
+        "index": 18
+      },
+      {
+        "type": "commit",
+        "label": "feat: タスク管理機能の追加",
+        "commit": {
+          "hash": "c28caf61ad1a4d097e3db809b8c9e89c2a4107a1",
+          "subject": "feat: タスク管理機能の追加",
+          "author": "tomoyasu-sasaki",
+          "timestamp": 1762086936,
+          "parents": [
+            "cb74cdf40f8970211dbed496efc109d7f7ac9247"
+          ],
+          "parent": "cb74cdf40f8970211dbed496efc109d7f7ac9247",
+          "refs": "",
+          "branches": []
+        },
+        "commitHash": "c28caf61ad1a4d097e3db809b8c9e89c2a4107a1",
+        "lane": 0,
+        "parentLinks": [
+          {
+            "hash": "cb74cdf40f8970211dbed496efc109d7f7ac9247",
+            "lane": 0
+          }
+        ],
+        "branchColor": "#4f85e8",
+        "branchTags": [],
+        "index": 19
+      },
+      {
+        "type": "commit",
+        "label": "神威初期設定",
+        "commit": {
+          "hash": "cb74cdf40f8970211dbed496efc109d7f7ac9247",
+          "subject": "神威初期設定",
+          "author": "tomoyasu-sasaki",
+          "timestamp": 1762067755,
+          "parents": [
+            "7bc0076b41c761fc760851ef185010f8b8889c0c"
+          ],
+          "parent": "7bc0076b41c761fc760851ef185010f8b8889c0c",
+          "refs": "origin/main, origin/develop, main, develop",
+          "branches": [
+            "origin/main",
+            "origin/develop",
+            "main",
+            "develop"
+          ]
+        },
+        "commitHash": "cb74cdf40f8970211dbed496efc109d7f7ac9247",
+        "lane": 0,
+        "parentLinks": [
+          {
+            "hash": "7bc0076b41c761fc760851ef185010f8b8889c0c",
+            "lane": 0
+          }
+        ],
+        "primaryBranchName": "main",
+        "branchColor": "#4f85e8",
+        "branchTags": [
+          "main",
+          "develop"
+        ],
+        "index": 20
       },
       {
         "type": "commit",
@@ -5902,17 +7249,8 @@
             "a65a435a234f276f78058344cf96c76127fae680"
           ],
           "parent": "0b5f0079116604c7ffe0912900f9715d7f213db2",
-          "refs": "HEAD -> main, origin/main, task/task-1762065401082-315008, task/task-1762065398891-c05a99, task/task-1762065304541-777d84, task/task-1762065302360-3f13ea",
-          "branches": [
-            "HEAD -> main",
-            "origin/main",
-            "task/task-1762065401082-315008",
-            "task/task-1762065398891-c05a99",
-            "task/task-1762065304541-777d84",
-            "task/task-1762065302360-3f13ea",
-            "main",
-            "tomoyasu-sasaki/develop"
-          ]
+          "refs": "",
+          "branches": []
         },
         "commitHash": "7bc0076b41c761fc760851ef185010f8b8889c0c",
         "lane": 0,
@@ -5926,65 +7264,9 @@
             "lane": 1
           }
         ],
-        "primaryBranchName": "main",
         "branchColor": "#4f85e8",
-        "branchTags": [
-          "main",
-          "task/task-1762065302360-3f13ea",
-          "task/task-1762065304541-777d84",
-          "task/task-1762065398891-c05a99",
-          "task/task-1762065401082-315008",
-          "tomoyasu-sasaki/develop"
-        ],
-        "worktrees": [
-          {
-            "path": "/Users/tmys-sasaki/Projects/Public/kanshichan",
-            "head": "7bc0076b41c761fc760851ef185010f8b8889c0c",
-            "branch": "main",
-            "isMerged": false,
-            "mergeCommitHash": null,
-            "status": {
-              "staged": [],
-              "unstaged": [],
-              "untracked": [
-                {
-                  "path": ".kamui/model-versions-cache.json",
-                  "status": "untracked",
-                  "rawPath": ".kamui/model-versions-cache.json",
-                  "timestamp": 1762067654843
-                },
-                {
-                  "path": ".kamui/prompt/merge-prompt.txt",
-                  "status": "untracked",
-                  "rawPath": ".kamui/prompt/merge-prompt.txt",
-                  "timestamp": 1762067654843
-                },
-                {
-                  "path": ".kamui/prompt/restart-prompt.txt",
-                  "status": "untracked",
-                  "rawPath": ".kamui/prompt/restart-prompt.txt",
-                  "timestamp": 1762067654843
-                },
-                {
-                  "path": ".kamui/system-graph-state.json",
-                  "status": "untracked",
-                  "rawPath": ".kamui/system-graph-state.json",
-                  "timestamp": 1762067654843
-                },
-                {
-                  "path": ".kamui/tasks-state.json",
-                  "status": "untracked",
-                  "rawPath": ".kamui/tasks-state.json",
-                  "timestamp": 1762067654843
-                }
-              ],
-              "capturedAt": 1762067654843
-            },
-            "normalizedPath": "/Users/tmys-sasaki/Projects/Public/kanshichan",
-            "lane": 0
-          }
-        ],
-        "index": 2
+        "branchTags": [],
+        "index": 21
       },
       {
         "type": "commit",
@@ -5998,17 +7280,8 @@
             "7ccccf2397ea20ecf05fa3de0d2a70a179441a1f"
           ],
           "parent": "7ccccf2397ea20ecf05fa3de0d2a70a179441a1f",
-          "refs": "origin/develop, develop",
-          "branches": [
-            "origin/develop",
-            "develop",
-            "tomoyasu-sasaki/develop",
-            "main",
-            "task/task-1762065302360-3f13ea",
-            "task/task-1762065304541-777d84",
-            "task/task-1762065398891-c05a99",
-            "task/task-1762065401082-315008"
-          ]
+          "refs": "",
+          "branches": []
         },
         "commitHash": "a65a435a234f276f78058344cf96c76127fae680",
         "lane": 0,
@@ -6018,12 +7291,9 @@
             "lane": 1
           }
         ],
-        "primaryBranchName": "main",
         "branchColor": "#4f85e8",
-        "branchTags": [
-          "develop"
-        ],
-        "index": 3
+        "branchTags": [],
+        "index": 22
       },
       {
         "type": "commit",
@@ -6038,15 +7308,7 @@
           ],
           "parent": "38002fd4a25335f9ceb2d1db29389926fe0ae0da",
           "refs": "",
-          "branches": [
-            "tomoyasu-sasaki/develop",
-            "develop",
-            "main",
-            "task/task-1762065302360-3f13ea",
-            "task/task-1762065304541-777d84",
-            "task/task-1762065398891-c05a99",
-            "task/task-1762065401082-315008"
-          ]
+          "branches": []
         },
         "commitHash": "7ccccf2397ea20ecf05fa3de0d2a70a179441a1f",
         "lane": 0,
@@ -6056,10 +7318,9 @@
             "lane": 1
           }
         ],
-        "primaryBranchName": "main",
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 4
+        "index": 23
       },
       {
         "type": "commit",
@@ -6074,15 +7335,7 @@
           ],
           "parent": "9da293c759a6c63a73fcbb797e9af1d088baaa98",
           "refs": "",
-          "branches": [
-            "tomoyasu-sasaki/develop",
-            "develop",
-            "main",
-            "task/task-1762065302360-3f13ea",
-            "task/task-1762065304541-777d84",
-            "task/task-1762065398891-c05a99",
-            "task/task-1762065401082-315008"
-          ]
+          "branches": []
         },
         "commitHash": "38002fd4a25335f9ceb2d1db29389926fe0ae0da",
         "lane": 0,
@@ -6092,10 +7345,9 @@
             "lane": 1
           }
         ],
-        "primaryBranchName": "main",
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 5
+        "index": 24
       },
       {
         "type": "commit",
@@ -6110,15 +7362,7 @@
           ],
           "parent": "0b5f0079116604c7ffe0912900f9715d7f213db2",
           "refs": "",
-          "branches": [
-            "tomoyasu-sasaki/develop",
-            "develop",
-            "main",
-            "task/task-1762065302360-3f13ea",
-            "task/task-1762065304541-777d84",
-            "task/task-1762065398891-c05a99",
-            "task/task-1762065401082-315008"
-          ]
+          "branches": []
         },
         "commitHash": "9da293c759a6c63a73fcbb797e9af1d088baaa98",
         "lane": 0,
@@ -6128,10 +7372,9 @@
             "lane": 0
           }
         ],
-        "primaryBranchName": "main",
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 6
+        "index": 25
       },
       {
         "type": "commit",
@@ -6146,9 +7389,7 @@
           ],
           "parent": "e63f09db1ab6ad14d099a034f9648c50e98808cb",
           "refs": "",
-          "branches": [
-            "main"
-          ]
+          "branches": []
         },
         "commitHash": "0b5f0079116604c7ffe0912900f9715d7f213db2",
         "lane": 0,
@@ -6158,10 +7399,9 @@
             "lane": 0
           }
         ],
-        "primaryBranchName": "main",
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 7
+        "index": 26
       },
       {
         "type": "commit",
@@ -6176,9 +7416,7 @@
           ],
           "parent": "6f546ece8bb6f801744c442aa6190d8cff18caa7",
           "refs": "",
-          "branches": [
-            "main"
-          ]
+          "branches": []
         },
         "commitHash": "e63f09db1ab6ad14d099a034f9648c50e98808cb",
         "lane": 0,
@@ -6188,10 +7426,9 @@
             "lane": 0
           }
         ],
-        "primaryBranchName": "main",
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 8
+        "index": 27
       },
       {
         "type": "commit",
@@ -6206,9 +7443,7 @@
           ],
           "parent": "66b7545715b14d5f5e9c531b1e2a98864064e1d3",
           "refs": "",
-          "branches": [
-            "main"
-          ]
+          "branches": []
         },
         "commitHash": "6f546ece8bb6f801744c442aa6190d8cff18caa7",
         "lane": 0,
@@ -6218,10 +7453,9 @@
             "lane": 0
           }
         ],
-        "primaryBranchName": "main",
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 9
+        "index": 28
       },
       {
         "type": "commit",
@@ -6236,9 +7470,7 @@
           ],
           "parent": "b16d650da650e9606b37f0274cf2b2b5f832a4d6",
           "refs": "",
-          "branches": [
-            "main"
-          ]
+          "branches": []
         },
         "commitHash": "66b7545715b14d5f5e9c531b1e2a98864064e1d3",
         "lane": 0,
@@ -6248,10 +7480,9 @@
             "lane": 0
           }
         ],
-        "primaryBranchName": "main",
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 10
+        "index": 29
       },
       {
         "type": "commit",
@@ -6266,9 +7497,7 @@
           ],
           "parent": "8e85150ce2c5026b12ce2a16c3adcda45e90d026",
           "refs": "",
-          "branches": [
-            "main"
-          ]
+          "branches": []
         },
         "commitHash": "b16d650da650e9606b37f0274cf2b2b5f832a4d6",
         "lane": 0,
@@ -6278,10 +7507,9 @@
             "lane": 0
           }
         ],
-        "primaryBranchName": "main",
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 11
+        "index": 30
       },
       {
         "type": "commit",
@@ -6296,9 +7524,7 @@
           ],
           "parent": "a2814a157e406c2d5ad2495dca33a845320b79e4",
           "refs": "",
-          "branches": [
-            "main"
-          ]
+          "branches": []
         },
         "commitHash": "8e85150ce2c5026b12ce2a16c3adcda45e90d026",
         "lane": 0,
@@ -6308,10 +7534,9 @@
             "lane": 0
           }
         ],
-        "primaryBranchName": "main",
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 12
+        "index": 31
       },
       {
         "type": "commit",
@@ -6326,9 +7551,7 @@
           ],
           "parent": "2dbb1de192b643f821e6810eaca91738bc54df64",
           "refs": "",
-          "branches": [
-            "main"
-          ]
+          "branches": []
         },
         "commitHash": "a2814a157e406c2d5ad2495dca33a845320b79e4",
         "lane": 0,
@@ -6338,10 +7561,9 @@
             "lane": 0
           }
         ],
-        "primaryBranchName": "main",
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 13
+        "index": 32
       },
       {
         "type": "commit",
@@ -6356,9 +7578,7 @@
           ],
           "parent": "0f92f606a606cec5956c41c5ee814f0aa213b831",
           "refs": "",
-          "branches": [
-            "main"
-          ]
+          "branches": []
         },
         "commitHash": "2dbb1de192b643f821e6810eaca91738bc54df64",
         "lane": 0,
@@ -6368,10 +7588,9 @@
             "lane": 0
           }
         ],
-        "primaryBranchName": "main",
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 14
+        "index": 33
       },
       {
         "type": "commit",
@@ -6386,9 +7605,7 @@
           ],
           "parent": "37bbfa4cb5f3a06b7aa0d37c5455985624106551",
           "refs": "",
-          "branches": [
-            "main"
-          ]
+          "branches": []
         },
         "commitHash": "0f92f606a606cec5956c41c5ee814f0aa213b831",
         "lane": 0,
@@ -6398,10 +7615,9 @@
             "lane": 0
           }
         ],
-        "primaryBranchName": "main",
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 15
+        "index": 34
       },
       {
         "type": "commit",
@@ -6416,9 +7632,7 @@
           ],
           "parent": "923ebefadfaeb1e4eb4f5387eb0b096159ab8adb",
           "refs": "",
-          "branches": [
-            "main"
-          ]
+          "branches": []
         },
         "commitHash": "37bbfa4cb5f3a06b7aa0d37c5455985624106551",
         "lane": 0,
@@ -6428,10 +7642,9 @@
             "lane": 0
           }
         ],
-        "primaryBranchName": "main",
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 16
+        "index": 35
       },
       {
         "type": "commit",
@@ -6446,9 +7659,7 @@
           ],
           "parent": "9b9c1fb0370e76adaea4f84a0d6c4333edcf402d",
           "refs": "",
-          "branches": [
-            "main"
-          ]
+          "branches": []
         },
         "commitHash": "923ebefadfaeb1e4eb4f5387eb0b096159ab8adb",
         "lane": 0,
@@ -6458,10 +7669,9 @@
             "lane": 0
           }
         ],
-        "primaryBranchName": "main",
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 17
+        "index": 36
       },
       {
         "type": "commit",
@@ -6476,9 +7686,7 @@
           ],
           "parent": "a8a0ec34a7198b3781d3e37a6e630cb5bddcbd6b",
           "refs": "",
-          "branches": [
-            "main"
-          ]
+          "branches": []
         },
         "commitHash": "9b9c1fb0370e76adaea4f84a0d6c4333edcf402d",
         "lane": 0,
@@ -6488,10 +7696,9 @@
             "lane": 0
           }
         ],
-        "primaryBranchName": "main",
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 18
+        "index": 37
       },
       {
         "type": "commit",
@@ -6506,9 +7713,7 @@
           ],
           "parent": "f194ea21b311d00ef8f4ac5ddd8d39c16b92866f",
           "refs": "",
-          "branches": [
-            "main"
-          ]
+          "branches": []
         },
         "commitHash": "a8a0ec34a7198b3781d3e37a6e630cb5bddcbd6b",
         "lane": 0,
@@ -6518,10 +7723,9 @@
             "lane": 0
           }
         ],
-        "primaryBranchName": "main",
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 19
+        "index": 38
       },
       {
         "type": "commit",
@@ -6536,9 +7740,7 @@
           ],
           "parent": "43d0f224b14d323586f2264fa616bed866427bb4",
           "refs": "",
-          "branches": [
-            "main"
-          ]
+          "branches": []
         },
         "commitHash": "f194ea21b311d00ef8f4ac5ddd8d39c16b92866f",
         "lane": 0,
@@ -6548,10 +7750,9 @@
             "lane": 0
           }
         ],
-        "primaryBranchName": "main",
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 20
+        "index": 39
       },
       {
         "type": "commit",
@@ -6566,9 +7767,7 @@
           ],
           "parent": "ce7d2d8148f9af83e4b654c77e015c3985d368d9",
           "refs": "",
-          "branches": [
-            "main"
-          ]
+          "branches": []
         },
         "commitHash": "43d0f224b14d323586f2264fa616bed866427bb4",
         "lane": 0,
@@ -6578,10 +7777,9 @@
             "lane": 0
           }
         ],
-        "primaryBranchName": "main",
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 21
+        "index": 40
       },
       {
         "type": "commit",
@@ -6596,9 +7794,7 @@
           ],
           "parent": "349ef1e2c709eb4809a0f7ce3dab5ddc13451005",
           "refs": "",
-          "branches": [
-            "main"
-          ]
+          "branches": []
         },
         "commitHash": "ce7d2d8148f9af83e4b654c77e015c3985d368d9",
         "lane": 0,
@@ -6608,10 +7804,9 @@
             "lane": 0
           }
         ],
-        "primaryBranchName": "main",
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 22
+        "index": 41
       },
       {
         "type": "commit",
@@ -6626,9 +7821,7 @@
           ],
           "parent": "2c5ae456b6cae97f45b7e75f27f89f8cff112496",
           "refs": "",
-          "branches": [
-            "main"
-          ]
+          "branches": []
         },
         "commitHash": "349ef1e2c709eb4809a0f7ce3dab5ddc13451005",
         "lane": 0,
@@ -6638,10 +7831,9 @@
             "lane": 0
           }
         ],
-        "primaryBranchName": "main",
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 23
+        "index": 42
       },
       {
         "type": "commit",
@@ -6656,9 +7848,7 @@
           ],
           "parent": "1a2c28781804699d25b46c2b2f5fe7e6983edece",
           "refs": "",
-          "branches": [
-            "main"
-          ]
+          "branches": []
         },
         "commitHash": "2c5ae456b6cae97f45b7e75f27f89f8cff112496",
         "lane": 0,
@@ -6668,10 +7858,9 @@
             "lane": 0
           }
         ],
-        "primaryBranchName": "main",
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 24
+        "index": 43
       },
       {
         "type": "commit",
@@ -6686,9 +7875,7 @@
           ],
           "parent": "25b96c7c4ebd68f50a1c0ec36de8469b72088cae",
           "refs": "",
-          "branches": [
-            "main"
-          ]
+          "branches": []
         },
         "commitHash": "1a2c28781804699d25b46c2b2f5fe7e6983edece",
         "lane": 0,
@@ -6698,10 +7885,9 @@
             "lane": 0
           }
         ],
-        "primaryBranchName": "main",
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 25
+        "index": 44
       },
       {
         "type": "commit",
@@ -6716,9 +7902,7 @@
           ],
           "parent": "4d74a056607c5497f9d92c8afef5e63515fe788a",
           "refs": "",
-          "branches": [
-            "main"
-          ]
+          "branches": []
         },
         "commitHash": "25b96c7c4ebd68f50a1c0ec36de8469b72088cae",
         "lane": 0,
@@ -6728,10 +7912,9 @@
             "lane": 0
           }
         ],
-        "primaryBranchName": "main",
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 26
+        "index": 45
       },
       {
         "type": "commit",
@@ -6746,9 +7929,7 @@
           ],
           "parent": "9716e50686d450b8a5bf7c6d41b63881de79f509",
           "refs": "",
-          "branches": [
-            "main"
-          ]
+          "branches": []
         },
         "commitHash": "4d74a056607c5497f9d92c8afef5e63515fe788a",
         "lane": 0,
@@ -6758,10 +7939,9 @@
             "lane": 0
           }
         ],
-        "primaryBranchName": "main",
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 27
+        "index": 46
       },
       {
         "type": "commit",
@@ -6776,9 +7956,7 @@
           ],
           "parent": "53e30e0f150f0586f0382f50671896f49192b224",
           "refs": "",
-          "branches": [
-            "main"
-          ]
+          "branches": []
         },
         "commitHash": "9716e50686d450b8a5bf7c6d41b63881de79f509",
         "lane": 0,
@@ -6788,10 +7966,9 @@
             "lane": 0
           }
         ],
-        "primaryBranchName": "main",
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 28
+        "index": 47
       },
       {
         "type": "commit",
@@ -6806,9 +7983,7 @@
           ],
           "parent": "a07032829d4debef082b9c509f185d9b190bd5f2",
           "refs": "",
-          "branches": [
-            "main"
-          ]
+          "branches": []
         },
         "commitHash": "53e30e0f150f0586f0382f50671896f49192b224",
         "lane": 0,
@@ -6818,10 +7993,9 @@
             "lane": 0
           }
         ],
-        "primaryBranchName": "main",
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 29
+        "index": 48
       },
       {
         "type": "commit",
@@ -6837,6 +8011,7 @@
           "parent": "63be735364af477432b3302026ad52ccd15acbb7",
           "refs": "",
           "branches": [
+            "feature/tasks-management",
             "main"
           ]
         },
@@ -6851,7 +8026,7 @@
         "primaryBranchName": "main",
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 30
+        "index": 49
       },
       {
         "type": "commit",
@@ -6866,9 +8041,7 @@
           ],
           "parent": "c383bac50795165a6e3aa68b407f96c015889549",
           "refs": "",
-          "branches": [
-            "main"
-          ]
+          "branches": []
         },
         "commitHash": "63be735364af477432b3302026ad52ccd15acbb7",
         "lane": 0,
@@ -6878,10 +8051,9 @@
             "lane": 0
           }
         ],
-        "primaryBranchName": "main",
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 31
+        "index": 50
       },
       {
         "type": "commit",
@@ -6896,9 +8068,7 @@
           ],
           "parent": "6651d2766080b35263cd495315fccd73b3b42042",
           "refs": "",
-          "branches": [
-            "main"
-          ]
+          "branches": []
         },
         "commitHash": "c383bac50795165a6e3aa68b407f96c015889549",
         "lane": 0,
@@ -6908,10 +8078,9 @@
             "lane": 0
           }
         ],
-        "primaryBranchName": "main",
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 32
+        "index": 51
       },
       {
         "type": "commit",
@@ -6926,9 +8095,7 @@
           ],
           "parent": "afc46805eb2c3ad8cb3552a091b0aedd1668929a",
           "refs": "",
-          "branches": [
-            "main"
-          ]
+          "branches": []
         },
         "commitHash": "6651d2766080b35263cd495315fccd73b3b42042",
         "lane": 0,
@@ -6938,10 +8105,9 @@
             "lane": 0
           }
         ],
-        "primaryBranchName": "main",
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 33
+        "index": 52
       },
       {
         "type": "commit",
@@ -6956,9 +8122,7 @@
           ],
           "parent": "f1d85ff851880381ba09a166d846f05230ef6253",
           "refs": "",
-          "branches": [
-            "main"
-          ]
+          "branches": []
         },
         "commitHash": "afc46805eb2c3ad8cb3552a091b0aedd1668929a",
         "lane": 0,
@@ -6968,10 +8132,9 @@
             "lane": 0
           }
         ],
-        "primaryBranchName": "main",
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 34
+        "index": 53
       },
       {
         "type": "commit",
@@ -6987,7 +8150,8 @@
           "parent": "77ef5027992c2194d80dad917abbf1e5ddd4cd91",
           "refs": "",
           "branches": [
-            "main"
+            "main",
+            "feature/tasks-management"
           ]
         },
         "commitHash": "f1d85ff851880381ba09a166d846f05230ef6253",
@@ -7001,7 +8165,7 @@
         "primaryBranchName": "main",
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 35
+        "index": 54
       },
       {
         "type": "commit",
@@ -7014,27 +8178,24 @@
           "parents": [],
           "parent": null,
           "refs": "",
-          "branches": [
-            "main"
-          ]
+          "branches": []
         },
         "commitHash": "77ef5027992c2194d80dad917abbf1e5ddd4cd91",
         "lane": 0,
         "parentLinks": [],
-        "primaryBranchName": "main",
         "branchColor": "#4f85e8",
         "branchTags": [],
-        "index": 36
+        "index": 55
       },
       {
         "type": "empty",
         "label": "初期状態 (初回コミット以前)",
         "files": [],
         "marker": "pre-history",
-        "index": 37
+        "index": 56
       }
     ]
   },
   "projectRoot": "/Users/tmys-sasaki/Projects/Public/kanshichan",
-  "savedAt": 1762067662050
+  "savedAt": 1762214004188
 }

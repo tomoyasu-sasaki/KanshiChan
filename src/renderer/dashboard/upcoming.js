@@ -1,6 +1,6 @@
 /**
  * 「直近の予定」セクションの計算と描画を担当するモジュール。
- * - ローカルストレージのスケジュールを直接参照する点に注意（同期漏れ防止のため描画直前に再取得）。
+ * - メインプロセスから schedulesList IPC を介して予定を都度取得する。
  * - 24時間以内かつ上限件数までに絞ることで、Slack・ダッシュボード両方の視認性を確保する。
  */
 import { state } from './state.js';
@@ -15,11 +15,21 @@ import {
 } from './constants.js';
 import { escapeHtml } from './utils.js';
 
-/**
- * localStorage に保存されているスケジュール一覧を安全に取得する。
- * @returns {Array<Object>} 正規化前のスケジュール配列
- */
-function getStoredSchedules() {
+async function fetchSchedulesForDashboard() {
+  if (window.electronAPI?.schedulesList) {
+    try {
+      const response = await window.electronAPI.schedulesList();
+      if (response?.success && Array.isArray(response.items)) {
+        return response.items;
+      }
+      if (response?.error) {
+        console.warn('[Dashboard] schedulesList error:', response.error);
+      }
+    } catch (error) {
+      console.warn('[Dashboard] schedulesList invocation failed:', error);
+    }
+  }
+
   try {
     const raw = localStorage.getItem('schedules');
     if (!raw) {
@@ -28,7 +38,7 @@ function getStoredSchedules() {
     const parsed = JSON.parse(raw);
     return Array.isArray(parsed) ? parsed : [];
   } catch (error) {
-    console.warn('[Dashboard] スケジュールの読み込みに失敗:', error);
+    console.warn('[Dashboard] legacy schedule load failed:', error);
     return [];
   }
 }
@@ -180,11 +190,12 @@ function formatUpcomingRelative(minutes) {
  * 直近24時間以内の予定を抽出し、表示用メタ情報へ整形する。
  * @returns {Array<Object>} ソート済み予定リスト
  */
-function computeUpcomingSchedules() {
+async function computeUpcomingSchedules() {
   const now = new Date();
   const rangeMs = UPCOMING_SCHEDULE_RANGE_HOURS * 60 * 60 * 1000;
 
-  const schedules = getStoredSchedules()
+  const rawSchedules = await fetchSchedulesForDashboard();
+  const schedules = rawSchedules
     .map((item) => ({
       id: item.id,
       title: getScheduleTitle(item),
@@ -276,11 +287,15 @@ function renderUpcomingSchedules(list) {
  * 最新の localStorage から予定を再計算し、UI を更新する。
  */
 export function refreshUpcomingSchedules() {
-  const upcoming = computeUpcomingSchedules();
-  state.upcomingSchedules = upcoming;
-  renderUpcomingSchedules(upcoming);
-
-  if (upcomingSchedulesWrapper) {
-    upcomingSchedulesWrapper.style.display = 'block';
-  }
+  computeUpcomingSchedules()
+    .then((upcoming) => {
+      state.upcomingSchedules = upcoming;
+      renderUpcomingSchedules(upcoming);
+      if (upcomingSchedulesWrapper) {
+        upcomingSchedulesWrapper.style.display = 'block';
+      }
+    })
+    .catch((error) => {
+      console.warn('[Dashboard] upcoming schedules refresh failed:', error);
+    });
 }
