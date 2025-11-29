@@ -439,7 +439,6 @@ function registerIpcHandlers({
       }
 
       const items = await tasksService.listTasks(filter || {});
-      console.info('[IPC] tasks-list result count', items.length);
       return { success: true, items };
     } catch (error) {
       console.error('[IPC] tasks-list エラー:', error);

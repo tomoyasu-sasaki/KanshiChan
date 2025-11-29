@@ -5,7 +5,7 @@
 import { getMonitorState, MONITOR_TIMING_CONSTANTS, DEFAULT_MONITOR_SETTINGS } from './context.js';
 import { recordDetectionLogEntry } from './logs.js';
 import { triggerPhoneAlert, triggerAbsenceAlert } from './alerts.js';
-import { updateTimers } from './render.js';
+import { updateTimers, drawCameraFrame } from './render.js';
 
 const PHONE_INTERPOLATION_WINDOW = MONITOR_TIMING_CONSTANTS.phoneInterpolationWindowMs;
 const PERSON_INTERPOLATION_WINDOW = MONITOR_TIMING_CONSTANTS.personInterpolationWindowMs;
@@ -31,7 +31,10 @@ export async function performDetection() {
   }
 
   try {
-    ctx.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
+    const frameDrawn = drawCameraFrame(ctx, videoElement, canvasElement);
+    if (!frameDrawn) {
+      return;
+    }
     const imageDataUrl = canvasElement.toDataURL('image/jpeg', 0.8);
     const result = await window.electronAPI.detectObjects(imageDataUrl);
 

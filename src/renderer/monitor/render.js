@@ -5,6 +5,27 @@
 import { getMonitorState, MONITOR_TIMING_CONSTANTS, DEFAULT_MONITOR_SETTINGS } from './context.js';
 
 /**
+ * カメラ映像を左右反転補正して Canvas に描画する。
+ * - 多くの内蔵カメラが鏡像でストリームを返すため、ここで補正して UI と検知の両方を正しい向きに揃える。
+ */
+export function drawCameraFrame(ctx, videoElement, canvasElement) {
+  if (!ctx || !videoElement || !canvasElement) {
+    return false;
+  }
+  const width = canvasElement.width || videoElement.videoWidth;
+  const height = canvasElement.height || videoElement.videoHeight;
+  if (!width || !height) {
+    return false;
+  }
+
+  ctx.save();
+  ctx.scale(-1, 1);
+  ctx.drawImage(videoElement, -width, 0, width, height);
+  ctx.restore();
+  return true;
+}
+
+/**
  * 描画ループを開始する。
  * - 二重で requestAnimationFrame を発火させないようハンドルを保持する。
  */
@@ -44,7 +65,11 @@ function renderLoop() {
     return;
   }
 
-  ctx.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height);
+  const frameDrawn = drawCameraFrame(ctx, videoElement, canvasElement);
+  if (!frameDrawn) {
+    state.renderHandle = requestAnimationFrame(renderLoop);
+    return;
+  }
 
   const now = Date.now();
   if (

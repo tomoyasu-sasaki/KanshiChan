@@ -1,9 +1,0 @@
-if [ -f .kamui/dev.pid ]; then
-  DEV_PID=$(cat .kamui/dev.pid)
-  if ps -p "$DEV_PID" >/dev/null 2>&1; then
-    kill "$DEV_PID"
-  fi
-  rm -f .kamui/dev.pid
-fi
-npm run dev >/tmp/kamui-dev.log 2>&1 &
-printf "%s" $! > .kamui/dev.pid
